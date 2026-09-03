@@ -14,25 +14,30 @@ What the system **DOES build and maintain**:
 
 | # | Feature | Description | Responsible service |
 |---|---------|-------------|---------------------|
-| 1 | [Feature A] | [Brief description] | [service-name] |
-| 2 | [Feature B] | [Brief description] | [service-name] |
-| 3 | [Feature C] | [Brief description] | [service-name] |
+| 1 | User Authentication and Registration | Allows users to register, log in, and access the platform securely. | Not defined |
+| 2 | Educational Environment Monitoring | Allows users to view and monitor temperature, humidity, CO₂, and noise level in educational environments. | Not defined |
+| 3 | Environment Management | Allows the management and consultation of educational environment information. | Not defined |
+| 4 | Environmental Data Dashboard | Displays environmental data in an organized dashboard, allowing users to analyze the conditions of educational environments. | Not defined |
+| 5 | Historical Data Analysis | Allows users to analyze environmental data by day, week, month, and year. | Not defined |
+| 6 | Environment Favorites | Allows users to add and remove educational environments from their favorites. | Not defined |
+| 7 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment. | Not defined |
 
 ### Included integrations
 
 | External system | Integration type | Purpose |
-|----------------|-----------------|---------|
-| [System A] | REST API / Webhook / SDK | [purpose] |
-| [System B] | SFTP / Database | [purpose] |
+|----------------|------------------|---------|
+| GitHub | Repository | Source code management and version control. |
+| Jenkins | CI/CD | Continuous integration and project automation. |
+| Docker | Containerization | Provides a consistent environment for application development and deployment. |
 
 ### Environments being built
 
 | Environment | Purpose |
 |-------------|---------|
-| Local | Development on the developer's machine |
-| Development (dev) | Continuous integration and development testing |
-| Staging | Pre-production, PO acceptance testing |
-| Production | Production environment |
+| Local | Development on the developer's machine. |
+| Development (dev) | Continuous integration and development testing. |
+| Staging | Pre-production testing and validation. |
+| Production | Production environment. |
 
 ---
 
@@ -42,16 +47,17 @@ What the system **does NOT build** in this version and why:
 
 | # | What is out of scope | Reason | Future version? |
 |---|---------------------|--------|----------------|
-| 1 | [Feature X] | [Out of budget / Not MVP / Uses external system] | Yes — H2 2024 |
-| 2 | [Integration with Y] | [Provider has no public API yet] | Pending provider |
-| 3 | [Module Z] | [Another team builds it] | N/A |
+| 1 | Environmental ranking | Removed from the current project scope. The project now focuses on environmental data analysis through the dashboard. | No |
+| 2 | Advanced predictive environmental analysis | Not part of the current MVP scope. | To be determined |
+| 3 | Automated control of environmental equipment | The current system focuses on monitoring, visualization, and data analysis. | To be determined |
+| 4 | Integration with external environmental control systems | No external control integration has been defined for the current version. | To be determined |
 
 ### What another system / team handles (and why not us)
 
 | Feature | Who builds it | Why not us |
 |---------|--------------|-----------|
-| [SSO Authentication] | Central IAM team | Reuse existing implementation |
-| [Financial reports] | BI system / Analytics team | Outside the core domain |
+| External environmental sensor hardware | Not defined | Hardware development is outside the current software scope. |
+| External infrastructure services | Not defined | Infrastructure services outside the project are not managed by EduAirControl. |
 
 ---
 
@@ -61,9 +67,11 @@ What the system **does NOT build** in this version and why:
 
 | # | Assumption | Consequence if false |
 |---|-----------|---------------------|
-| 1 | External system [X] has an available REST API | We would have to build the integration differently |
-| 2 | Users use [language / device / etc.] | The UX design would change |
-| 3 | Initial data volume is < [N] records | The database strategy might change |
+| 1 | Environmental data is available to the system. | The monitoring and data analysis functionalities would require an alternative data source. |
+| 2 | Users access the system through a web interface. | The interface and user experience requirements would need to change. |
+| 3 | Postgres is available for storing system information and environmental data. | The database strategy would need to be reviewed. |
+| 4 | Environmental data can be analyzed using daily, weekly, monthly, and yearly periods. | The dashboard and data analysis strategy would need to be adjusted. |
+| 5 | The initial project is developed by a team of 3 members. | The scope or sprint capacity may need to be adjusted. |
 
 ---
 
@@ -71,11 +79,11 @@ What the system **does NOT build** in this version and why:
 
 | Type | Description |
 |------|-------------|
-| **Time** | [MVP must be ready in X weeks / by date Y] |
-| **Budget** | [N development hours / X USD of infrastructure] |
-| **Technology** | [Must use the corporate stack: Java + PostgreSQL] |
-| **Regulatory** | [Must comply with X regulation / certification] |
-| **Team** | [N developers available] |
+| **Time** | The project is developed using one-week Sprints. |
+| **Budget** | No specific budget has been defined. |
+| **Technology** | The project uses React for the frontend, Spring Boot for the backend, and Postgres for the database. |
+| **Regulatory** | No specific regulation or certification has been defined. |
+| **Team** | 3 developers are available for the project. |
 
 ---
 
@@ -83,9 +91,10 @@ What the system **does NOT build** in this version and why:
 
 | Dependency | Team / Provider | Required date | Status |
 |-----------|----------------|--------------|--------|
-| API of [System X] | [Team name] | [date] | 🟢 Available |
-| Credentials for [Provider Y] | [Contact] | [date] | 🟡 In progress |
-| [Infrastructure Z] | DevOps | [date] | 🔴 Pending |
+| GitHub repository | Development team | Not defined | 🟢 Available |
+| Jenkins | Development team | Not defined | 🟡 In progress |
+| Docker environment | Development team | Not defined | 🟡 In progress |
+| Environmental data source | Not defined | Not defined | 🟡 In progress |
 
 ---
 
@@ -93,11 +102,11 @@ What the system **does NOT build** in this version and why:
 
 The scope can change, but the change has a process:
 
-1. Document the proposed change in this file
-2. Evaluate the impact on schedule and effort
-3. Obtain approval from the Product Owner and Tech Lead
-4. Update the roadmap in `03-product/vision.md`
-5. Create or update HUs in `04-requirements/user-stories.md`
+1. Document the proposed change in this file.
+2. Evaluate the impact on schedule and effort.
+3. Obtain approval from the Product Owner and Tech Lead.
+4. Update the roadmap in `03-product/vision.md`.
+5. Create or update HUs in `04-requirements/user-stories.md`.
 
 ---
 

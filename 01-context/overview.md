@@ -6,45 +6,42 @@
 
 ---
 
-## What is [System Name]?
+## What is EduAirControl?
 
-[2-3 sentences describing what the system is and what problem it solves.
-No technical jargon — it must be understandable by someone from the business side.]
+EduAirControl is a technological platform for the management and monitoring of educational environments. The system allows users to visualize the environmental conditions of educational spaces through variables such as temperature, humidity, CO₂, and noise level, facilitating the monitoring of environmental conditions.
 
 ## Problem it solves
 
-**Before the system:** [How the process was handled without the system. What pain the users had.]
+**Before the system:** Monitoring the environmental conditions of educational environments is carried out in a poorly centralized manner, making it difficult to track variables such as temperature, humidity, CO₂, and noise.
 
-**With the system:** [How the process improves. What value it delivers.]
+**With the system:** EduAirControl centralizes information about educational environments and allows users to visualize their environmental conditions in an organized way, facilitating monitoring and decision-making.
 
 ## Main users
 
 | Role | Description | What they do in the system |
 |------|-------------|--------------------------|
-| [Role 1] | [Who they are] | [Main actions] |
-| [Role 2] | [Who they are] | [Main actions] |
+| User | A person who uses the platform to consult educational environments. | Views environments and monitors temperature, humidity, CO₂, and noise level. |
+| Administrator | A user responsible for managing the platform and its environments. | Manages environment information and monitors their environmental conditions. |
 
 ## Technology stack
 
 | Layer | Technology | Justification |
 |-------|-----------|---------------|
-| Frontend | [React / Angular / Vue] | [why] |
-| Backend | [Spring Boot / Node / Django] | [why] |
-| Database | [PostgreSQL / MongoDB] | [why] |
-| Message broker | [RabbitMQ / Kafka] | [why] |
-| Infrastructure | [Docker + K8s / AWS / etc.] | [why] |
+| Frontend | React | Allows the development of a modular and interactive web interface for visualizing and managing environments. |
+| Backend | Spring Boot | Allows the development of the services required to manage the platform's information. |
+| Database | MySQL | Allows the system's information to be stored and managed in a structured way. |
+| Message broker | Not defined | No message broker has been defined for the project. |
+| Infrastructure | Docker + Jenkins + GitHub | Used to support the development environment, integration, and project management. |
 
 ## Current status
 
-- **Phase:** [In development / In production / Legacy]
-- **Current version:** [v0.1.0]
-- **Last release:** [date]
-- **Next milestone:** [description and date]
+- **Phase:** In development
+- **Current version:** Not defined
+- **Last release:** Not defined
+- **Next milestone:** Not defined
 
-## Project contacts
-
-| Role | Name | Contact |
-|------|------|---------|
-| Tech Lead | [Name] | [email/Slack] |
-| Product Owner | [Name] | [email/Slack] |
-| DevOps | [Name] | [email/Slack] |
+Project contacts
+| Role                  | Name   | Contact   |
+| --------------------- | ------ | --------- |
+| Developer / Tech Lead | Jhon Cortez | cortezvargasjhon01@gmail.com |
+| Developer             | Maria Olaya | mariadelosangelesolayagar@gmail.com |
