@@ -1,138 +1,443 @@
-# Per-Microservice Documentation Standard
+# Per-Microservice Documentation Standard — EduAirControl
 
-> Defines exactly what documents each microservice must have, who writes them,
-> when they are created, and when they must be updated. Non-compliance blocks the merge.
+> Adaptación del `microservices-governance-framework` al estado real de EduAirControl, tomando como evidencia el frontend React/Vite y el backend Spring Boot entregados.
 
----
+## 1. Propósito
 
-## Required structure for each service
+Este documento define cómo debe documentarse cada servicio de EduAirControl, qué información debe contener, cómo se relaciona con los contratos API, datos, dependencias y operación, y cómo debe registrarse una futura extracción hacia microservicios.
 
-Each microservice lives in `09-microservices/services/NN-service-name/` and MUST have:
+El estándar de referencia organiza la documentación de microservicios en `09-microservices` y relaciona los cambios de arquitectura, datos y API con los servicios afectados.
 
-```
-09-microservices/services/NN-service-name/
-├── README.md         ⭐ REQUIRED from Sprint 1
-├── data-model.md     ⭐ REQUIRED before creating migrations
-├── events.md         ⭐ REQUIRED if the service emits/consumes events
-├── decisions.md      🔵 RECOMMENDED — internal technical decisions of the service
-└── runbook.md        🟢 REQUIRED before first deploy to staging
-```
+## 2. Estado arquitectónico actual
 
-And its OpenAPI contract in:
-```
-07-api/contracts/openapi/service-name.yaml   ⭐ REQUIRED if it exposes REST endpoints
-```
+**EduAirControl no está implementado actualmente como varios microservicios backend independientes.**
 
----
+El backend entregado corresponde a un **monolito modular Spring Boot**, con los módulos de autenticación y seguridad dentro de un único proceso.
 
-## README.md — Service technical sheet
-
-**When to create it:** At the start of the sprint where the service is created
-**Owner:** Developer assigned to the service
-**Update when:** Responsibility, ports, or dependencies between services change
-
-Minimum content (use `_template/service/README.md`):
-
-| Section | What it must say |
-|---------|-----------------|
-| Responsibility | One sentence: what it does and what data it is the authoritative owner of |
-| Architecture location | Port, repository, DB engine, who it communicates with |
-| Responsibilities (what it DOES) | List of concrete responsibilities |
-| Out of scope (what it does NOT do) | What it delegated and to whom |
-| How to run locally | Exact commands, must work |
-| Related documents | Links to the other files of the service |
-
----
-
-## data-model.md — Service data model
-
-**When to create it:** Before the first migration script
-**Owner:** Developer assigned to the service
-**Update when:** A table/collection is created or modified
-
-Minimum content:
-- ER diagram (Mermaid) of the service's tables
-- Description of each table with its columns, types, constraints, and purpose
-- Justification of the chosen DB engine (PostgreSQL, MongoDB, Redis, etc.)
-- Migration strategy (Flyway, Liquibase, or manual scripts)
-
-**Rule:** A field whose reason for existing is not obvious MUST have a comment in the diagram.
-
----
-
-## events.md — Service event catalog
-
-**When to create it:** When the service publishes or consumes its first domain event
-**Owner:** Developer assigned to the service
-**Update when:** An event is added, modified, or removed
-
-Minimum content:
-- Table of published events: name, topic/exchange, when it is emitted, schema
-- Table of consumed events: name, which service it comes from, what action it triggers
-- Payload schema (can reference the OpenAPI or Avro contract)
-
-See standard event structure: `02-domain/domain-events.md`
-
----
-
-## decisions.md — Service technical decisions
-
-**When to create it:** When the team makes a non-obvious technical decision about the service
-**Owner:** Whoever made the decision
-**Update when:** A new decision is made or a previous one is revoked
-
-Recommended format: miniADR (without the full rigor of an architecture ADR):
-```markdown
-### Decision: [short name]
-**Date:** [date]
-**Context:** [what problem was being solved]
-**Decision:** [what was decided]
-**Consequences:** [known trade-offs]
+```text
+Frontend React/Vite
+        |
+        | HTTP
+        v
+Backend Spring Boot
+        |
+        +-- auth
+        |
+        +-- security
+        |
+        v
+   PostgreSQL
 ```
 
----
+### Tecnologías comprobadas
 
-## runbook.md — Service operations manual
+- Java / Spring Boot
+- Spring Security
+- Spring Data JPA
+- PostgreSQL
+- JWT
+- OAuth2 con Google
+- OpenAPI / Swagger
+- Liquibase presente en los recursos del proyecto
 
-**When to create it:** Before the first deploy to staging
-**Owner:** Responsible developer + DevOps
-**Update when:** A new operational issue is discovered or a procedure changes
+Por tanto, nombres como `auth-service`, `environment-service`, `sensor-service`, `ranking-service` y `notification-service` representan **candidatos de futura extracción**, no microservicios ya desplegados.
 
-Minimum content:
-- How to verify the service is healthy (health check, key metrics)
-- Known symptoms and their causes: "If you see X, the problem is Y, the solution is Z"
-- How to perform a service rollback
-- How to run DB migrations
-- Configured alerts and what to do when they fire
+## 3. Frontend y punto de integración
 
----
+El frontend está desarrollado con React/Vite y contiene módulos funcionales de:
 
-## OpenAPI Contract
+- autenticación;
+- dashboard;
+- ambientes;
+- favoritos;
+- ranking;
+- notificaciones;
+- perfil;
+- configuración.
 
-**When to create it:** Before implementing the service's first endpoint (API-first)
-**Owner:** Developer assigned to the service
-**Update when:** An endpoint is added, modified, or removed
+La configuración del frontend utiliza:
 
-**API-First Rule:** The contract is written BEFORE the code. Contract tests validate
-that the code fulfills the contract, not the other way around.
+```text
+VITE_API_URL=http://localhost:8080
+```
 
-Use the template: `07-api/contracts/openapi/_template-service.yaml`
+Por ello, `http://localhost:8080` es actualmente el punto de integración configurado entre frontend y backend.
 
----
+El frontend contiene servicios como `environmentService` y `rankingService`, pero su presencia no significa que existan microservicios backend independientes para esos dominios.
 
-## How to add a new microservice
+## 4. Estructura documental futura
 
-1. Copy `09-microservices/_template/service/` → `09-microservices/services/NN-name/`
-2. Update `09-microservices/service-catalog.md` with the new service's entry
-3. Update `09-microservices/dependency-map.md` (or create it if it doesn't exist)
-4. Copy `07-api/contracts/openapi/_template-service.yaml` → `07-api/contracts/openapi/service-name.yaml`
-5. Create a PR with at least the README.md and the sketched API contract
+Cada microservicio deberá documentarse bajo:
 
----
+```text
+09-microservices/
+└── services/
+    └── NN-service-name/
+        ├── README.md
+        ├── data-model.md
+        ├── events.md
+        ├── decisions.md
+        └── runbook.md
+```
 
-## Correlations
+Si expone REST, deberá existir además un contrato OpenAPI:
 
-- Service template → `09-microservices/_template/service/`
-- Service catalog → `09-microservices/service-catalog.md`
-- API contracts → `07-api/contracts/openapi/`
-- General documentation rules → `00-governance/documentation-rules.md`
+```text
+07-api/
+└── contracts/
+    └── openapi/
+        └── service-name.yaml
+```
+
+| Documento | Requisito |
+|---|---|
+| `README.md` | Obligatorio |
+| `data-model.md` | Si posee persistencia |
+| `events.md` | Si publica o consume eventos |
+| `decisions.md` | Para decisiones técnicas relevantes |
+| `runbook.md` | Antes de staging |
+| OpenAPI | Si expone REST |
+
+## 5. Backend actual
+
+### Responsabilidad
+
+El backend actual proporciona la API de EduAirControl y concentra principalmente autenticación y seguridad.
+
+### Estructura comprobada
+
+```text
+com.eduaircontrol.backend/
+├── config/
+│   ├── OpenApiConfig
+│   ├── SecurityBean
+│   └── SecurityConfig
+└── modules/
+    ├── auth/
+    │   ├── controller/
+    │   ├── dto/
+    │   ├── entity/
+    │   ├── repository/
+    │   └── service/
+    └── security/
+        ├── JwtAuthFilter
+        ├── JwtService
+        └── OAuth2AuthenticationSuccessHandler
+```
+
+## 6. Módulo de autenticación
+
+El módulo `auth` administra usuarios y autenticación.
+
+### Endpoints comprobados
+
+```text
+POST /auth/register
+POST /auth/login
+```
+
+### Registro
+
+`RegisterRequest` recibe:
+
+```text
+name
+email
+password
+```
+
+El servicio verifica el correo, cifra la contraseña mediante BCrypt, asigna el rol `USER`, persiste el usuario y genera un JWT.
+
+### Login
+
+`LoginRequest` recibe:
+
+```text
+email
+password
+```
+
+El servicio valida las credenciales y genera un JWT.
+
+### Recuperación de contraseña
+
+El frontend contiene componentes para recuperación, cambio y verificación de código. Sin embargo, en el backend entregado existen DTO como `ForgotPasswordRequest` y `VerifyCodeRequest`, pero el `AuthController` comprobado actualmente solo expone `register` y `login`.
+
+Por tanto, la recuperación de contraseña debe considerarse **interfaz/estructura preparada, pero no endpoint backend comprobado**, hasta que exista el controlador correspondiente.
+
+### OAuth2
+
+El backend contiene:
+
+```text
+OAuth2AuthenticationSuccessHandler
+```
+
+y lógica de usuario Google. La configuración utiliza:
+
+```text
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+FRONTEND_OAUTH2_SUCCESS_URL
+```
+
+## 7. Módulo de seguridad
+
+Los componentes comprobados son:
+
+```text
+JwtService
+JwtAuthFilter
+OAuth2AuthenticationSuccessHandler
+```
+
+El JWT se transmite mediante:
+
+```text
+Authorization: Bearer <token>
+```
+
+La configuración contempla los roles:
+
+```text
+USER
+ADMIN
+```
+
+Las propiedades del JWT incluyen:
+
+```text
+JWT_SECRET
+JWT_EXPIRATION
+```
+
+El `SecurityConfig` permite públicamente, entre otros:
+
+```text
+/
+/auth/login
+/auth/register
+/oauth2/**
+/login/**
+/v3/api-docs/**
+/swagger-ui/**
+/swagger-ui.html
+```
+
+El resto de solicitudes requiere autenticación.
+
+## 8. Persistencia actual
+
+La entidad comprobada es `Users`, mapeada a:
+
+```text
+users
+```
+
+Campos principales:
+
+| Campo | Propósito |
+|---|---|
+| `id` | Identificador |
+| `name` | Nombre |
+| `email` | Correo único |
+| `password` | Contraseña cifrada |
+| `google_id` | Identificador Google |
+| `role` | Rol del usuario |
+
+La conexión configurada es:
+
+```text
+jdbc:postgresql://postgres:5432/eduaircontrol
+```
+
+El backend utiliza actualmente:
+
+```text
+spring.jpa.hibernate.ddl-auto=update
+```
+
+También existe estructura de Liquibase en:
+
+```text
+src/main/resources/liquibase/
+```
+
+Antes de producción debe definirse una política clara sobre la evolución del esquema para evitar ambigüedad entre Hibernate y Liquibase.
+
+## 9. OpenAPI / Swagger
+
+OpenAPI está configurado mediante `OpenApiConfig`.
+
+La documentación debe mantenerse sincronizada con los controladores reales.
+
+Endpoints comprobados:
+
+```text
+POST /auth/register
+POST /auth/login
+```
+
+La seguridad de la API utiliza Bearer JWT para endpoints protegidos.
+
+Los recursos de Swagger/OpenAPI están permitidos para documentación:
+
+```text
+/v3/api-docs/**
+/swagger-ui/**
+/swagger-ui.html
+```
+
+## 10. Candidatos de futura extracción
+
+| Servicio futuro | Responsabilidad | Estado |
+|---|---|---|
+| `auth-service` | usuarios, JWT y OAuth2 | Candidato |
+| `environment-service` | ambientes educativos | Candidato |
+| `sensor-service` | dispositivos y lecturas | Candidato |
+| `ranking-service` | reglas y consultas de ranking | Candidato |
+| `notification-service` | alertas y notificaciones | Candidato |
+| `api-gateway` | entrada y enrutamiento | Candidato |
+
+Estos nombres representan la posible evolución del sistema, no la arquitectura backend actualmente desplegada.
+
+## 11. Criterio para extraer un microservicio
+
+La extracción debe hacerse solamente cuando exista:
+
+- responsabilidad de negocio claramente delimitada;
+- ownership de datos;
+- contrato API definido;
+- dependencias identificadas;
+- pruebas;
+- estrategia de migración;
+- necesidad real de despliegue independiente;
+- observabilidad y rollback;
+- documentación propia.
+
+Crear una carpeta o clase con el nombre de un servicio no constituye por sí mismo un microservicio.
+
+## 12. Ownership de datos futuro
+
+Regla:
+
+> Cada servicio será propietario de los datos de su dominio. Otros servicios no deben escribir directamente en sus tablas.
+
+Propuesta:
+
+| Datos | Propietario futuro |
+|---|---|
+| Usuarios y credenciales | `auth-service` |
+| Ambientes | `environment-service` |
+| Lecturas | `sensor-service` |
+| Ranking | `ranking-service` |
+| Alertas | `notification-service` |
+
+En el monolito actual estos límites todavía no están separados físicamente.
+
+## 13. Comunicación futura
+
+La primera alternativa será REST/HTTP mediante contratos OpenAPI:
+
+```text
+React/Vite
+    |
+    v
+API Gateway
+    |
+    +-- auth-service
+    +-- environment-service
+    +-- sensor-service
+    +-- ranking-service
+    +-- notification-service
+```
+
+Los eventos solamente deberán documentarse cuando exista una implementación real de mensajería.
+
+No se debe afirmar que Kafka, RabbitMQ u otro broker está implementado si el código no lo demuestra.
+
+## 14. Eventos futuros
+
+Actualmente no existen eventos de dominio implementados en el backend entregado.
+
+Cuando se implementen, `events.md` deberá registrar:
+
+- nombre;
+- productor;
+- consumidores;
+- transporte;
+- payload;
+- versión;
+- compatibilidad.
+
+Ejemplos de nombres candidatos:
+
+```text
+UserRegistered
+EnvironmentMeasurementReceived
+EnvironmentStatusChanged
+AlertCreated
+```
+
+Estos nombres son propuestas.
+
+## 15. Runbook
+
+Antes de staging, cada servicio deberá documentar:
+
+1. health check;
+2. ejecución local;
+3. variables de entorno;
+4. errores frecuentes;
+5. diagnóstico;
+6. recuperación;
+7. rollback;
+8. migraciones;
+9. métricas;
+10. alertas.
+
+Nunca deben documentarse valores reales de secretos.
+
+Variables actuales relevantes del backend:
+
+```text
+JWT_SECRET
+JWT_EXPIRATION
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+FRONTEND_OAUTH2_SUCCESS_URL
+CORS_ALLOWED_ORIGINS
+```
+
+## 16. Definition of Done documental
+
+- [ ] Existe `README.md`.
+- [ ] Responsabilidad y límites están definidos.
+- [ ] Ownership de datos está definido.
+- [ ] Existe `data-model.md` si aplica.
+- [ ] Existe `events.md` si aplica.
+- [ ] Las decisiones relevantes están documentadas.
+- [ ] Existe OpenAPI si expone REST.
+- [ ] Existe `runbook.md` antes de staging.
+- [ ] El servicio aparece en el catálogo.
+- [ ] El mapa de dependencias está actualizado.
+- [ ] La documentación fue revisada mediante Pull Request.
+
+## 17. Cuándo actualizar esta documentación
+
+Debe revisarse cuando cambie:
+
+- arquitectura;
+- módulos;
+- endpoints;
+- contratos OpenAPI;
+- modelo de datos;
+- migraciones;
+- dependencias;
+- eventos;
+- fronteras entre servicios;
+- despliegue.
+
+Los cambios de arquitectura deben reflejarse en los servicios afectados; los cambios de datos, en el servicio propietario; y los cambios de contratos API, en sus consumidores y proveedor.
+
+

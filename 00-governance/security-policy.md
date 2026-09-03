@@ -23,7 +23,7 @@
 | Property | Required value |
 |----------|---------------|
 | Signing algorithm | RS256 (asymmetric) or HS256 with 256+ bit secret |
-| Access token expiration | 1 hour (`exp`) |
+| Access token expiration | 15 min (`exp`) |
 | Refresh token expiration | 7 days |
 | Required claims | `sub` (userId), `iat`, `exp`, `jti` (unique token ID) |
 | Client storage | `httpOnly cookie` (web) or Keychain/Keystore (mobile) |
@@ -49,8 +49,8 @@
 | Role | Description | Permissions |
 |------|-------------|------------|
 | `SUPER_ADMIN` | System technical administrator | All |
-| `ADMIN` | Business administrator | [define] |
-| `OPERATOR` | Operator with write permissions | [define] |
+| `ADMIN` | Business administrator | [Create, read, update] |
+| `OPERATOR` | Operator with write permissions | [read, update, export] |
 | `VIEWER` | Read-only | [define] |
 | `[CUSTOM_ROLE]` | [description] | [define] |
 

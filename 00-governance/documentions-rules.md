@@ -69,14 +69,14 @@ ADRs are numbered sequentially: ADR-001-short-title.md.
 
 | Section | Owner | Review frequency |
 |---------|-------|-----------------|
-| `00-governance/` | Tech Lead | Start of each sprint |
-| `02-domain/` | Tech Lead + PO | When the domain changes |
-| `04-requirements/` | Product Owner | Each sprint |
-| `05-architecture/` | Tech Lead | Each design decision |
-| `07-api/contracts/` | Service-owning developer | Each API change |
-| `09-microservices/` | Service-owning developer | Each release |
-| `13-operations/` | DevOps / On-call | After each incident |
-| `15-project-control/` | Tech Lead | Weekly review |
+| `00-governance/` | development team | Start of each sprint |
+| `02-domain/` | development team | When the domain changes |
+| `04-requirements/` | development team | Each sprint |
+| `05-architecture/` | development team | Each design decision |
+| `07-api/contracts/` | development team | Each API change |
+| `09-microservices/` | development team | Each release |
+| `13-operations/` | development team | After each incident |
+| `15-project-control/` | development team | Weekly review |
 
 ---
 

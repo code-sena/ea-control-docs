@@ -9,26 +9,26 @@
 
 | Field | Value |
 |-------|-------|
-| Duration | [1 week / 2 weeks / 3 weeks] |
-| Sprint start | [Monday / Tuesday / Wednesday] |
-| Sprint end | [Friday of week N] |
+| Duration | 1 week  |
+| Sprint start | Tuesday |
+| Sprint end | Monday of the following week |
 | Current sprint | Sprint [N] — [start date] to [end date] |
-| Estimated capacity | [N story points per sprint] |
+| Estimated capacity | 42 points |
 
 ---
 
 ## Ceremonies
 
 ### Sprint Planning
-- **When:** First day of the sprint — [time]
-- **Duration:** Maximum [1h per week of sprint]
+- **When:** 25/08/2026 - 3:00 p.m.
+- **Duration:** 1 hour 
 - **Who:** Entire team
 - **Goal:** Select and commit to sprint user stories, break down into technical tasks
-- **Output artifact:** Sprint Backlog updated in [tool: Jira / Linear / GitHub Issues]
+- **Output artifact:** Sprint Backlog updated in ClickUp https://app.clickup.com/90171046961/v/b/li/901712132123
 
 ### Daily Stand-up
-- **When:** Every day — [time]
-- **Duration:** Maximum 15 minutes
+- **When:** Every day - 10:00 p.m.
+- **Duration:** 15 minutes
 - **Format:**
   1. What did I do yesterday?
   2. What will I do today?
@@ -36,22 +36,22 @@
 - **Rule:** Technical discussions happen after the daily, not during it
 
 ### Sprint Review
-- **When:** Last day of the sprint — [time]
-- **Duration:** Maximum [30 min]
-- **Who:** Team + Product Owner (+ stakeholders if applicable)
+- **When:** Mondays of each week - 2:00 p.m. 
+- **Duration:** 30 minutes
+- **Who:** Team + Product Owner 
 - **Goal:** Show what was built and collect feedback
 
 ### Sprint Retrospective
 - **When:** Last day of the sprint — after the review
-- **Duration:** Maximum [45 min]
-- **Format:** [What went well / What to improve / Action commitments]
+- **Duration:** 45 minutes 
+- **Format:** What went well / What to improve / Action commitments
 - **Rule:** Each retro produces at least 1 improvement action with an owner and due date
 
 ### Backlog Refinement
-- **When:** [Wednesday of the second week / mid-sprint]
-- **Duration:** Maximum [1h]
-- **Goal:** Detail and estimate user stories for the next sprint
-- **Exit criterion:** The user story meets the Definition of Ready
+- **When:** Thursday of the week / mid-sprint
+- **Duration:** 1 hour 
+- **Goal:** Detail, clarify, prioritize, and estimate the user stories that could be included in the next sprint.
+- **Exit criterion:** The story meets the Definition of Ready and can be considered for the next Sprint
 
 ---
 
@@ -67,8 +67,8 @@
 | 8 | Very large — should be split |
 | 13 | Epic — MUST be split before the sprint |
 
-**Technique:** [Planning Poker / T-shirt sizing]
-**Tool:** [tool name]
+**Technique:** Planning Poker 
+**Tool:** Parabol Spring Poker 
 
 ### Estimation rule
 - If there is disagreement of 2+ levels (e.g., someone says 3 and another says 8), discuss before voting again.
@@ -78,8 +78,8 @@
 
 ## Backlog tool
 
-**Tool:** [Jira / Linear / GitHub Projects / Trello]
-**Board URL:** [URL]
+**Tool:** ClickUp 
+**Board URL:** https://app.clickup.com/90171046961/v/b/li/901712132123
 
 ### Board columns
 | Column | Meaning |
