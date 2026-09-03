@@ -50,8 +50,7 @@
 |------|-------------|------------|
 | `SUPER_ADMIN` | System technical administrator | All |
 | `ADMIN` | Business administrator | [Create, read, update] |
-| `OPERATOR` | Operator with write permissions | [read, update, export] |
-| `VIEWER` | Read-only | [define] |
+| `USER` | End user of the system | [read, update] |
 | `[CUSTOM_ROLE]` | [description] | [define] |
 
 **Permission model:**
