@@ -10,14 +10,8 @@
 
 > Complete this template:
 
-**[User segment]** who **[usage context]** struggle with **[pain/problem]**
-because **[root cause]**, resulting in **[quantifiable impact]**.
+> **Users of educational environments** who **need to monitor and understand environmental conditions over time** struggle with **having centralized and accessible information about temperature, humidity, CO₂, and noise levels**, because **environmental information is not sufficiently centralized and analyzed in a single platform**, resulting in **difficulty understanding environmental conditions and their changes over time**.
 
-**Example:**
-> **Mid-sized company inventory operators** who **manage catalogs of more than 500 products**
-> struggle with **stock control across multiple warehouses** because **current systems
-> do not support real-time synchronization**, resulting in **15% of orders with stock errors
-> and 3 hours of manual correction work per day**.
 
 ---
 
@@ -25,16 +19,18 @@ because **[root cause]**, resulting in **[quantifiable impact]**.
 
 | Segment | Description | Estimated size | Priority |
 |---------|-------------|---------------|---------|
-| [Segment A] | [Who they are, what they do] | [N users] | High |
-| [Segment B] | [Who they are] | [N users] | Medium |
+| Educational environment users | Users who access the platform to consult environmental conditions and historical environmental information | Not defined | High |
+| Administrators | Users responsible for managing access and educational environment information | Not defined | High |
 
 ### Jobs-to-be-done (JTBD)
 
 > What job is the user trying to do when they "hire" our product?
 
-**When** [situation / context],
-**I want** [motivation / what they are trying to achieve],
-**so that** [expected outcome / benefit].
+**When** I need to understand the environmental conditions of an educational environment,
+
+**I want** to consult temperature, humidity, CO₂, and noise information and analyze it over different time periods,
+
+**so that** I can better understand the environmental conditions and their changes over time.
 
 ---
 
@@ -44,10 +40,10 @@ because **[root cause]**, resulting in **[quantifiable impact]**.
 
 | Evidence type | Source | Date | Key finding |
 |--------------|--------|------|------------|
-| User interviews | [N] interviews with [profile] | [date] | [what they said] |
-| Support data | Support tickets | [period] | [% of tickets on this topic] |
-| Benchmarking | [Competitors / market] | [date] | [how others solve it] |
-| Direct observation | [Shadowing / field research] | [date] | [what was observed] |
+| User interviews | Not defined | Not defined | Not defined |
+| Support data | Not defined | Not defined | Not defined |
+| Benchmarking | Not defined | Not defined | Not defined |
+| Direct observation | Not defined | Not defined | Not defined |
 
 ---
 
@@ -57,8 +53,8 @@ because **[root cause]**, resulting in **[quantifiable impact]**.
 
 | Current solution | Limitations | Cost/Friction |
 |-----------------|------------|--------------|
-| [Excel / manual process] | [Does not scale, errors, slow] | [X hours/day] |
-| [Legacy system] | [No API, no integration] | [Y errors/week] |
+| Not defined | Environmental information may not be centralized in a single platform | Not defined |
+| Not defined | Not defined | Not defined |
 
 ---
 
@@ -66,10 +62,13 @@ because **[root cause]**, resulting in **[quantifiable impact]**.
 
 > This is the first draft of the solution direction. It is not a commitment.
 
-**We believe that** [describe the high-level solution]
-**for** [the user segment],
-**will achieve** [the expected benefit].
-**We will know we succeeded when** [specific metric].
+**We believe that** a platform that centralizes the monitoring and analysis of environmental conditions in educational environments, including temperature, humidity, CO₂, and noise level information,
+
+**for** users who need to consult and understand environmental conditions,
+
+**will achieve** easier access to environmental information and better understanding of changes over time.
+
+**We will know we succeeded when** users can access the environmental dashboard and analyze environmental information by day, week, month, and year.
 
 ---
 
@@ -77,34 +76,49 @@ because **[root cause]**, resulting in **[quantifiable impact]**.
 
 | Metric | Current baseline | 6-month target | How to measure it |
 |--------|----------------|---------------|-------------------|
-| [Business metric 1] | [current value] | [target value] | [instrument] |
-| [Adoption metric] | [current value] | [target value] | [instrument] |
+| Environmental data analysis availability | Not defined | Not defined | Not defined |
+| Dashboard adoption | Not defined | Not defined | Not defined |
+| Historical analysis by period | Not defined | Not defined | Not defined |
 
-**North Star Metric:** [The single metric that best captures the value delivered]
+**North Star Metric:** **Not defined**
 
 ---
 
 ## 7. Hypothesis risks
 
 | Risk | Probability | Impact | Experiment to validate |
-|------|------------|--------|----------------------|
-| [Users will not adopt the change] | High | High | [Pilot with N users] |
-| [The problem is not as frequent as we think] | Medium | High | [Support log analysis] |
+|------|-------------|--------|----------------------|
+| Users will not adopt the environmental dashboard | Not defined | High | Pilot the dashboard with representative users and collect usage feedback |
+| The available environmental data may not be sufficient for meaningful analysis | Not defined | High | Validate the availability and completeness of environmental data |
+| The defined environmental variables may not fully satisfy user needs | Not defined | Medium | Validate the usefulness of temperature, humidity, CO₂, and noise information with users |
+| Historical analysis may not provide sufficient value to users | Not defined | Medium | Test the day/week/month/year analysis views with representative users |
 
 ---
 
 ## 8. Out of scope (we do not solve)
 
 > Explicitly define which related problems you are NOT solving in this version.
+>
 > This prevents scope creep.
 
-- [Related problem that is out of scope: why]
-- [Feature users ask for but we are not doing now: reason]
+- **Environmental Ranking:** The current version does not provide ranking of educational environments. The project focuses on monitoring and analyzing environmental information.
+
+- **Advanced predictive environmental analysis:** Predictive or advanced forecasting capabilities are not part of the current MVP scope.
+
+- **Automated control of environmental equipment:** The system does not automatically control air conditioning, ventilation, lighting, or other environmental equipment.
+
+- **External environmental control systems:** Integration with external systems for automated environmental control is not part of the current scope.
+
+- **External environmental sensor hardware:** The project software does not cover the physical implementation or management of environmental sensor hardware.
+
+- **Advanced external infrastructure services:** External infrastructure services outside the currently defined technology stack are not part of the current scope.
 
 ---
 
 ## Correlations
 
 - Product vision → `03-product/vision.md`
+
 - HUs that implement this solution → `04-requirements/user-stories.md`
+
 - Detailed KPIs → `13-operations/README.md`

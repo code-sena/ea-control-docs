@@ -30,45 +30,45 @@ It is an immutable message that describes the fact in past tense.
 | **Event** | Notification of something that occurred | Past | No (it already happened) |
 
 ```
-User → [CreateOrder] → System → [OrderCreated] → Other contexts
-          (Command)                  (Event)
+User → [RegisterUser] → System → [UserRegistered]
+          (Command)                    (Event)
 ```
 
 ---
 
 ## Event catalog
 
-### Event: [EventName]
+### Event: UserRegistered
 
 | Field | Value |
 |-------|-------|
-| **Name** | `[EventName]` |
-| **Bounded Context** | [Origin context] |
-| **Aggregate** | [Aggregate that generates it] |
-| **Trigger** | [Which business action generates this event] |
-| **Consumers** | [Which services/contexts listen to this event] |
-| **Channel (topic)** | `[topic.name]` |
+| **Name** | `UserRegistered` |
+| **Bounded Context** | User Management |
+| **Aggregate** | User |
+| **Trigger** | A user completes the registration process |
+| **Consumers** | Not defined |
+| **Channel (topic)** | Not defined |
 | **Schema version** | `v1` |
-| **Delivery guarantee** | At-least-once / At-most-once / Exactly-once |
+| **Delivery guarantee** | Not defined |
 
 **Payload (JSON schema):**
 
 ```json
 {
-  "eventId": "550e8400-e29b-41d4-a716-446655440000",
-  "eventType": "[EventName]",
-  "aggregateId": "550e8400-e29b-41d4-a716-446655440001",
-  "aggregateType": "[AggregateName]",
-  "occurredAt": "2024-01-15T10:30:00Z",
+  "eventId": "UUID",
+  "eventType": "UserRegistered",
+  "aggregateId": "UUID",
+  "aggregateType": "User",
+  "occurredAt": "ISO 8601",
   "version": 1,
   "payload": {
-    "[field1]": "[type and description]",
-    "[field2]": "[type and description]"
+    "userId": "UUID",
+    "email": "string"
   },
   "metadata": {
-    "correlationId": "550e8400-e29b-41d4-a716-446655440002",
-    "causationId": "550e8400-e29b-41d4-a716-446655440003",
-    "userId": "550e8400-e29b-41d4-a716-446655440004"
+    "correlationId": "UUID",
+    "causationId": "UUID",
+    "userId": "UUID"
   }
 }
 ```
@@ -78,14 +78,14 @@ User → [CreateOrder] → System → [OrderCreated] → Other contexts
 ```json
 {
   "eventId": "generated-uuid",
-  "eventType": "[EventName]",
-  "aggregateId": "aggregate-uuid",
-  "aggregateType": "[AggregateName]",
-  "occurredAt": "2024-01-15T10:30:00Z",
+  "eventType": "UserRegistered",
+  "aggregateId": "user-uuid",
+  "aggregateType": "User",
+  "occurredAt": "2026-09-04T10:30:00Z",
   "version": 1,
   "payload": {
-    "[field1]": "example value",
-    "[field2]": 150.00
+    "userId": "user-uuid",
+    "email": "user@example.com"
   }
 }
 ```
@@ -94,8 +94,144 @@ User → [CreateOrder] → System → [OrderCreated] → Other contexts
 
 | Consuming service | Action | Idempotent? |
 |------------------|--------|-------------|
-| [Service A] | [Updates its data model] | Yes — uses eventId as idempotency key |
-| [Service B] | [Sends notification] | Yes — checks if notification was already sent |
+| [Service A] | Not defined | Not defined — Not defined |
+
+---
+
+
+### Event: EnvironmentalDataRecorded
+
+| Field | Value |
+|-------|-------|
+| **Name** | `EnvironmentalDataRecorded` |
+| **Bounded Context** | Environmental Monitoring |
+| **Aggregate** | Environmental Data |
+| **Trigger** | Environmental measurements are recorded for an educational environment |
+| **Consumers** | Environmental Data Analysis |
+| **Channel (topic)** | Not defined |
+| **Schema version** | `v1` |
+| **Delivery guarantee** | Not defined |
+
+**Payload (JSON schema):**
+
+```json
+{
+  "eventId": "UUID",
+  "eventType": "EnvironmentalDataRecorded",
+  "aggregateId": "UUID",
+  "aggregateType": "EnvironmentalData",
+  "occurredAt": "ISO 8601",
+  "version": 1,
+  "payload": {
+    "environmentId": "UUID",
+    "temperature": "number",
+    "humidity": "number",
+    "co2": "number",
+    "noiseLevel": "number"
+  },
+  "metadata": {
+    "correlationId": "UUID",
+    "causationId": "UUID",
+    "userId": "UUID"
+  }
+}
+```
+
+**Real payload example:**
+
+```json
+{
+  "eventId": "generated-uuid",
+  "eventType": "EnvironmentalDataRecorded",
+  "aggregateId": "environmental-data-uuid",
+  "aggregateType": "EnvironmentalData",
+  "occurredAt": "2026-09-04T10:30:00Z",
+  "version": 1,
+  "payload": {
+    "environmentId": "environment-uuid",
+    "temperature": 23.5,
+    "humidity": 58.2,
+    "co2": 650,
+    "noiseLevel": 42.5
+  }
+}
+
+---
+
+**What do consumers do with this event?**
+
+| Consuming service | Action | Idempotent? |
+|------------------|--------|-------------|
+| Environmental Data Analysis | Uses environmental data for historical analysis | Not defined |
+
+---
+
+### Event: EnvironmentalDataAnalyzed
+
+| Field | Value |
+|-------|-------|
+| **Name** | `EnvironmentalDataAnalyzed` |
+| **Bounded Context** | Environmental Data Analysis |
+| **Aggregate** | Environmental Data Analysis |
+| **Trigger** | Environmental data is analyzed according to a selected time period |
+| **Consumers** | Environmental Dashboard |
+| **Channel (topic)** | Not defined |
+| **Schema version** | `v1` |
+| **Delivery guarantee** | Not defined |
+
+**Payload (JSON schema):**
+
+```json
+{
+  "eventId": "UUID",
+  "eventType": "EnvironmentalDataAnalyzed",
+  "aggregateId": "UUID",
+  "aggregateType": "EnvironmentalDataAnalysis",
+  "occurredAt": "ISO 8601",
+  "version": 1,
+  "payload": {
+    "environmentId": "UUID",
+    "period": "day | week | month | year",
+    "temperature": "number",
+    "humidity": "number",
+    "co2": "number",
+    "noiseLevel": "number"
+  },
+  "metadata": {
+    "correlationId": "UUID",
+    "causationId": "UUID",
+    "userId": "UUID"
+  }
+}
+```
+
+**Real payload example:**
+
+```json
+{
+  "eventId": "generated-uuid",
+  "eventType": "EnvironmentalDataAnalyzed",
+  "aggregateId": "analysis-uuid",
+  "aggregateType": "EnvironmentalDataAnalysis",
+  "occurredAt": "2026-09-04T10:30:00Z",
+  "version": 1,
+  "payload": {
+    "environmentId": "environment-uuid",
+    "period": "week",
+    "temperature": 23.8,
+    "humidity": 57.4,
+    "co2": 640,
+    "noiseLevel": 43.1
+  }
+}
+
+---
+
+**What do consumers do with this event?**
+
+| Consuming service | Action | Idempotent? |
+|------------------|--------|-------------|
+| Environmental Dashboard | Displays the analyzed environmental information | Not defined |
 
 ---
 
@@ -117,21 +253,44 @@ All events must include these fields in the envelope:
 | `metadata.userId` | UUID | User who initiated the chain (if applicable) |
 
 ---
-
-## Event flow: [Flow name]
+## Event flow: Environmental Monitoring and Data Analysis
 
 > Document here the event flows for the main business processes.
 > Use the Event Storming format: orange=event, blue=command, green=view/policy, yellow=aggregate.
 
 ```
-[Actor]
+User
   │
-  │  [CommandA]           [CommandB]           [CommandC]
-  ▼      │                    │                    │
-[AggregateA]          [AggregateB]          [AggregateC]
-  │                        ▲                    ▲
-  │   [EventA]             │   [EventB]         │
-  └──────────────────────▶│──────────────────▶│
+  │ RegisterUser (command)
+  ▼
+[Aggregate: User]
+  │
+  │ UserRegistered (event)
+  ▼
+[User Management]
+
+
+Environmental Data Source
+  │
+  │ RecordEnvironmentalData (command)
+  ▼
+[Aggregate: Environmental Data]
+  │
+  │ EnvironmentalDataRecorded (event)
+  ▼
+[Environmental Data Analysis]
+  │
+  │ AnalyzeEnvironmentalData (command)
+  ▼
+[Aggregate: Environmental Data Analysis]
+  │
+  │ EnvironmentalDataAnalyzed (event)
+  ▼
+[Environmental Dashboard]
+
+Analysis periods:
+Day → Week → Month → Year
+
 ```
 
 ### Example: Order creation flow
@@ -139,22 +298,22 @@ All events must include these fields in the envelope:
 ```
 Customer
   │
-  │  CreateOrder (command)
+  │ CreateOrder (command)
   ▼
 [Aggregate: Order]
   │
-  │  OrderCreated (event)
+  │ OrderCreated (event)
   ├──────────────────────────────────┐
-  │                                   ▼
-  │                          [Service: Inventory]
-  │                          Decrements stock
-  │                          StockReserved (event)
+  │                                  ▼
+  │                         [Service: Inventory]
+  │                         Decrements stock
+  │                         StockReserved (event)
   │
-  │  OrderCreated (event)
+  │ OrderCreated (event)
   └──────────────────────────────────┐
-                                      ▼
-                            [Service: Notifications]
-                            Sends email to customer
+                                     ▼
+                           [Service: Notifications]
+                           Sends email to customer
 ```
 
 ---
@@ -198,8 +357,9 @@ Step 5: Stop publishing EventV1
 
 | Event | Origin context | Topic | Consumers | Version |
 |-------|---------------|-------|-----------|---------|
-| [EventA] | [ContextA] | `[topic.a]` | [SvcB, SvcC] | v1 |
-| [EventB] | [ContextB] | `[topic.b]` | [SvcA] | v1 |
+| UserRegistered | User Management | `Not defined` | Not defined | v1 |
+| EnvironmentalDataRecorded | Environmental Monitoring | `Not defined` | Environmental Data Analysis | v1 |
+| EnvironmentalDataAnalyzed | Environmental Data Analysis | `Not defined` | Environmental Dashboard | v1 |
 
 ---
 
@@ -209,14 +369,16 @@ A **Policy** (or Saga step) describes what happens automatically when an event a
 It is the logic of "whenever X occurs, do Y".
 
 ```
-Event:  OrderCreated
-Policy: Whenever an OrderCreated arrives with type=URGENT,
-        emit the command NotifyOperationsTeam
+Event: EnvironmentalDataRecorded
+
+Policy: Whenever environmental data is recorded,
+        use it for historical environmental analysis
 ```
 
 | Trigger event | Policy | Emitted command | Service |
 |--------------|--------|----------------|---------|
-| [EventA] | Whenever [condition], then... | [CommandB] | [ServiceX] |
+| EnvironmentalDataRecorded | Whenever environmental data is recorded, use it for historical analysis | AnalyzeEnvironmentalData | Environmental Data Analysis |
+| EnvironmentalDataAnalyzed | Whenever environmental data is analyzed, display the results according to the selected period | Not defined | Environmental Dashboard |
 
 ---
 
@@ -229,7 +391,11 @@ delivered more than once (in case of retries). Consumers must be **idempotent**.
 
 ```typescript
 // Idempotent consumer — stores the processed eventId
-async function processOrderCreatedEvent(event: OrderCreated): Promise<void> {
+
+async function processEnvironmentalDataRecordedEvent(
+  event: EnvironmentalDataRecorded
+): Promise<void> {
+
   // 1. Check if already processed
   if (await isEventAlreadyProcessed(event.eventId)) {
     logger.info(`Event ${event.eventId} already processed, ignoring`);

@@ -1,8 +1,10 @@
 # Non-Functional Requirements (NFR)
 
 > NFRs define the **qualities of the system** — not what it does but how well it does it.
+>
 > The golden rule: every NFR must have a metric. "The system must be fast" is not an NFR.
-> "The P99 latency of the /orders endpoint must be < 200ms under 500 RPS load" is.
+>
+> "The P95 latency of a critical endpoint must be < 300ms under 100 concurrent requests" is.
 
 ---
 
@@ -10,10 +12,10 @@
 
 | Bad | Good |
 |-----|------|
-| "The system must be fast" | "P95 latency must be < 300ms under 1000 concurrent RPS" |
-| "The system must be secure" | "All endpoints require a valid JWT; tokens expire in 1 hour" |
-| "The system must scale" | "The system must support up to 5000 concurrent users without degradation" |
-| "The system must be available" | "Availability SLO: 99.9% monthly (maximum 44 min downtime/month)" |
+| "The system must be fast" | "P95 latency must be < 300ms under 100 concurrent requests" |
+| "The system must be secure" | "All private endpoints require a valid JWT; tokens expire in 1 hour" |
+| "The system must scale" | "The system must support up to 500 concurrent users without degradation" |
+| "The system must be available" | "Availability SLO: 99.5% monthly" |
 
 ---
 
@@ -21,20 +23,30 @@
 
 | Attribute | Metric | Test condition |
 |-----------|--------|---------------|
-| P95 latency — critical endpoints | < 300ms | Under [N] RPS load |
-| P99 latency — critical endpoints | < 500ms | Under [N] RPS load |
-| P95 latency — non-critical endpoints | < 1000ms | Normal load |
-| Minimum throughput | [N] RPS | Without degradation |
+| P95 latency — critical endpoints | < 500ms | Under 100 concurrent requests |
+| P99 latency — critical endpoints | < 1000ms | Under 100 concurrent requests |
+| P95 latency — non-critical endpoints | < 1500ms | Normal load |
+| Minimum throughput | ≥ 20 requests/second | Without degradation |
 | Service startup time | < 30 seconds | Cold start |
 
 **Defined critical endpoints:**
-- `POST /[resource]` — [justification for why it is critical]
-- `GET /[resource]/:id` — [justification]
+
+- `POST /api/auth/register` — Critical because it is responsible for creating user accounts and is part of the authentication flow.
+- `POST /api/auth/login` — Critical because it allows users to authenticate and obtain access to the platform.
+- `GET /api/usuarios/{id}` — Critical because authenticated services may require user information.
+- `GET /api/aulas/{id}` — Critical because educational environments are required for environmental monitoring.
+- `GET /api/monitoreo/ambiente` — Critical because it provides environmental information to the frontend.
+- `GET /api/monitoreo/historial` — Critical because it provides historical environmental information used by the analysis and dashboard functionality.
 
 **Load testing tools:**
-- k6, Apache JMeter, Locust, Gatling
 
-**Where is it validated?** CI/CD in the staging pipeline before production.
+- k6
+- Apache JMeter
+- Locust
+
+**Where is it validated?**
+
+CI/CD or staging environment before production deployment.
 
 ---
 
@@ -42,16 +54,19 @@
 
 | Environment | SLO | Maintenance window | Max downtime/month |
 |------------|-----|-------------------|-------------------|
-| Production | 99.9% | Sundays 2am-4am | 44 minutes |
-| Staging | 95% | No restriction | 36 hours |
+| Production | 99.5% | Scheduled maintenance when required | Approximately 3 hours 39 minutes |
+| Staging | 95% | No restriction | Approximately 36 hours |
 
-**Monthly error budget in production:** 44 minutes
-**Error Budget policy:** If > 50% of the error budget is consumed in the first half of the month,
-feature deploys are frozen until the next month and stability is prioritized.
+**Monthly error budget in production:** Approximately 3 hours 39 minutes.
+
+**Error Budget policy:**
+
+If more than 50% of the monthly error budget is consumed before the middle of the month, new feature deployments should be reviewed and stability and corrective actions should be prioritized.
 
 **Health checks:**
-- `GET /health` — Liveness: responds 200 if the process is alive
-- `GET /health/ready` — Readiness: responds 200 only if it can process traffic (DB connected, dependencies OK)
+
+- `GET /health` — Liveness: responds with HTTP 200 when the service process is running.
+- `GET /health/ready` — Readiness: responds with HTTP 200 when the service is ready to process requests and its required dependencies are available.
 
 ---
 
@@ -59,39 +74,65 @@ feature deploys are frozen until the next month and stability is prioritized.
 
 | Scenario | Expected behavior |
 |---------|------------------|
-| Gradual load growth | Horizontal auto-scaling activated when CPU > 70% |
-| Sudden spike (Black Friday, etc.) | System scales in < 2 minutes |
-| Load reduction | Scale-down without interrupting active traffic |
-| Horizontal scaling limit | Up to [N] instances per service |
+| Gradual load growth | Additional service instances can be started when CPU usage exceeds 70%. |
+| Sudden traffic spike | The system should increase available service instances within 2 minutes. |
+| Load reduction | Instances can be reduced without interrupting active requests. |
+| Horizontal scaling limit | Up to 5 instances per service in the initial deployment. |
 
-**Strategy:** Stateless horizontal scaling — each instance does not store state in memory.
-State goes in Redis (sessions, cache) or PostgreSQL (persistent data).
+**Strategy:**
+
+Stateless horizontal scaling. Microservice instances should not depend on local in-memory state to maintain user sessions or persistent application data.
+
+Persistent information is stored in the corresponding MySQL database. Temporary information and caching may use an appropriate distributed cache if required by the implementation.
+
+The architecture allows services such as `ms-security`, `ms-usuarios`, `ms-aulas`, `ms-sensores` and `ms-monitoreo` to be scaled independently according to their workload.
 
 ---
 
 ## NFR-004: Security
 
 ### Authentication and Authorization
-- All private endpoints require a valid JWT in the `Authorization: Bearer <token>` header
-- JWT tokens expire in **1 hour**
-- Refresh tokens valid for **7 days**
-- RBAC (Role-Based Access Control): roles defined in `00-governance/security-policy.md`
+
+- All private endpoints require a valid JWT in the `Authorization: Bearer <token>` header.
+- JWT tokens expire according to the security configuration established by the project.
+- Refresh tokens may be implemented when required by the authentication architecture.
+- RBAC (Role-Based Access Control) is used to control access to protected functionality.
+- At minimum, the system distinguishes between regular users and administrators.
+- Public endpoints such as user registration and login do not require an authenticated session.
+- The API Gateway and security service must validate authentication before allowing access to protected microservices.
 
 ### Data transmission
-- HTTPS mandatory in production (TLS 1.2+)
-- HTTP only in local development
+
+- HTTPS is mandatory in production.
+- TLS 1.2 or higher must be used for secure communications.
+- HTTP may be used only in local development environments when necessary.
+- Communication between frontend, API Gateway and backend services must use defined API contracts.
 
 ### Sensitive data
-- Passwords: hashing with bcrypt (cost factor ≥ 12) or Argon2id
-- PII (personal data): encrypted at rest
-- Secrets/keys: only in environment variables or vault, **never in code**
+
+- Passwords must never be stored in plain text.
+- Passwords must be securely hashed using BCrypt with an appropriate cost factor or another approved password hashing algorithm.
+- Authentication credentials and secrets must not be stored directly in source code.
+- Environment-specific configuration must be provided through environment variables or secure configuration mechanisms.
+- Database credentials and JWT secrets must not be committed to the Git repository.
+- Personal information must only be stored when required by the functionality of EduAirControl.
 
 ### OWASP Top 10
-Code must be reviewed against the OWASP Top 10 on each release.
-Tools: SAST (SonarQube/Snyk), dependency scanning, DAST in staging.
+
+Code must be reviewed against the OWASP Top 10 during development and before production release.
+
+**Tools:**
+
+- SonarQube for static code analysis.
+- Dependency scanning for vulnerable libraries.
+- DAST or security testing in the staging environment when available.
 
 ### Regulatory compliance
-- [GDPR / Habeas Data / PCI-DSS / etc.] — as applicable to the project
+
+- The project must comply with the Colombian personal data protection framework applicable to EduAirControl.
+- Personal data must be processed according to the principles of authorization, security, confidentiality, purpose and restricted access.
+- The project must consider Colombian Habeas Data requirements applicable to the information stored by the platform.
+- EduAirControl must not collect or process personal information that is not necessary for its operation.
 
 ---
 
@@ -99,12 +140,28 @@ Tools: SAST (SonarQube/Snyk), dependency scanning, DAST in staging.
 
 | Pillar | Requirement | Tool |
 |--------|------------|------|
-| Logs | Structured JSON format + Correlation ID | Winston / Logback |
-| Metrics | RED (Rate, Errors, Duration) per endpoint | Prometheus + Grafana |
-| Traces | End-to-end distributed traces | OpenTelemetry + Jaeger |
-| Alerts | Alert in < 5 min when SLI violates SLO | Alertmanager / PagerDuty |
+| Logs | Structured logs with timestamp, service, level and correlation ID | Logback / Spring Boot |
+| Metrics | Requests, errors, response duration and service health | Prometheus + Grafana |
+| Traces | Trace propagation between microservices when implemented | OpenTelemetry |
+| Alerts | Alert when a critical service violates its defined availability or performance threshold | Alertmanager / Grafana |
 
-**Correlation ID:** Each external request generates a UUID correlationId propagated in all logs and spans of that transaction.
+**Correlation ID:**
+
+Each external request should generate or propagate a unique `correlationId`. The identifier must be propagated through the API Gateway and microservices involved in the same transaction so that a request can be traced through the system.
+
+**Minimum information recorded in logs:**
+
+- Timestamp.
+- Service name.
+- Log level.
+- Correlation ID.
+- HTTP method.
+- Endpoint.
+- Response status.
+- Request processing time.
+- Error information when applicable.
+
+Sensitive information such as passwords, JWT secrets and authentication credentials must never be written to logs.
 
 ---
 
@@ -112,20 +169,35 @@ Tools: SAST (SonarQube/Snyk), dependency scanning, DAST in staging.
 
 | Metric | Target |
 |--------|--------|
-| Test coverage | ≥ 80% of lines (≥ 90% in the domain) |
-| Cyclomatic complexity | ≤ 10 per function |
-| Technical debt | Resolution time < 1 sprint from registration |
-| Onboarding time | A new dev can deploy locally in < 1 hour following `10-devops/local-setup.md` |
-| Average build time | < 5 minutes in CI |
+| Test coverage | ≥ 80% of lines in the application |
+| Domain/business logic coverage | ≥ 90% where applicable |
+| Cyclomatic complexity | ≤ 10 per function whenever reasonably achievable |
+| Technical debt | Critical issues resolved before production release |
+| Onboarding time | A new developer can run the project locally in < 1 hour following the project setup documentation |
+| Average build time | < 5 minutes in CI under normal conditions |
+
+**Maintainability requirements:**
+
+- The backend must follow a consistent package and layer structure.
+- Microservices must maintain separation of responsibilities.
+- Business rules must not be unnecessarily duplicated between services.
+- APIs must have documented contracts.
+- Code must follow the project's established Java/Spring Boot conventions.
+- Pull requests must be reviewed before merging into the main development branches.
+- Technical documentation must be updated when significant architectural or implementation changes are introduced.
 
 ---
 
 ## NFR-007: Portability
 
-- All services are deployed as Docker images
-- Images work in any environment with Kubernetes 1.28+
-- No service depends on the host operating system
-- Environment variables are the only source of environment-specific configuration
+- All backend microservices must be deployable as Docker images.
+- The frontend must be deployable as a Docker container.
+- The application must run independently of the host operating system when Docker is available.
+- Environment-specific configuration must be provided through environment variables or external configuration.
+- Services must not depend on hard-coded local paths.
+- Database connection parameters must be configurable without modifying the application source code.
+- The system should be deployable in development, testing and production environments using the same containerized architecture with environment-specific configuration.
+- The architecture must allow future deployment using Docker Compose and, if required, Kubernetes.
 
 ---
 
@@ -133,10 +205,19 @@ Tools: SAST (SonarQube/Snyk), dependency scanning, DAST in staging.
 
 | Scenario | RTO (Recovery Time Objective) | RPO (Recovery Point Objective) |
 |---------|------------------------------|-------------------------------|
-| Single service failure | < 2 minutes (K8s restart) | 0 (stateless) |
-| Primary database failure | < 5 minutes (failover to replica) | < 1 second (synchronous replication) |
-| Availability zone loss | < 15 minutes | < 5 minutes |
-| Full region disaster | < 4 hours (DR in secondary region) | < 1 hour |
+| Single microservice failure | < 5 minutes | 0 for stateless service data |
+| API Gateway failure | < 5 minutes | 0 |
+| Primary database failure | < 30 minutes | ≤ 24 hours with daily backups |
+| Container or host failure | < 10 minutes | 0 for stateless services |
+| Complete deployment/environment failure | < 4 hours | ≤ 24 hours |
+
+**Backup requirements:**
+
+- The MySQL database must have periodic backups.
+- Database backups must be verified periodically through restoration tests.
+- Backups must be stored separately from the primary database environment.
+- Critical configuration and deployment files must be maintained in version control.
+- Recovery procedures must be documented before the system is considered production-ready.
 
 ---
 
@@ -144,18 +225,22 @@ Tools: SAST (SonarQube/Snyk), dependency scanning, DAST in staging.
 
 | NFR | Priority (P1/P2/P3) | Validated in CI? | Owner |
 |-----|---------------------|-----------------|-------|
-| Performance | P1 | Yes (k6 in staging) | [Tech Lead] |
-| Availability | P1 | Yes (health checks) | [DevOps] |
-| Security | P1 | Yes (SAST + OWASP) | [Security] |
-| Scalability | P2 | Manual (quarterly) | [DevOps] |
-| Observability | P1 | Yes (smoke test in CI) | [Tech Lead] |
-| Maintainability | P2 | Yes (coverage in CI) | [Team] |
+| Performance | P1 | Yes — automated tests and staging load tests when configured | Development Team |
+| Availability | P1 | Yes — health checks | DevOps / Development Team |
+| Security | P1 | Yes — SAST, dependency scanning and security tests | Development Team |
+| Scalability | P2 | Manual — staging/load testing | DevOps / Development Team |
+| Observability | P1 | Yes — service health and logging smoke tests | Development Team |
+| Maintainability | P2 | Yes — tests, coverage and static analysis | Development Team |
+| Portability | P2 | Yes — Docker build in CI | DevOps / Development Team |
+| Disaster Recovery | P2 | Manual — backup and restoration tests | DevOps / Development Team |
 
 ---
 
 ## Correlations
 
-- Detailed SLOs and SLAs → `13-operations/README.md`
+- Detailed SLOs and operational requirements → `13-operations/README.md`
 - Pipeline that validates NFRs → `10-devops/README.md`
 - Incidents related to NFR violations → `13-operations/incident-management.md`
 - Security checklist → `00-governance/security-policy.md`
+- Microservice architecture → `05-architecture/overview.md`
+- Microservice catalog → `09-microservices/service-catalog.md`
