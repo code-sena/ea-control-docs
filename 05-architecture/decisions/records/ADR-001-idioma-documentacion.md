@@ -3,76 +3,86 @@
 | Field | Value |
 |-------|-------|
 | **ID** | ADR-001 |
-| **Date** | 2024-01-10 |
+| **Date** | 2026-09-08 |
 | **Status** | Accepted |
-| **Authors** | María García — Tech Lead |
-| **Reviewers** | Carlos Méndez, Sofía Torres, Andrés Ruiz — Development team |
+| **Authors** | EduAirControl Development Team |
+| **Reviewers** | Development team |
 
 ---
 
 ## Context
 
-The software industry standard — Stack Overflow, library documentation, technical articles,
-frameworks, and open-source tooling — operates in English. Mixing languages across artifacts
-(Spanish docs, English code, Spanish API descriptions) creates a cognitive translation
-boundary that slows onboarding, increases errors in naming, and makes it harder to search
-for help online.
 
-A single, clear rule established from day one prevents inconsistencies: mismatched variable
-names, Spanish comments in English code, and conflicting terminology between documentation
-and implementation.
+EduAirControl is developed using technologies and frameworks whose official documentation, libraries, technical references, and development tools are primarily available in English. Using different languages across code, documentation, commits, and technical artifacts can create inconsistencies in terminology and make maintenance and collaboration more difficult
+
+A single language standard is required to maintain consistency throughout the project
 
 ---
 
 ## Evaluated alternatives
 
 ### Alternative A — Everything in English (CHOSEN)
-- **Pros:** Industry standard; easy to hire external developers; libraries and frameworks are in English; technical reference documentation is in English; eliminates the translation boundary between docs and code; GitHub, Stack Overflow, and AI tools all work best with English content
-- **Cons:** May require slightly more effort from team members who are not native English speakers
+- **Pros:** Consistent with programming languages, frameworks, libraries, technical documentation, GitHub, and development tools.
+- **Cons:** Some team members may require additional effort when writing or understanding technical content in English
 
 ### Alternative B — Everything in Spanish
-- **Pros:** Natural communication with Spanish-speaking clients; business domain names preserved exactly
-- **Cons:** Uncomfortable mix with language keywords (if, for, return, etc.); inconsistent with the library ecosystem; external contributors cannot participate
+
+- **Pros:** Easier communication for Spanish-speaking team members
+- **Cons:** Inconsistent with programming conventions and most technical documentation and libraries
 
 ### Alternative C — Split by layer (discarded)
-- **Pros:** Each artifact uses the most natural language for its audience
-- **Cons:** Requires strict discipline and explicit rules; harder to explain to new team members; creates a permanent translation boundary between docs (Spanish) and code (English); domain terms accumulate two canonical names
+
+- **Pros:** Allows each artifact to use the language most comfortable for its audience
+- **Cons:** Creates inconsistent terminology between code and documentation and makes project conventions harder to maintain
 
 ---
 
 ## Decision
 
-**Alternative A:** Use English for all documentation and code.
+## Decision
+
+**Alternative A:** Use English as the standard language for code and technical documentation, while supporting four user interface languages through i18n.
 
 | Artifact | Language | Reason |
 |----------|----------|--------|
-| Variables, functions, classes in code | English | Consistency with libraries and frameworks |
-| Table and column names in DB | English | Coherence with the code that maps them |
-| Commits (Conventional Commits) | English | Established standard, readable on GitHub |
-| Git branch names | English | Consistent with commits |
-| Markdown documentation | English | Eliminates the translation boundary; searchable |
-| OpenAPI contracts (descriptions) | English | Readable by any future contributor |
-| End-user error messages | English (or localized) | Localization layer handles language at runtime |
-| Internal system logs | English | Facilitates search in library documentation and alerts |
-| ADRs and technical documentation | English | Single source of truth, no translation boundary |
+| Variables, functions, and classes | English | Consistency with programming conventions |
+| Database tables and columns | English | Coherence with backend code |
+| Commits | English | Consistency with Git conventions |
+| Git branch names | English | Standardized project naming |
+| Markdown documentation | English | Consistent technical documentation |
+| ADRs and technical documentation | English | Single technical language |
+| OpenAPI contracts | English | Easier understanding for contributors |
+| System logs | English | Easier troubleshooting |
+| User interface | Spanish, English, Portuguese, French | Internationalization through i18n |
+| User-facing messages | Spanish, English, Portuguese, French | Adaptation to the selected user language |
 
----
+### Supported languages
+
+- **Spanish (`es`)** — Default language
+- **English (`en`)**
+- **Portuguese (`pt`)**
+- **French (`fr`)**
+
+The frontend will use **i18n** to manage translations and allow the user to select the preferred language.
 
 ## Consequences
 
 **Positive:**
-- A single language across all artifacts eliminates the cognitive translation boundary
-- New team members have one clear rule from day 1
-- External contributors and AI tools work without friction
-- Domain terms have one canonical form (the English one in the code)
+
+- Consistent terminology throughout the project.
+- Easier maintenance and collaboration.
+- Better alignment with technical documentation and development tools.
+- Easier integration of future contributors.
 
 **Negative:**
-- Team members who are less confident in English need to invest more initially
-- Some business terms may require careful translation decisions
+
+- Team members with limited English proficiency may require additional effort.
+- Some business terms may require careful translation.
 
 **Mitigation:**
-- Maintain a domain glossary with the canonical English translation for each business term: `01-context/glossary.md`
-- When a term has a debatable translation, document it in the glossary before using it in code
+
+- Maintain a domain glossary with the canonical English terminology.
+- Define ambiguous terms before using them in code or documentation.
 
 ---
 
