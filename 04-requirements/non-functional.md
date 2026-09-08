@@ -93,13 +93,10 @@ The architecture allows services such as `ms-security`, `ms-usuarios`, `ms-aulas
 
 ### Authentication and Authorization
 
-- All private endpoints require a valid JWT in the `Authorization: Bearer <token>` header.
-- JWT tokens expire according to the security configuration established by the project.
-- Refresh tokens may be implemented when required by the authentication architecture.
-- RBAC (Role-Based Access Control) is used to control access to protected functionality.
-- At minimum, the system distinguishes between regular users and administrators.
-- Public endpoints such as user registration and login do not require an authenticated session.
-- The API Gateway and security service must validate authentication before allowing access to protected microservices.
+- All private endpoints require a valid JWT in the `Authorization: Bearer <token>` header
+- JWTs expire in 1 hour
+- Refresh tokens are valid for 7 days
+- RBAC (Role-Based Access Control): roles defined in `00-governance/security-policy.md`
 
 ### Data transmission
 
@@ -213,7 +210,7 @@ Sensitive information such as passwords, JWT secrets and authentication credenti
 
 **Backup requirements:**
 
-- The MySQL database must have periodic backups.
+- The Postgres database must have periodic backups.
 - Database backups must be verified periodically through restoration tests.
 - Backups must be stored separately from the primary database environment.
 - Critical configuration and deployment files must be maintained in version control.
