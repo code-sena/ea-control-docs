@@ -33,25 +33,27 @@ you need to simulate the database.
 ```
 
 ```
+```text
 ✓ Hexagonal Architecture:
 
-  [HTTP Controller]  [CLI]  [Test]  ← Primary Adapters (enter the hexagon)
-          │            │      │
-          └────────────┴──────┘
-                       │
-                 [Driving Port]  ← Interface that defines the domain's API
-                       │
-               ┌───────────────┐
-               │               │
-               │    DOMAIN     │  ← Pure business logic, no external dependencies
-               │               │
-               └───────────────┘
-                       │
-                 [Driven Port]  ← Interface the domain needs from the outside world
-                       │
-          ┌────────────┴──────┐
-          │                   │
-  [DB Adapter]  [Kafka Adapter]  ← Secondary Adapters (exit the hexagon)
+[REST Controller]  [MQTT/Message]  [Tests]
+        │                │             │
+        └────────────────┼─────────────┘
+                         │
+                  [Input Port]
+                         │
+                  ┌───────────────┐
+                  │    DOMAIN     │
+                  │               │
+                  │ Business      │
+                  │ Rules         │
+                  └───────────────┘
+                         │
+                  [Output Port]
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+      [MySQL Adapter]       [RabbitMQ Adapter]
 ```
 
 ---
