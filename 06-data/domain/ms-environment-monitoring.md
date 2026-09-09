@@ -1,262 +1,268 @@
 # Environmental Monitoring — Data Model
 
-## 1. Overview
-
-The Environmental Monitoring domain is responsible for storing environmental measurements collected from sensors and maintaining the current environmental status of educational environments.
-
-Its main responsibilities are:
-
-* Storing historical environmental measurements.
-* Associating measurements with educational environments and variables.
-* Recording measurement data quality.
-* Maintaining the calculated environmental status of an educational environment.
-* Providing aggregated environmental statistics for operational queries.
-
-EduAirControl currently uses a **monolithic architecture with a centralized PostgreSQL 15 database**. Therefore, physical foreign keys can be used between entities belonging to different domains.
-
-Although the database is shared, domain ownership is maintained at the application level.
+> This document reflects the real project domain: the monitoring model is centered on environmental readings, threshold-based analysis, and alerts, not on a generic status table.
+> The legacy file name retains the old `enviroment` typo; the canonical business name in the database and domain is `environment`.
 
 ---
 
-## 2. Database Design
+## 1. Overview
+
+The Environmental Monitoring domain is responsible for:
+
+- storing the historical measurements produced by sensors,
+- associating each reading with a sensor installation, a variable, and an instant in time,
+- evaluating thresholds by environment type and variable,
+- calculating analyses for a defined period,
+- creating alerts when an environmental condition exceeds the configured rule.
+
+The core model is therefore centered on:
+
+- `environment_measurement`
+- `variable_threshold`
+- `environmental_analysis`
+- `analysis_result`
+- `environment_alert`
+
+The domain must remain aligned with the domain model in 02 and with the project’s real business purpose: monitoring air quality in educational spaces.
+
+---
+
+## 2. Canonical domain model
 
 ```dbml
 Project EnvironmentalMonitoring {
   database_type: 'PostgreSQL'
-  Note: 'Environmental measurements, environmental status and operational statistics'
+  Note: 'Core monitoring model for educational environments'
+}
+
+Table educational_environment {
+  educational_environment_id serial [pk]
+  campus_id integer [not null]
+  code varchar(30) [not null]
+  name varchar(120) [not null]
+  environment_type_id smallint [not null]
+  floor_area_m2 numeric(8,2)
+  occupancy_capacity smallint
+}
+
+Table sensor {
+  sensor_id bigserial [pk]
+  serial_number varchar(60) [not null, unique]
+  sensor_model_id smallint [not null]
+  sensor_status_id smallint [not null]
+  last_seen_at timestamptz
+}
+
+Table sensor_installation {
+  sensor_installation_id bigserial [pk]
+  sensor_id bigint [not null]
+  educational_environment_id integer [not null]
+  installed_at timestamptz [not null]
+  removed_at timestamptz
+}
+
+Table variable {
+  variable_id smallserial [pk]
+  code varchar(30) [not null, unique]
+  name varchar(80) [not null]
+  unit_id smallint [not null]
+}
+
+Table sensor_variable {
+  sensor_id bigint [pk, not null]
+  variable_id smallint [pk, not null]
+}
+
+Table variable_threshold {
+  variable_threshold_id serial [pk]
+  variable_id smallint [not null]
+  environment_type_id smallint [not null]
+  min_value numeric(12,4)
+  max_value numeric(12,4)
+  severity_id smallint [not null]
+  valid_from date [not null]
+  valid_to date
 }
 
 Table environment_measurement {
-  measurement_id uuid [pk, default: `gen_random_uuid()`]
-  educational_environment_id uuid [not null]
-  variable_id uuid [not null]
-  value numeric(12,4) [not null]
-  measurement_at timestamptz [not null]
-  data_quality varchar(30) [not null, default: 'VALID']
-  created_at timestamptz [not null, default: `now()`]
-
-  indexes {
-    educational_environment_id
-    variable_id
-    measurement_at
-    (educational_environment_id, variable_id, measurement_at)
-  }
+  environment_measurement_id bigserial [pk]
+  sensor_installation_id bigint [not null]
+  variable_id smallint [not null]
+  measured_value numeric(12,4) [not null]
+  measured_at timestamptz [not null]
+  quality_flag_id smallint [not null]
 }
 
-Table environmental_status {
- environmental_status_id uuid [pk, default: `gen_random_uuid()`]
-  educational_environment_id uuid [not null]
-  comfort_level varchar(30)
-  air_quality varchar(30)
-  calculated_at timestamptz [not null]
-  updated_at timestamptz [not null, default: `now()`]
-
-  indexes {
-    educational_environment_id
-    calculated_at
-  }
+Table environmental_analysis {
+  environmental_analysis_id bigserial [pk]
+  educational_environment_id integer [not null]
+  period_start timestamptz [not null]
+  period_end timestamptz [not null]
+  analysis_status_id smallint [not null]
+  requested_by bigint
+  computed_at timestamptz
 }
 
-Table environmental_statistics {
-  statistic_id uuid [pk, default: `gen_random_uuid()`]
-  educational_environment_id uuid [not null]
-  variable_id uuid [not null]
-  average numeric(12,4)
-  maximum numeric(12,4)
-  minimum numeric(12,4)
-  sample_count integer
-  calculated_at timestamptz [not null]
-  created_at timestamptz [not null, default: `now()`]
-  updated_at timestamptz [not null, default: `now()`]
-
-  indexes {
-    educational_environment_id
-    variable_id
-    calculated_at
-    (educational_environment_id, variable_id)
-  }
+Table analysis_result {
+  analysis_result_id bigserial [pk]
+  environmental_analysis_id bigint [not null]
+  variable_id smallint [not null]
+  min_value numeric(12,4) [not null]
+  max_value numeric(12,4) [not null]
+  avg_value numeric(12,4) [not null]
+  sample_count integer [not null]
+  exceedance_count integer [not null]
 }
 
-Ref: environment_measurement.educational_environment_id > educational_environments.educational_environment_id
-Ref: environment_measurement.variable_id > variable.variable_id
-
-Ref: environmental_status.educational_environment_id > educational_environments.educational_environment_id
-
-Ref: environmental_statistics.educational_environment_id > educational_environments.educational_environment_id
-Ref: environmental_statistics.variable_id > variable.variable_id
+Table environment_alert {
+  environment_alert_id bigserial [pk]
+  educational_environment_id integer [not null]
+  variable_id smallint [not null]
+  variable_threshold_id integer [not null]
+  triggering_measurement_id bigint [not null]
+  raised_at timestamptz [not null, default: `now()`]
+  acknowledged_at timestamptz
+  acknowledged_by bigint
+}
 ```
 
 ---
 
-## 3. Naming Standardization
+## 3. Naming and domain rules
 
-The original model used:
+The model must use the following conventions:
 
 ```text
-variable_history
-environment_id
+Tables:        snake_case, singular nouns
+Columns:       snake_case
+PKs:           <table_name>_id
+FKs:           <referenced_table>_id
+Time stamps:   TIMESTAMPTZ
+English terms: always in English
 ```
 
-The model is standardized to:
+Examples:
 
 ```text
+educational_environment
+sensor_installation
 environment_measurement
-educational_environment_id
+variable_threshold
+analysis_result
+environment_alert
 ```
 
-This provides consistency with the rest of the EduAirControl database.
-
-The canonical environmental measurement entity is:
-
-```text
-environment_measurement
-```
-
-and its relationship to the monitored location is:
-
-```text
-environment_measurement.educational_environment_id
-    →
-educational_environments.educational_environment_id
-```
-
-The same naming convention should be used by other domains that reference an educational environment.
+These names are the canonical names for the project. Any legacy variant such as `variable_history`, `environment_id`, or `enviroment_*` must be considered deprecated and replaced when touched.
 
 ---
 
-## 4. Cross-Domain References
+## 4. Core business rules
 
-Because EduAirControl currently uses a **single centralized PostgreSQL database**, these relationships can be implemented using physical foreign keys.
+### 4.1 Measurement is atomic
 
-### Measurement
-
-```text
-environment_measurement.educational_environment_id
-    →
-educational_environments.educational_environment_id
-
-environment_measurement.variable_id
-    →
-variable.variable_id
-```
-
-### Environmental Status
-
-```text
-environmental_status.educational_environment_id
-    →
-educational_environments.educational_environment_id
-```
-
-### Environmental Statistics
-
-```text
-environmental_statistics.educational_environment_id
-    →
-educational_environments.educational_environment_id
-
-environmental_statistics.variable_id
-    →
-variable.variable_id
-```
-
-These foreign keys provide database-level referential integrity.
-
-However, physical relationships do not change domain ownership.
-
-For example:
-
-```text
-Classroom Management
-    owns → educational_environments
-
-Sensor / Variable Management
-    owns → variable
-
-Environmental Monitoring
-    owns → environment_measurement
-    owns → environmental_status
-    owns → environmental_statistics
-```
-
----
-
-## 5. Environment Measurements
-
-`environment_measurement` stores the historical measurements collected from sensors.
-
-Each measurement represents a value associated with:
-
-* One educational environment.
-* One environmental variable.
-* One collection timestamp.
-* One data-quality state.
-
-Conceptually:
-
-```text
-Sensor
-  │
-  │ produces
-  ▼
-Measurement
-  │
-  ├── Variable
-  ├── Educational Environment
-  ├── Value
-  ├── Measurement Time
-  └── Data Quality
-```
-
-Example:
-
-```text
-educational_environment: Classroom A
-variable: CO2
-value: 742.0000
-measurement_at: 2026-09-09 10:30:00-05
-data_quality: VALID
-```
-
-The original collection timestamp must be preserved because measurements are historical telemetry data.
-
----
-
-## 6. Measurement Data Quality
-
-The `data_quality` field indicates whether the measurement can be considered reliable.
-
-Recommended values:
-
-```text
-VALID
-INVALID
-SUSPECT
-MISSING
-```
-
-These values should be documented as part of the measurement business rules.
-
-A possible PostgreSQL constraint is:
+`environment_measurement` stores exactly one value per installation, variable, and instant.
 
 ```sql
-CHECK (
-    data_quality IN (
-        'VALID',
-        'INVALID',
-        'SUSPECT',
-        'MISSING'
-    )
-)
+-- One row = one sensor installation + one variable + one timestamp
 ```
 
-The exact rules for assigning each state belong to the measurement ingestion and validation logic.
+This prohibits wide rows like:
+
+```text
+co2, temp, humidity, noise
+```
+
+in the same table row, because those would violate the 1NF principle and make schema evolution harder.
+
+### 4.2 Thresholds are time-valid and referenced by foreign key
+
+`variable_threshold` stores the threshold rule by variable and environment type, with validity dates.
+
+```text
+variable_id
+environment_type_id
+min_value
+max_value
+valid_from
+valid_to
+```
+
+The threshold is not duplicated into each measurement; instead, the alert or analysis resolves the active threshold at query time.
+
+### 4.3 Analysis is period-based
+
+`environmental_analysis` materializes the period being analyzed:
+
+```text
+period_start
+period_end
+```
+
+Each analysis can produce multiple `analysis_result` rows, one per variable.
+
+### 4.4 Alerts remain traceable
+
+`environment_alert` references:
+
+- the environment,
+- the variable,
+- the threshold that was active,
+- the measurement that triggered the condition.
+
+The alert is not a copy of the measurement; it is a traceable event based on that measurement.
 
 ---
 
-## 7. Measurement Constraints
+## 5. Direct relations
 
-The following constraints are recommended.
+```text
+educational_environment 1 ─── N sensor_installation
+sensor 1 ─── N sensor_installation
+sensor_installation 1 ─── N environment_measurement
+variable 1 ─── N environment_measurement
+variable 1 ─── N variable_threshold
+environment_type 1 ─── N variable_threshold
+educational_environment 1 ─── N environmental_analysis
+environmental_analysis 1 ─── N analysis_result
+variable 1 ─── N analysis_result
+educational_environment 1 ─── N environment_alert
+variable 1 ─── N environment_alert
+variable_threshold 1 ─── N environment_alert
+environment_measurement 1 ─── N environment_alert
+```
+
+---
+
+## 6. Direct consequences for 06
+
+The asset should not live as a generic template or a legacy summary without the project’s actual purpose. The critical missing tables are:
+
+- `environment_measurement`
+- `variable_threshold`
+- `environmental_analysis`
+- `analysis_result`
+- `environment_alert`
+
+The project is not primarily a sensor catalog or IAM data model; it is an environmental monitoring system for educational environments.
+
+This is the main correction required in 06: the model must reflect the actual business domain, not the implementation scaffolding that was copied into `06-data/models.md` and partially reused in the monitoring document.
+
+---
+
+## 7. Recommended implementation notes
+
+- Keep historical measurements immutable from the point of insertion.
+- Use `TIMESTAMPTZ` to preserve the original measurement instant.
+- Prefer `BIGSERIAL` for high-volume fact tables such as measurements and alerts.
+- Use explanatory numeric precision (`NUMERIC(12,4)`) for readings and aggregated values.
+- Ensure indexes are built for `(sensor_installation_id, variable_id, measured_at)` and for environment/time queries.
+- Maintain the same audit pattern used across the project: creation, modification, and soft-deletion metadata.
+
+---
+
+## 8. Final conclusion
+
+The appropriate structure for 06 is a relational model based on the domain’s actual use case: environment, sensor, measurement, analysis, and alert. The data model should be normalized, traceable, and explicit about the actual meaning of each table and relation.
 
 ### Measurement value
 

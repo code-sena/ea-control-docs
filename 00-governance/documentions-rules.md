@@ -14,7 +14,7 @@ The DoD requires it.
 
 ---
 
-## Language
+## Language and naming
 
 | Artifact | Language |
 |----------|----------|
@@ -26,9 +26,36 @@ The DoD requires it.
 | OpenAPI contracts (descriptions) | English |
 | Error messages returned to frontend | English (or localized) |
 | Internal system logs | English |
+| Database identifiers | English |
+| Business terminology | English |
 
 > **Rule:** Once the language for each category is chosen, it is binding for the entire project.
 > Mixing languages in the same category is grounds for PR rejection.
+
+### Naming standard for this repository
+
+All project artifacts must use consistent naming in English, with `snake_case` for database identifiers and kebab-case for document files.
+
+```text
+✓ educational_environment
+✓ environment_measurement
+✓ variable_threshold
+✓ app_user
+✓ analysis_result
+
+✗ educacion_ambiente
+✗ EnvironmentMeasurement
+✗ ms-enviroment-monitoring.md  (legacy typo; prefer environment in the business name)
+```
+
+Rules:
+- Use English for tables, columns, enum values, statuses, and business concepts.
+- Use `snake_case` for all SQL identifiers.
+- Use singular nouns for core domain tables: `campus`, `sensor`, `variable`, `environment_measurement`.
+- Primary keys use `<table_name>_id`.
+- Foreign keys use the referenced table name plus `_id`.
+- Prefer stable business codes (`code`, `serial_number`, `name`) over ad hoc labels.
+- File names follow kebab-case and must not contain spelling inconsistencies from the domain language.
 
 ---
 
@@ -40,6 +67,8 @@ Content documents use kebab-case.md (e.g.: domain-map.md, risk-register.md).
 Templates are prefixed with _ to appear first (e.g.: _template-hu.md, _template-adr.md).
 ADRs are numbered sequentially: ADR-001-short-title.md.
 ```
+
+> **Note:** Keep file names and internal names aligned. If a document or table is renamed, update all related references in the same change.
 
 ---
 

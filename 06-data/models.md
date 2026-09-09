@@ -1,231 +1,256 @@
-# Data Models per Service
+# Data Models for EduAirControl
 
-> **What to fill in here:** The data schema for each microservice.
-> Each service has its own section. Remember: **each service has its own database**.
-> Schema changes are always done with versioned migrations, never by modifying tables in place.
-
-> **DB engine note:** This document is technology-agnostic. The examples show standard SQL
-> compatible with most relational engines. For document databases
-> (MongoDB) or key-value stores (Redis), adapt the diagrams and schemas to the corresponding format.
-> The engine choice is documented in each service section — the scaffold does not assume which one to use.
+> This document is the canonical data-model reference for the project.
+> It is not a template. It reflects the actual domain model defined in 02 and the work carried out in 06.
 
 ---
 
-## Data modeling principles
+## 1. Design principles
 
-### 1. Database per Service (mandatory)
-No service directly accesses another service's database.
-Communication between services is always via API or events.
+### 1.1 Naming and vocabulary
 
+All data model names use English and `snake_case`.
+
+```text
+✓ educational_environment
+✓ environment_measurement
+✓ variable_threshold
+✓ analysis_result
+✓ app_user
+
+✗ ambiente_educativo
+✗ EnvironmentMeasurement
+✗ ms-enviroment-monitoring
 ```
-✓ Service A → DB A (PostgreSQL)
-✓ Service B → DB B (MongoDB)
-✗ Service A → JOIN with Service B's tables
-```
 
-### 2. Standard audit fields
-All tables include:
+### 1.2 Normalization
+
+The project follows 3NF for transactional domain data.
+
+- One fact per row.
+- No repeated columns for variables or measurements.
+- Thresholds are referenced by foreign key with validity dates instead of duplicated into each measurement.
+- Measurements are stored as time-series facts, not as a wide row per variable.
+
+### 1.3 Audit and traceability
+
+Every persistent table should include the same audit block:
 
 ```sql
-id          UUID        PRIMARY KEY  DEFAULT gen_random_uuid(),
-created_at  TIMESTAMPTZ NOT NULL     DEFAULT NOW(),
-updated_at  TIMESTAMPTZ NOT NULL     DEFAULT NOW(),
-deleted_at  TIMESTAMPTZ              -- NULL = active (soft delete)
+created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+created_by      BIGINT NULL,
+updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+updated_by      BIGINT NULL,
+deleted_at      TIMESTAMPTZ NULL,
+deleted_by      BIGINT NULL,
+row_version     INTEGER NOT NULL DEFAULT 0
 ```
 
-### 3. Soft delete by default
-Do not delete records with a physical DELETE. Use `deleted_at IS NOT NULL` to mark as deleted.
-This facilitates auditing and recovery.
-
-### 4. Naming conventions
-
-```sql
--- Tables:      snake_case, plural              → orders, order_items, users
--- Columns:     snake_case, descriptive         → unit_price, delivery_date
--- FKs:         [referenced_table]_id           → customer_id, product_id
--- Indexes:     idx_[table]_[column(s)]         → idx_orders_customer_id
--- Timestamps:  always with timezone (TIMESTAMPTZ, not TIMESTAMP)
-```
+The exact audit fields may be implemented according to the identity and audit service conventions, but the concept is mandatory in all domain tables.
 
 ---
 
-## Service: [service-name]
+## 2. Shared catalog and identity tables
 
-**DB Engine:** PostgreSQL 15 / MongoDB 7 / Redis 7 — [justification for the choice]
+These tables are shared in the project and are not specific to environmental monitoring.
 
-**Engine justification:**
-- [Why this engine for this service. E.g.: "PostgreSQL for ACID support in financial transactions"]
-- [Which engine features are used: JSONB, full-text search, geo, etc.]
+### Identity
 
-### Table: [table_name]
+- `identity.app_user`
+- `identity.person`
+- `identity.role`
+- `identity.permission`
+- `identity.role_permission`
+- `identity.user_role`
+- `identity.user_session`
 
-**Purpose:** [What this table records]
+### Audit
 
-```sql
-CREATE TABLE [table_name] (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  -- Business fields
-  [field1]        [TYPE]      NOT NULL,
-  [field2]        [TYPE],
-  [field3]        [TYPE]      NOT NULL DEFAULT [value],
-  
-  -- Relationships
-  [reference]_id  UUID        REFERENCES [referenced_table](id) ON DELETE RESTRICT,
-  
-  -- Status fields
-  status          VARCHAR(50) NOT NULL DEFAULT 'ACTIVE'
-                  CHECK (status IN ('ACTIVE', 'INACTIVE', 'CANCELLED')),
-  
-  -- Audit (in all tables)
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at      TIMESTAMPTZ,
-  created_by      UUID,
-  updated_by      UUID
-);
+- `audit.audit_log`
 
--- Indexes
-CREATE INDEX idx_[table]_[field] ON [table_name] ([field]);
-CREATE INDEX idx_[table]_deleted ON [table_name] (deleted_at) WHERE deleted_at IS NULL;
--- For frequent searches:
-CREATE INDEX idx_[table]_[search_field] ON [table_name] ([search_field]);
-```
+### Catalogs
 
-**Data dictionary:**
-
-| Column | Type | Description | Example |
-|--------|------|-------------|---------|
-| id | UUID | Auto-generated unique identifier | `550e8400-...` |
-| [field1] | [TYPE] | [Business description] | [Example] |
-| status | VARCHAR(50) | Lifecycle status | `ACTIVE` |
-| created_at | TIMESTAMPTZ | When the record was created | `2024-01-15T10:30:00Z` |
-| deleted_at | TIMESTAMPTZ | NULL = active; with value = deleted | `NULL` |
-
-**Modeling decisions:**
-1. [Why field X is NOT NULL and not nullable]
-2. [Why soft delete is used instead of hard delete]
-3. [Why the status field has that set of values]
+- `city`
+- `environment_type`
+- `sensor_model`
+- `sensor_status`
+- `measurement_unit`
+- `quality_flag`
+- `severity`
+- `analysis_status`
 
 ---
 
-### Table: [related_table]
+## 3. Environment domain
 
-```sql
-CREATE TABLE [related_table] (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  [principal]_id  UUID        NOT NULL REFERENCES [principal_table](id) ON DELETE CASCADE,
-  
-  -- Fields
-  [field]         [TYPE]      NOT NULL,
-  
-  -- Audit
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at      TIMESTAMPTZ
-);
+### `campus`
 
-CREATE INDEX idx_[related_table]_[principal]_id ON [related_table] ([principal]_id);
-```
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `campus_id` | SERIAL / BIGSERIAL | PK | Unique campus identifier |
+| `code` | VARCHAR(30) | NOT NULL, UNIQUE | Stable internal code |
+| `name` | VARCHAR(150) | NOT NULL | Campus name |
+| `city_id` | INTEGER | NOT NULL, FK | City reference |
 
----
+### `educational_environment`
 
-## Migration strategy
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `educational_environment_id` | SERIAL / BIGSERIAL | PK | Unique educational environment identifier |
+| `campus_id` | INTEGER | NOT NULL, FK | Campus owner |
+| `code` | VARCHAR(30) | NOT NULL | Environment code within campus |
+| `name` | VARCHAR(120) | NOT NULL | Friendly environment name |
+| `environment_type_id` | SMALLINT | NOT NULL, FK | Classroom, lab, etc. |
+| `floor_area_m2` | NUMERIC(8,2) | NULL | Usable area |
+| `occupancy_capacity` | SMALLINT | NULL | Maximum occupancy |
 
-**Tool:** [Flyway / Liquibase / Prisma Migrate / TypeORM Migrations]
+### `environment_type`
 
-**File naming convention:**
-
-```
-V{version_number}__{snake_case_description}.sql
-
-Examples:
-  V001__create_orders_table.sql
-  V002__add_status_to_orders.sql
-  V003__create_index_orders_customer_id.sql
-```
-
-**Migration rules:**
-
-```
-✓ Migrations are ALWAYS forward-only
-✓ One migration per logical change
-✓ Seed data goes in separate migrations with prefix S: S001__seed_...
-✗ Never modify a migration already executed in any environment
-✗ Never do DROP COLUMN / DROP TABLE in a migration if there is code in production that uses it
-    (process: 1-deprecate in code → 2-cleanup migration in the next release)
-```
-
-**Compatible schema changes (non-breaking):**
-
-```sql
--- Add nullable column → always safe
-ALTER TABLE orders ADD COLUMN notes TEXT;
-
--- Add NOT NULL column with DEFAULT → safe if DEFAULT is valid
-ALTER TABLE orders ADD COLUMN priority VARCHAR(20) NOT NULL DEFAULT 'NORMAL';
-
--- Create new index → safe (in production use CONCURRENTLY)
-CREATE INDEX CONCURRENTLY idx_orders_date ON orders (created_at);
-```
-
-**Incompatible changes (require 2-phase migration):**
-
-```sql
--- Rename column → 2 phases:
--- Phase 1 (release N): Add new column, copy data, update code to use both
-ALTER TABLE orders ADD COLUMN delivery_date TIMESTAMPTZ;
-UPDATE orders SET delivery_date = fecha_entrega;
-
--- Phase 2 (release N+1): Remove old column (code no longer uses it)
-ALTER TABLE orders DROP COLUMN fecha_entrega;
-```
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `environment_type_id` | SMALLINT | PK | Type catalog |
+| `code` | VARCHAR(30) | UNIQUE, NOT NULL | Internal code |
+| `name` | VARCHAR(80) | UNIQUE, NOT NULL | Human readable type |
 
 ---
 
-## DB engine selection guide
+## 4. Sensor domain
 
-| Engine | Use when... | Avoid when... |
-|--------|------------|---------------|
-| **PostgreSQL** | ACID transactions, complex relationships, JSONB, full-text | Deeply nested documents, graphs |
-| **MongoDB** | Flexible documents, product catalogs, catalogs | Complex transactions across collections |
-| **Redis** | Cache, sessions, lightweight queues, counters | Source of truth, critical data |
-| **Elasticsearch** | Full-text search, analytics, logs | Source of truth (it's an index, not a DB) |
-| **InfluxDB / TimescaleDB** | Time series, metrics, IoT | Transactional business data |
+### `sensor`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `sensor_id` | BIGSERIAL | PK | Unique sensor identifier |
+| `serial_number` | VARCHAR(60) | NOT NULL, UNIQUE | Physical device serial |
+| `sensor_model_id` | SMALLINT | NOT NULL, FK | Sensor catalog model |
+| `sensor_status_id` | SMALLINT | NOT NULL, FK | Current operational status |
+| `last_seen_at` | TIMESTAMPTZ | NULL | Last communication timestamp |
+
+### `sensor_installation`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `sensor_installation_id` | BIGSERIAL | PK | Installation record |
+| `sensor_id` | BIGINT | NOT NULL, FK | Sensor being installed |
+| `educational_environment_id` | INTEGER | NOT NULL, FK | Environment where it is located |
+| `installed_at` | TIMESTAMPTZ | NOT NULL | Initial install timestamp |
+| `removed_at` | TIMESTAMPTZ | NULL | End of installation time |
+
+### `variable`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `variable_id` | SMALLSERIAL | PK | Unique variable identifier |
+| `code` | VARCHAR(30) | NOT NULL, UNIQUE | Variable code such as CO2 |
+| `name` | VARCHAR(80) | NOT NULL | Variable name |
+| `unit_id` | SMALLINT | NOT NULL, FK | Measurement unit |
+
+### `sensor_variable`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `sensor_id` | BIGINT | PK/FK | Sensor |
+| `variable_id` | SMALLINT | PK/FK | Measured variable |
+
+### `variable_threshold`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `variable_threshold_id` | SERIAL | PK | Threshold definition |
+| `variable_id` | SMALLINT | NOT NULL, FK | Related variable |
+| `environment_type_id` | SMALLINT | NOT NULL, FK | Applies to environment type |
+| `min_value` | NUMERIC(12,4) | NULL | Lower threshold |
+| `max_value` | NUMERIC(12,4) | NULL | Upper threshold |
+| `severity_id` | SMALLINT | NOT NULL, FK | Criticality |
+| `valid_from` | DATE | NOT NULL | Start of validity |
+| `valid_to` | DATE | NULL | End of validity |
 
 ---
 
-## Relationship diagram (per service)
+## 5. Measurement and analysis domain
 
-```
-Replace with an ER diagram of the service using your preferred tool's notation.
+### `environment_measurement`
 
-Mermaid example:
-\```mermaid
-erDiagram
-    ORDERS ||--o{ ORDER_ITEMS : contains
-    ORDERS {
-        uuid id PK
-        uuid customer_id FK
-        varchar status
-        decimal total
-        timestamptz created_at
-    }
-    ORDER_ITEMS {
-        uuid id PK
-        uuid order_id FK
-        uuid product_id FK
-        integer quantity
-        decimal unit_price
-    }
-\```
-```
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `environment_measurement_id` | BIGSERIAL | PK | Unique measurement record |
+| `sensor_installation_id` | BIGINT | NOT NULL, FK | Installation that generated the reading |
+| `variable_id` | SMALLINT | NOT NULL, FK | Measured variable |
+| `measured_value` | NUMERIC(12,4) | NOT NULL | Raw value |
+| `measured_at` | TIMESTAMPTZ | NOT NULL | Original observation timestamp |
+| `quality_flag_id` | SMALLINT | NOT NULL, FK | Validity or quality state |
+
+> This is the core time-series table of the project. One row = one measurement, one sensor installation, one variable, one instant.
+
+### `environmental_analysis`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `environmental_analysis_id` | BIGSERIAL | PK | Unique analysis batch |
+| `educational_environment_id` | INTEGER | NOT NULL, FK | Environment analyzed |
+| `period_start` | TIMESTAMPTZ | NOT NULL | Analysis start |
+| `period_end` | TIMESTAMPTZ | NOT NULL | Analysis end |
+| `analysis_status_id` | SMALLINT | NOT NULL, FK | Current status |
+| `requested_by` | BIGINT | NULL, FK | Who requested it |
+| `computed_at` | TIMESTAMPTZ | NULL | When processed |
+
+### `analysis_result`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `analysis_result_id` | BIGSERIAL | PK | Unique result record |
+| `environmental_analysis_id` | BIGINT | NOT NULL, FK | Parent analysis |
+| `variable_id` | SMALLINT | NOT NULL, FK | Evaluated variable |
+| `min_value` | NUMERIC(12,4) | NOT NULL | Minimum observed |
+| `max_value` | NUMERIC(12,4) | NOT NULL | Maximum observed |
+| `avg_value` | NUMERIC(12,4) | NOT NULL | Average observed |
+| `sample_count` | INTEGER | NOT NULL | Number of readings |
+| `exceedance_count` | INTEGER | NOT NULL | Number of threshold breaches |
 
 ---
 
-## Correlations
+## 6. Alert domain
 
-- Domain entities that map to these tables → `02-domain/entities-and-rules.md`
-- Saga and Outbox pattern for distributed consistency → `05-architecture/pattern-guide.md`
-- Data for each service in detail → `09-microservices/services/XX/data-model.md`
-- How data is accessed via API → `07-api/contracts/openapi/`
+### `environment_alert`
+
+| Column | Type | Constraints | Purpose |
+|--------|------|------------|---------|
+| `environment_alert_id` | BIGSERIAL | PK | Unique alert identifier |
+| `educational_environment_id` | INTEGER | NOT NULL, FK | Affected environment |
+| `variable_id` | SMALLINT | NOT NULL, FK | Triggering variable |
+| `variable_threshold_id` | INTEGER | NOT NULL, FK | Threshold used |
+| `triggering_measurement_id` | BIGINT | NOT NULL, FK | Measurement that triggered the alert |
+| `raised_at` | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Alert creation time |
+| `acknowledged_at` | TIMESTAMPTZ | NULL | Acknowledgement time |
+| `acknowledged_by` | BIGINT | NULL, FK | Responsible user |
+
+> An alert must keep the threshold and the triggering measurement as traceable evidence. It does not duplicate the entire measurement payload.
+
+---
+
+## 7. Recommended integrity rules
+
+- `environment_measurement` stores one value per installation, variable and instant.
+- `educational_environment` is the nucleus of the monitoring domain and must exist as a first-class table.
+- `environmental_analysis` and `environment_alert` must not be represented as unstructured text or JSON blobs when the project already has a relational model.
+- Thresholds are stored by validity window and referenced by foreign key, not copied into each record.
+- A sensor may move between environments over time through `sensor_installation` without breaking measurement history.
+
+---
+
+## 8. Data ownership
+
+| Domain | Owns |
+|--------|-------|
+| Identity & Access | `app_user`, sessions, permissions |
+| Environment | `campus`, `educational_environment`, `environment_type` |
+| Sensor | `sensor`, `sensor_installation`, `variable`, `sensor_variable` |
+| Measurement | `environment_measurement` |
+| Analysis | `environmental_analysis`, `analysis_result` |
+| Alert | `environment_alert` |
+
+---
+
+## 9. Migration notes
+
+The data model must be implemented with versioned migrations, always using English names and without modifying already-executed migrations. The final target is a normalized relational model aligned with the domain definitions in 02 and the monitoring requirements in 03 and 06.
