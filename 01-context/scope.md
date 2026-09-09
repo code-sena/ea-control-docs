@@ -14,13 +14,13 @@ What the system **DOES build and maintain**:
 
 | # | Feature | Description | Responsible service |
 |---|---------|-------------|---------------------|
-| 1 | User Authentication and Registration | Allows users to register, log in, and access the platform securely. | Not defined |
-| 2 | Educational Environment Monitoring | Allows users to view and monitor temperature, humidity, CO₂, and noise level in educational environments. | Not defined |
-| 3 | Environment Management | Allows the management and consultation of educational environment information. | Not defined |
-| 4 | Environmental Data Dashboard | Displays environmental data in an organized dashboard, allowing users to analyze the conditions of educational environments. | Not defined |
-| 5 | Historical Data Analysis | Allows users to analyze environmental data by day, week, month, and year. | Not defined |
-| 6 | Environment Favorites | Allows users to add and remove educational environments from their favorites. | Not defined |
-| 7 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment. | Not defined |
+| 1 | User Authentication and Registration | Allows users to register, log in, and access the platform securely. | ms-security |
+| 2 | Educational Environment Monitoring | Allows users to view and monitor temperature, humidity, CO₂, and noise level in educational environments. | ms-monitoreo |
+| 3 | Environment Management | Allows the management and consultation of educational environment information. | ms-aulas |
+| 4 | Environmental Data Dashboard | Displays environmental data in an organized dashboard, allowing users to analyze the conditions of educational environments. | ms-monitoreo |
+| 5 | Historical Data Analysis | Allows users to analyze environmental data by day, week, month, and year. | ms-monitoreo |
+| 6 | Environment Favorites | Allows users to add and remove educational environments from their favorites. | ms-user-experience |
+| 7 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment. | ms-user-experience |
 
 ### Included integrations
 
@@ -81,9 +81,9 @@ What the system **does NOT build** in this version and why:
 |------|-------------|
 | **Time** | The project is developed using one-week Sprints. |
 | **Budget** | No specific budget has been defined. |
-| **Technology** | The project uses React for the frontend, Spring Boot for the backend, and Postgres for the database. |
+| **Technology** | The project uses React for the frontend, Spring Boot for the backend, and PostgreSQL 15 for the database. |
 | **Regulatory** | No specific regulation or certification has been defined. |
-| **Team** | 3 developers are available for the project. |
+| **Team** | 2 developers are available for the project. |
 
 ---
 
