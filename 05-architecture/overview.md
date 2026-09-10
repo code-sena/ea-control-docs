@@ -25,8 +25,8 @@ The main characteristics of the adopted architecture are:
   - `ms-aulas`
   - `ms-sensores`
   - `ms-monitoreo`
-- **MySQL** as the persistence technology.
-- The database is **logically divided by domains**, using separate tables/schema organization for each bounded context, while remaining part of the same MySQL database infrastructure used by the project.
+- **PostgreSQL 15** as the persistence technology.
+-The MVP uses one PostgreSQL instance with **logical ownership boundaries per service.** Services do not access another service's tables directly. 
 - **REST/HTTP** for synchronous communication between the frontend, API Gateway and services.
 - **MQTT/HTTP** for receiving environmental information from sensors.
 - **RabbitMQ** can be used for asynchronous communication and events where decoupling is beneficial.
@@ -36,7 +36,7 @@ This architecture was selected because EduAirControl needs to receive environmen
 
 The architecture also facilitates the independent evolution of each domain without requiring the entire system to be implemented as a single application.
 
-**Reference ADR:** [`ADR-001-architectural-style.md`](decisions/records/)
+**Reference ADR:** [`ADR-002, ADR-003, ADR-004, ADR-005, ADR-006, ADR-007`]
 
 ---
 
@@ -90,7 +90,7 @@ The architecture also facilitates the independent evolution of each domain witho
 │                                 │                                          │
 │                                 ▼                                          │
 │                         ┌────────────────┐                                 │
-│                         │ MySQL Database │                                 │
+│                         │ PostgreSQL 15 │                                 │
 │                         │  Domain-based  │                                 │
 │                         └────────────────┘                                 │
 │                                                                            │
@@ -160,7 +160,7 @@ graph TB
 
         MQ["RabbitMQ<br/>Asynchronous Events"]
 
-        DB[("PostgreSQL<br/>Domain-organized database")]
+        DB[("PostgreSQL 15<br/>Logical ownership per service")]
 
     end
 
@@ -205,7 +205,7 @@ graph TB
 | `ms-sensores` | Registration, configuration and management of environmental sensors |
 | `ms-monitoreo` | Reception, storage, consultation and analysis of environmental measurements |
 | RabbitMQ | Optional asynchronous communication between services when events need to be decoupled |
-| MySQL | Persistent storage organized logically according to project domains |
+| PostgreSQL 15 | Persistent storage organized logically according to project domains |
 
 ### Environmental data flow
 
@@ -220,7 +220,7 @@ Environmental Sensor
         ▼
    ms-monitoreo
         │
-        ├──────────────► MySQL
+        ├──────────────► PostgreSQL 15
         │
         ▼
 Historical Environmental Data
@@ -245,11 +245,11 @@ Daily / Weekly / Monthly / Yearly Analysis
 | # | Service | Responsibility | Port | DB | Communication type |
 |---|---------|---------------|------|-----|-------------------|
 | 1 | `api-gateway` | Central entry point, routing and request control | 8080 | No direct DB | HTTP/REST Proxy |
-| 2 | `ms-security` | Registration, authentication, JWT and access control | 8081 | MySQL - Security domain | REST |
-| 3 | `ms-usuarios` | User management and user information | 8082 | MySQL - Users domain | REST |
-| 4 | `ms-aulas` | Educational classroom/environment management | 8083 | MySQL - Classrooms domain | REST |
-| 5 | `ms-sensores` | Environmental sensor registration and communication | 8084 | MySQL - Sensors domain | REST + MQTT/HTTP |
-| 6 | `ms-monitoreo` | Environmental data reception, storage, monitoring and analysis | 8085 | MySQL - Monitoring domain | REST + MQTT/Events |
+| 2 | `ms-security` | Registration, authentication, JWT and access control | 8081 | PostgreSQL - Security ownership boundary | REST |
+| 3 | `ms-usuarios` | User management and user information | 8082 | PostgreSQL - Users ownership boundary | REST |
+| 4 | `ms-aulas` | Educational classroom/environment management | 8083 | PostgreSQL - Classrooms ownership boundary | REST |
+| 5 | `ms-sensores` | Environmental sensor registration and communication | 8084 | 	PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
+| 6 | `ms-monitoreo` | Environmental data reception, storage, monitoring and analysis | 8085 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
 | 7 | `RabbitMQ` | Asynchronous messaging between services when required | 5672 | No | AMQP |
 | 8 | `Frontend React` | User interface and visualization of environmental information | 80 | No | HTTP/HTTPS |
 
@@ -276,13 +276,12 @@ API contracts are maintained under:
 
 ### P2: Domain-Oriented Data Separation
 
-EduAirControl uses a single MySQL database infrastructure organized logically by domains.
+EduAirControl uses a PostgreSQL 15 instance organized by service ownership boundaries during the MVP.
 
 Each microservice owns the data corresponding to its business responsibility and must not directly manipulate another domain's tables.
-
 Communication between domains must occur through APIs or asynchronous events when applicable.
 
-This principle was selected instead of using a completely independent physical database for every service because the current project scope requires logical domain separation while keeping the database infrastructure centralized.
+This principle was selected instead of requiring a separate physical database per service because the current project scope requires logical domain separation while keeping MVP operations manageable. Physical separation remains a future option
 
 ---
 
@@ -392,7 +391,7 @@ This principle helps maintain consistency between requirements, architecture, de
 | Saga | No | Not required for current business flows |
 | Outbox Pattern | Planned / Review | To be evaluated if asynchronous events become critical |
 | Hexagonal Architecture | Yes | `05-architecture/hexagonal-architecture.md` |
-| Database per physical service | No | Single MySQL infrastructure with domain separation |
+| Database per physical service | No | Single PostgreSQL infrastructure with domain separation |
 | Containerization | Yes | Docker / Docker Compose |
 
 ---

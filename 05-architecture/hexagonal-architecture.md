@@ -53,7 +53,7 @@ you need to simulate the database.
                          │
              ┌───────────┴───────────┐
              │                       │
-      [MySQL Adapter]       [RabbitMQ Adapter]
+      [PostgreSQL Adapter]       [RabbitMQ Adapter]
 ```
 
 ---
