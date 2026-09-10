@@ -57,7 +57,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Name** | User Management |
 | **Responsibility** | Manages user registration, authentication, access, and user-related information. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | Not defined |
+| **Microservice(s)** | `ms-security`, `ms-usuarios` |
 | **Database** | MySQL |
 | **Ubiquitous Language** | User, Administrator, Account, Authentication, Registration, Access |
 
@@ -78,7 +78,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Name** | Environmental Monitoring |
 | **Responsibility** | Manages the environmental information collected from educational environments. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | Not defined |
+| **Microservice(s)** | `ms-aulas`, `ms-sensores`, `ms-monitoreo` |
 | **Database** | MySQL |
 | **Ubiquitous Language** | Educational Environment, Temperature, Humidity, CO₂, Noise Level, Environmental Data, Environmental Monitoring |
 
@@ -100,8 +100,8 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Name** | Environmental Data Analysis |
 | **Responsibility** | Analyzes environmental data and presents historical information according to different time periods. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | Not defined |
-| **Database** | MySQL |
+| **Microservice(s)** | `ms-monitoreo` in the MVP; extraction remains a future option |
+| **Database** | PostgreSQL 15 — logical ownership boundary |
 | **Ubiquitous Language** | Environmental Data, Historical Data, Data Analysis, Daily Analysis, Weekly Analysis, Monthly Analysis, Yearly Analysis, Environmental Dashboard |
 
 **Context-specific terms (Ubiquitous Language):**
