@@ -82,12 +82,13 @@ See standard event structure: `02-domain/domain-events.md`
 **Update when:** A new decision is made or a previous one is revoked
 
 Recommended format: miniADR (without the full rigor of an architecture ADR):
-```markdown
-### Decision: [short name]
-**Date:** [date]
-**Context:** [what problem was being solved]
-**Decision:** [what was decided]
-**Consequences:** [known trade-offs]
+
+### Decision: Decision name
+**Date:** YYYY-MM-DD
+**Context:** Problem that required a decision.
+**Decision:** Agreed technical choice.
+**Consequences:** Known benefits, limitations and follow-up work.
+
 ```
 
 ---
@@ -136,3 +137,7 @@ Use the template: `07-api/contracts/openapi/_template-service.yaml`
 - Service catalog → `09-microservices/service-catalog.md`
 - API contracts → `07-api/contracts/openapi/`
 - General documentation rules → `00-governance/documentation-rules.md`
+
+## Governance gate
+
+A service change is ready for review only when its service documentation, API contract, data model and event documentation are updated as applicable. The service owner prepares the change; the reviewer verifies consistency with 02-domain/, 04-requirements/, 05-architecture/ and 06-data/.

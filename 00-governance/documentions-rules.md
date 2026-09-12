@@ -128,10 +128,6 @@ const x = 1;
 ```
 ````
 
-### Template instructions
-Blocks marked `> [!NOTE] INSTRUCTIONS` indicate the document is an unfilled template.
-Remove them when the document is complete.
-
 ---
 
 ## Update process
