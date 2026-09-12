@@ -1,11 +1,5 @@
 # System Overview
 
-> **Instructions:** Replace this content with your project's description.
-> This is the first page someone new reads. They must be able to understand the system in 5 minutes.
-> Remove these instructions when the document is complete.
-
----
-
 ## What is EduAirControl?
 
 EduAirControl is a web platform for managing and monitoring educational environments. It allows users to visualize temperature, humidity, CO₂, and noise measurements and to consult historical analysis by day, week, month, and year.
@@ -49,6 +43,7 @@ The system is organized around the following deployable components:
 | ms-aulas | Educational environment management |
 | ms-sensores | Sensor registration and measurement ingestion normalization |
 | ms-monitoreo | Environmental measurement persistence, current monitoring, historical analysis, and dashboard queries for the MVP |
+| ms-user-experience | User experience features such as environment favorites and ratings |
 | React frontend | User interface and visualization |
 
 ## Current status
