@@ -12,7 +12,7 @@
 | Duration | 1 week  |
 | Sprint start | Tuesday |
 | Sprint end | Monday of the following week |
-| Current sprint | Sprint [N] — [start date] to [end date] |
+| Current sprint | Current sprint is recorded in the project board; this file defines the stable sprint rules. |
 | Estimated capacity | 42 points |
 
 ---
@@ -109,3 +109,7 @@
 - Definition of Done → `00-governance/definition-of-done.md`
 - Risk management → `15-project-control/risks.md`
 - Technical debt backlog → `15-project-control/tech-backlog.md`
+
+## Decision and escalation
+
+The Product Owner decides priority and functional scope. The team decides implementation details. The Tech Lead decides architecture, integration and security matters. A change that affects domain rules, requirements, architecture or data ownership must update the affected document and, when significant, an ADR in 05-architecture/decisions/.

@@ -6,58 +6,53 @@
 
 ---
 
-## In Scope
+## Purpose and scope baseline
 
-What the system **DOES build and maintain**:
+This document defines the boundaries of the EduAirControl MVP. It is the baseline for prioritization, requirements, architecture and delivery planning. A proposed change must be evaluated against this baseline before entering the product backlog.
 
-### MVP Features
+### MVP Features - product capabilities
 
-| # | Feature | Description | Responsible service |
+| # | Capability | Description | Responsible service |
 |---|---------|-------------|---------------------|
-| 1 | User Authentication and Registration | Allows users to register, log in, and access the platform securely. | ms-security |
-| 2 | Educational Environment Monitoring | Allows users to view and monitor temperature, humidity, CO₂, and noise level in educational environments. | ms-monitoreo |
-| 3 | Environment Management | Allows the management and consultation of educational environment information. | ms-aulas |
-| 4 | Environmental Data Dashboard | Displays environmental data in an organized dashboard, allowing users to analyze the conditions of educational environments. | ms-monitoreo |
-| 5 | Historical Data Analysis | Allows users to analyze environmental data by day, week, month, and year. | ms-monitoreo |
-| 6 | Environment Favorites | Allows users to add and remove educational environments from their favorites. | ms-user-experience |
-| 7 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment. | ms-user-experience |
+| 1 | User Authentication and Registration | Allows users to register,sign up and access the platform securely. | ms-security |
+| 2 | Educational Environment management | Allows authorized users to manage and consult information about educational environments | ms-aulas |
+| 3 | Sensor management | Allows the registration, configuration and status management of environmental sensors | ms-sensores |
+| 4 | Environmental monitoring |Allows users to view temperature, humidity, CO₂ and noise measurements for educational environments | ms-monitoreo |
+| 5 | Environmental dashboard | Presents current and historical environmental information in an organized visual interface | ms-monitoreo and frontend |
+| 6 | Historical analysis | Allows consultation of environmental data by day, week, month and year | ms-monitoreo |
+| 7 | Environment Favorites | Allows users to add and remove educational environments from a personal favorites list | ms-user-experience |
+| 8 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment | ms-user-experience |
 
-### Included integrations
+### Included integrations and environments
 
 | External system | Integration type | Purpose |
 |----------------|------------------|---------|
-| GitHub | Repository | Source code management and version control. |
-| Jenkins | CI/CD | Continuous integration and project automation. |
-| Docker | Containerization | Provides a consistent environment for application development and deployment. |
-
-### Environments being built
-
-| Environment | Purpose |
-|-------------|---------|
-| Local | Development on the developer's machine. |
-| Development (dev) | Continuous integration and development testing. |
-| Staging | Pre-production testing and validation. |
-| Production | Production environment. |
+| GitHub | Source-control platform | Stores source code and supports version control |
+| Jenkins | CI/CD platform | Automates integration and project delivery tasks |
+| Docker | Containerization technology | Provides consistent execution environments |
+| MQTT or HTTPS | Sensor-ingestion mechanism | Receives measurements from environmental sensors |
+| Local | Development environment | Supports development on a team member's machine |
+| Development (dev) | Integration environment | Supports continuous integration and development testing |
+| Staging | Pre-production environment | Supports validation before production |
+| Production | Delivery environment | Hosts the released system when the MVP is deployed |
 
 ---
 
-## Out of Scope
+## Excluded from the MVP
 
-What the system **does NOT build** in this version and why:
-
-| # | What is out of scope | Reason | Future version? |
+| # | Excluded capability | Reason | Future consideration |
 |---|---------------------|--------|----------------|
-| 1 | Environmental ranking | Removed from the current project scope. The project now focuses on environmental data analysis through the dashboard. | No |
-| 2 | Advanced predictive environmental analysis | Not part of the current MVP scope. | To be determined |
-| 3 | Automated control of environmental equipment | The current system focuses on monitoring, visualization, and data analysis. | To be determined |
-| 4 | Integration with external environmental control systems | No external control integration has been defined for the current version. | To be determined |
+| 1 | Environmental ranking | The current scope focuses on monitoring, visualization and analysis rather than ranking environments | No current commitment |
+| 2 | Advanced predictive environmental analysis | Predictive analysis is not part of the current MVP | To be evaluated in a future version |
+| 3 | Automated control of environmental equipment | The current system monitors and analyzes conditions but does not control equipment | To be evaluated in a future version |
+| 4 | Integration with external environmental control systems | No such external integration has been defined for the current version | To be evaluated in a future version  |
 
-### What another system / team handles (and why not us)
+### Responsibilities outside EduAirControl
 
-| Feature | Who builds it | Why not us |
+| Responsability | owner | Boundary |
 |---------|--------------|-----------|
-| External environmental sensor hardware | Not defined | Hardware development is outside the current software scope. |
-| External infrastructure services | Not defined | Infrastructure services outside the project are not managed by EduAirControl. |
+| Environmental sensor hardware development | External hardware provider or institution | EduAirControl consumes sensor data; it does not develop the physical hardware |
+| External infrastructure services | Infrastructure provider or institution | EduAirControl documents and uses required integrations but does not own external provider infrastructure |
 
 ---
 
@@ -67,11 +62,12 @@ What the system **does NOT build** in this version and why:
 
 | # | Assumption | Consequence if false |
 |---|-----------|---------------------|
-| 1 | Environmental data is available to the system. | The monitoring and data analysis functionalities would require an alternative data source. |
-| 2 | Users access the system through a web interface. | The interface and user experience requirements would need to change. |
-| 3 | Postgres is available for storing system information and environmental data. | The database strategy would need to be reviewed. |
-| 4 | Environmental data can be analyzed using daily, weekly, monthly, and yearly periods. | The dashboard and data analysis strategy would need to be adjusted. |
-| 5 | The initial project is developed by a team of 3 members. | The scope or sprint capacity may need to be adjusted. |
+| 1 | Environmental measurements are available through the defined ingestion mechanisms | 	
+Environmental measurements are available through the defined ingestion mechanisms |
+| 2 | Users access the system through a web interface | Frontend and user-experience requirements must be revisited |
+| 3 | PostgreSQL is available for the platform's relational persistence | The data and architecture decisions must be reviewed |
+| 4 | Environmental data can be analyzed by day, week, month and year | Dashboard queries and analysis requirements must be adjusted |
+| 5 | The initial delivery is performed by the currently assigned development team | Scope, sequencing and sprint capacity may need adjustment |
 
 ---
 
@@ -79,11 +75,11 @@ What the system **does NOT build** in this version and why:
 
 | Type | Description |
 |------|-------------|
-| **Time** | The project is developed using one-week Sprints. |
-| **Budget** | No specific budget has been defined. |
-| **Technology** | The project uses React for the frontend, Spring Boot for the backend, and PostgreSQL 15 for the database. |
-| **Regulatory** | No specific regulation or certification has been defined. |
-| **Team** | 2 developers are available for the project. |
+| **Time** | Work is organized in one-week Sprints. |
+| **Budget** | No specific budget or cost limit has been defined in the available project documentation |
+| **Technology** | The current baseline uses React, Spring Boot and PostgreSQL 15, with Docker, Jenkins and GitHub in the delivery toolchain |
+| **Regulatory** | No specific regulation or certification has been defined in the available project documentation |
+| **Team** | The available project documentation identifies two developers and a Teach Lead responsability |
 
 ---
 
@@ -94,25 +90,26 @@ What the system **does NOT build** in this version and why:
 | GitHub repository | Development team | Not defined | 🟢 Available |
 | Jenkins | Development team | Not defined | 🟡 In progress |
 | Docker environment | Development team | Not defined | 🟡 In progress |
-| Environmental data source | Not defined | Not defined | 🟡 In progress |
+| Environmental data source and sensor connectivity | Not defined | Not defined | 🟡 In progress |
 
 ---
 
-## How to update the scope
+## Scope-change process
 
-The scope can change, but the change has a process:
-
-1. Document the proposed change in this file.
-2. Evaluate the impact on schedule and effort.
-3. Obtain approval from the Product Owner and Tech Lead.
-4. Update the roadmap in `03-product/vision.md`.
-5. Create or update HUs in `04-requirements/user-stories.md`.
+- Record the proposed change and its reason in the backlog.
+- Evaluate its impact on product value, requirements, architecture, data, schedule and delivery risk.
+- Obtain Product Owner approval for scope and value.
+- Obtain Tech Lead approval for technical and cross-section impacts.
+- Update this document and the affected documents in 03-product/, 04-requirements/, 05-architecture/ and 06-data/.
+- Add or update user stories and traceability in 04-requirements/.
+- Record an ADR when the change alters an architectural decision.
 
 ---
 
 ## Correlations
 
-- Vision and roadmap → `03-product/vision.md`
-- Term glossary → `01-context/glossary.md`
-- System overview → `01-context/overview.md`
-- Scope-related risks → `15-project-control/risks.md`
+- Product vision and roadmap: `03-product/vision.md`
+- System overview: `overview.md`
+- Project glossary: `glossary.md`
+- Scope-related risks: `15-project-control/risks.md`
+- Governance for scope changes: `00-governance/README.md`

@@ -6,6 +6,11 @@
 
 ---
 
+## Scope and ownership
+
+This policy applies to the frontend, backend/API, database, sensor integrations and operational environments of EduAirControl. The Tech Lead coordinates technical controls, DevOps coordinates environment and deployment controls, and the responsible service owner applies controls to the service under change.
+Security decisions that alter architecture or data handling are recorded in 05-architecture/decisions/. Code-level controls are specified in security-rules.md.
+
 ## Security principles
 
 1. **Defense in Depth:** Multiple security layers. If one fails, the others contain the damage.

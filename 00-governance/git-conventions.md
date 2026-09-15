@@ -9,15 +9,10 @@
   +-- qa
        |----- dev 
                 |
-                +-- feat/[description]
-                +-- fix/[description]
-                +-- chore/[description]
-                +-- hotfix/[description]
-``` story
-        └── fix/[description]     ← One branch per bugfix
-        └── chore/[description]   ← Infrastructure, docs, dependency changes
-        └── hotfix/[description]  ← Urgent fixes directly to main
-```
+                +-- feat/<description>
+                +-- fix/<description>
+                +-- chore/<description>
+                +-- hotfix/<description>
 
 **Rules:**
 - Nobody commits directly to `main` or `dev`
