@@ -13,6 +13,7 @@
                 +-- fix/<description>
                 +-- chore/<description>
                 +-- hotfix/<description>
+```
 
 **Rules:**
 - Nobody commits directly to `main` or `dev`
