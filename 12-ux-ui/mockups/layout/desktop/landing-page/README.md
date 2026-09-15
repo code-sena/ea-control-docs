@@ -4,7 +4,7 @@
 
 ## Files
 
-- `index.html` — Screen layout (HTML + Tailwind CSS)
+- `index.html` — Screen layout (HTML)
 
 ## Components
 
