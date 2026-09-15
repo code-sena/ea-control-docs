@@ -8,15 +8,18 @@
 
 ## Components
 
-- Hero section with tagline and CTA
-- Features overview
-- How it works section
+- Hero  
+- Why choose
+- How it works 
+- CTA
 - Footer with links
 
 ## Navigation
 
 - CTA → `../authentication/` (Register)
 - Login link → `../authentication/` (Login)
+- view demo → `../guide/` (guide)
+- terms and conditions → `../terms/` (terms)
 
 ## Bounded Context
 
