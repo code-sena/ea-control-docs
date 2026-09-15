@@ -114,6 +114,72 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 ---
 
+### Bounded Context: Classroom Management
+
+| Field | Value |
+|-------|-------|
+| **Name** | Classroom Management |
+| **Responsibility** | Manages campuses, educational environments (rooms), and environment types. Owns the physical/spatial domain model. |
+| **Owning team** | Development Team |
+| **Microservice(s)** | `ms-classroom-management` |
+| **Database** | PostgreSQL 15 |
+| **Ubiquitous Language** | Campus, Educational Environment, Environment Type, Floor Area, Occupancy Capacity |
+
+**Context-specific terms (Ubiquitous Language):**
+
+| Term | Meaning in THIS context | Different in another context? |
+|------|-------------------------|-------------------------------|
+| Campus | Physical location where educational environments are located. | No |
+| Educational Environment | A physical room/space whose environmental conditions are monitored. | Yes — in Environmental Monitoring, it refers to the monitored entity, not the physical space. |
+| Environment Type | Classification of an educational environment (classroom, lab, library, etc.). | No |
+
+---
+
+### Bounded Context: Sensor Management
+
+| Field | Value |
+|-------|-------|
+| **Name** | Sensor Management |
+| **Responsibility** | Manages physical sensors, models, manufacturers, status, installation history, variables, and measurement units. |
+| **Owning team** | Development Team |
+| **Microservice(s)** | `ms-sensor-management` |
+| **Database** | PostgreSQL 15 |
+| **Ubiquitous Language** | Sensor, Sensor Model, Sensor Status, Sensor Installation, Variable, Measurement Unit |
+
+**Context-specific terms (Ubiquitous Language):**
+
+| Term | Meaning in THIS context | Different in another context? |
+|------|-------------------------|-------------------------------|
+| Sensor | Physical device that collects environmental measurements. | Yes — in Environmental Monitoring, it refers to the data source, not the physical device. |
+| Sensor Model | Technical specification of a sensor type. | No |
+| Sensor Installation | Association between a sensor and an educational environment with time bounds. | No |
+| Variable | Measurable condition (temperature, humidity, CO₂, noise level). | No |
+| Measurement Unit | Unit of measurement for a variable (°C, %, ppm, dB). | No |
+
+---
+
+### Bounded Context: User Experience
+
+| Field | Value |
+|-------|-------|
+| **Name** | User Experience |
+| **Responsibility** | Manages user interactions: preferences, favorites, ratings, comments, search history, and filters. |
+| **Owning team** | Development Team |
+| **Microservice(s)** | `ms-user-experience` |
+| **Database** | PostgreSQL 15 |
+| **Ubiquitous Language** | Preference, Favorite, Rating, Comment, Search History, Filter |
+
+**Context-specific terms (Ubiquitous Language):**
+
+| Term | Meaning in THIS context | Different in another context? |
+|------|-------------------------|-------------------------------|
+| Preference | User's UI settings (theme, language, notification toggles). | Yes — in User Management, it refers to account-level settings. |
+| Favorite | An educational environment saved by the user for quick access. | No |
+| Rating | User's qualitative evaluation of an environmental condition or environment. | No |
+| Search History | Record of user's searches within the platform. | No |
+
+---
+
 ## 3. Context Map
 
 The Context Map shows relationships between bounded contexts. Relationships define how contexts communicate and who provides the information.
@@ -123,44 +189,56 @@ The Context Map shows relationships between bounded contexts. Relationships defi
 │                           CONTEXT MAP                                       │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────┐         ┌─────────────────────────┐
-│    User Management      │         │   Environmental         │
-│                         │         │   Monitoring            │
-│ • User registration     │         │                         │
-│ • Authentication        │         │ • Sensor management     │
-│ • Access control        │         │ • Data collection       │
-└───────────┬─────────────┘         └───────────┬─────────────┘
-            │                                   │
-            │ REST API                          │ Environmental Data
-            │ (authentication)                  │ (measurements)
-            │                                   │
-            ▼                                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         API Gateway                                         │
-│                    Spring Cloud Gateway                                      │
-└─────────────────────────────────────────────────────────────────────────────┘
-            │                                   │
-            │                                   │
-            ▼                                   ▼
-┌─────────────────────────┐         ┌─────────────────────────┐
-│ Environmental Data      │         │ Environmental Data      │
-│ Analysis                │         │ Monitoring              │
-│                         │         │                         │
-│ • Historical analysis   │         │ • Real-time monitoring  │
-│ • Dashboard views       │         │ • Threshold evaluation  │
-│ • Period-based reports  │         │ • Alert generation      │
-└─────────────────────────┘         └─────────────────────────┘
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│  User Management     │  │ Classroom Management │  │  Sensor Management   │
+│                      │  │                      │  │                      │
+│ • Authentication     │  │ • Campuses           │  │ • Sensor models      │
+│ • User registration  │  │ • Environments       │  │ • Installations      │
+│ • Access control     │  │ • Environment types  │  │ • Variables          │
+└──────────┬───────────┘  └──────────┬───────────┘  └──────────┬───────────┘
+           │                         │                         │
+           │ REST API                │ REST API                │ REST API
+           │ (auth)                  │ (environment data)      │ (sensor data)
+           │                         │                         │
+           └─────────────┬───────────┴─────────────┬───────────┘
+                         ▼                         ▼
+           ┌───────────────────────────────────────────────────┐
+           │                 API Gateway                       │
+           │              Spring Cloud Gateway                 │
+           └───────────────────────────────────────────────────┘
+                         │                         │
+                         ▼                         ▼
+┌──────────────────────────────┐    ┌──────────────────────────────┐
+│  Environmental Monitoring    │    │ Environmental Data Analysis  │
+│                              │    │                              │
+│ • Real-time monitoring       │    │ • Historical analysis        │
+│ • Threshold evaluation       │    │ • Dashboard views            │
+│ • Alert generation           │    │ • Period-based reports       │
+└──────────────┬───────────────┘    └──────────────────────────────┘
+               │
+               │ Environmental Data
+               │ (measurements)
+               ▼
+┌──────────────────────────────┐
+│      User Experience         │
+│                              │
+│ • Favorites                  │
+│ • Ratings                    │
+│ • Search history             │
+└──────────────────────────────┘
 
 Relationships:
 
-User Management ──(REST API)──► API Gateway ──(REST)──► Environmental Monitoring
-                                        │
-                                        │
+User Management ──(REST API)──► API Gateway
+Classroom Management ──(REST API)──► API Gateway
+Sensor Management ──(REST API)──► API Gateway
+API Gateway ──(REST)──► Environmental Monitoring
 Environmental Monitoring ──(data flow)──► Environmental Data Analysis
+Environmental Monitoring ──(data flow)──► User Experience
 
 Legend:
-─────► Synchronous communication (REST API)
-─────► Data flow (environmental measurements)
+──────► Synchronous communication (REST API)
+──────► Data flow (environmental measurements)
 ```
 
 ---
@@ -181,8 +259,12 @@ Legend:
 
 | Context A                | Relationship | Context B                   | Communication channel | Contract     |
 | ------------------------ | ------------ | --------------------------- | --------------------- | ------------ |
-| User Management          | U → D        | Environmental Monitoring    | REST API              | API contract |
-| Environmental Monitoring | U → D        | Environmental Data Analysis | REST API              | API contract |
+| User Management          | U → D        | API Gateway                 | REST API              | API contract |
+| Classroom Management     | U → D        | API Gateway                 | REST API              | API contract |
+| Sensor Management        | U → D        | API Gateway                 | REST API              | API contract |
+| API Gateway              | U → D        | Environmental Monitoring    | REST API              | API contract |
+| Environmental Monitoring | U → D        | Environmental Data Analysis | Data flow             | Events       |
+| Environmental Monitoring | U → D        | User Experience             | Data flow             | Events       |
 
 ---
 
@@ -202,6 +284,9 @@ DDD classifies subdomains by their strategic value:
 | --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | Environmental Data Analysis | Core       | It is the main differentiating functionality of EduAirControl, providing historical analysis of environmental conditions through the dashboard |
 | Environmental Monitoring    | Supporting | It provides the environmental information required by the analysis functionality                                                               |
+| Classroom Management        | Supporting | Manages the physical spaces being monitored; necessary for contextualizing environmental data                                                 |
+| Sensor Management           | Supporting | Manages the physical devices that collect data; necessary for the monitoring functionality                                                     |
+| User Experience             | Supporting | Manages user interactions and personalization; enhances the value of core functionality                                                         |
 | User Management             | Generic    | User authentication and account management are common functionalities with standard solutions available                                        |
 
 ---
