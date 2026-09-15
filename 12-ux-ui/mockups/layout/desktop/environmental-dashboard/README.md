@@ -1,20 +1,28 @@
 # Environmental Dashboard
 > Main screen with current conditions and charts.
+
 ## Files
 - `index.html` — Screen layout
+
 ## Components
-- Condition cards (Temperature, Humidity, CO₂, Noise Level)
-- Environment selector dropdown
-- Period selector (Day/Week/Month/Year)
+
+- Environment analysis panel
+- Time period selector (day/week/month/year)
 - Charts for each variable
-- Alert indicator
+- Charts for each environment
+- Alert indicator (quick reading)
+- Variable filter (temperature, humidity, CO₂, noise level)
+
 ## Navigation
-- To environments → `../educational-environments/`
-- To favorites → `../saved-environments/`
-- To alerts → `../alert-notifications/`
-- To profile → `../user-profile/`
-- To settings → `../user-settings/`
+- To dashboard → `../dashboard/` 
+- To environments → `../all-environments/`
+- To favorites → `../favorites/`
+- To alerts → `../management/`
+- To profile → `../profile/`
+- To settings → `../settings/`
+
 ## Bounded Context
 Environmental Data Analysis
+
 ## Correlations
 - FR-008, FR-009-FR-013 → `04-requirements/functional.md`
