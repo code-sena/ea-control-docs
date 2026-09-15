@@ -1,4 +1,3 @@
-````markdown
 # User Stories — Backlog
 
 > **What to fill in here:** The product's User Story backlog.
@@ -754,4 +753,3 @@ Scenario 1: [name]
 - API contracts derived from these HUs → `07-api/contracts/openapi/`
 - Domain Map — Bounded Contexts → `02-domain/domain-map.md`
 - Microservice catalog → `09-microservices/service-catalog.md`
-```

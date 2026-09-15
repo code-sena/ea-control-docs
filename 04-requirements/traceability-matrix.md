@@ -1,4 +1,3 @@
-````markdown id="73916"
 # Traceability Matrix
 
 > Traceability connects every line of code to its business justification.
@@ -139,6 +138,3 @@ If there is code without an HU: possible gold-plating or bug introduced without 
 * Definition of Done → `00-governance/definition-of-done.md`
 * Microservice catalog → `09-microservices/service-catalog.md`
 * Architecture overview → `05-architecture/overview.md`
-
-```
-```

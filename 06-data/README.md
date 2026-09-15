@@ -14,9 +14,16 @@ service, it requests it via API or receives it via event. This principle guarant
 
 ## What is here and how to fill it in
 
-### `models.md` ⭐
-Data models for each microservice.
-**Fill in:** ER (entity-relationship) diagram or description of collections/tables for each service.
+### `domain/` ⭐
+Data models for each microservice, organized by service.
+
+**Files:**
+- `ms-iam.md` — Identity and Access Management data model
+- `ms-alert.md` — Alert management data model
+- `ms-sensor-management.md` — Sensor management data model
+- `ms-environment-monitoring.md` — Environmental monitoring data model
+- `ms-classroom-management.md` — Classroom management data model
+- `ms-user-experience.md` — User experience data model
 
 **Format per service:**
 ```markdown
@@ -34,31 +41,6 @@ Data models for each microservice.
 | Name | Fields | Type | Justification |
 |------|--------|------|---------------|
 ```
-
-### `data-dictionary.md` ⭐
-Exact meaning of each important field in the system.
-**Fill in:** especially for fields that may be ambiguous or have business rules.
-
-**Format:**
-```markdown
-| Field | Service | Table | Type | Detailed description | Possible values |
-|-------|---------|-------|------|---------------------|-----------------|
-| status | scheduling | schedule | ENUM | Current status of the schedule | ACTIVE, CANCELLED, PENDING |
-```
-
-### `modeling-conventions.md`
-Naming and style conventions for the project's databases.
-**Fill in:** naming (snake_case or camelCase), use of UUIDs vs sequential, standard timestamps,
-soft delete vs hard delete, auditing (created_at, updated_at, created_by).
-
-### `normalization-assessment.md`
-Analysis of the normalization level and justification for denormalizations.
-**Fill in:** for each intentional denormalization, explain why (performance, simplification).
-
-### `migration-strategy.md`
-Strategy for migrating data between schema versions.
-**Fill in:** migration tool (Flyway, Liquibase, Alembic), rollback policy,
-how to handle migrations with data in production.
 
 ---
 

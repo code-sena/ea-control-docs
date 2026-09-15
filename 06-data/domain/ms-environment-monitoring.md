@@ -36,77 +36,77 @@ Project EnvironmentalMonitoring {
 }
 
 Table educational_environment {
-  educational_environment_id serial [pk]
-  campus_id integer [not null]
+  educational_environment_id uuid [pk, default: `gen_random_uuid()`]
+  campus_id uuid [not null]
   code varchar(30) [not null]
   name varchar(120) [not null]
-  environment_type_id smallint [not null]
+  environment_type_id uuid [not null]
   floor_area_m2 numeric(8,2)
   occupancy_capacity smallint
 }
 
 Table sensor {
-  sensor_id bigserial [pk]
+  sensor_id uuid [pk, default: `gen_random_uuid()`]
   serial_number varchar(60) [not null, unique]
-  sensor_model_id smallint [not null]
-  sensor_status_id smallint [not null]
+  sensor_model_id uuid [not null]
+  sensor_status_id uuid [not null]
   last_seen_at timestamptz
 }
 
 Table sensor_installation {
-  sensor_installation_id bigserial [pk]
-  sensor_id bigint [not null]
-  educational_environment_id integer [not null]
+  sensor_installation_id uuid [pk, default: `gen_random_uuid()`]
+  sensor_id uuid [not null]
+  educational_environment_id uuid [not null]
   installed_at timestamptz [not null]
   removed_at timestamptz
 }
 
 Table variable {
-  variable_id smallserial [pk]
+  variable_id uuid [pk, default: `gen_random_uuid()`]
   code varchar(30) [not null, unique]
   name varchar(80) [not null]
-  unit_id smallint [not null]
+  unit_id uuid [not null]
 }
 
 Table sensor_variable {
-  sensor_id bigint [pk, not null]
-  variable_id smallint [pk, not null]
+  sensor_id uuid [pk, not null]
+  variable_id uuid [pk, not null]
 }
 
 Table variable_threshold {
-  variable_threshold_id serial [pk]
-  variable_id smallint [not null]
-  environment_type_id smallint [not null]
+  variable_threshold_id uuid [pk, default: `gen_random_uuid()`]
+  variable_id uuid [not null]
+  environment_type_id uuid [not null]
   min_value numeric(12,4)
   max_value numeric(12,4)
-  severity_id smallint [not null]
+  severity_id uuid [not null]
   valid_from date [not null]
   valid_to date
 }
 
 Table environment_measurement {
-  environment_measurement_id bigserial [pk]
-  sensor_installation_id bigint [not null]
-  variable_id smallint [not null]
+  environment_measurement_id uuid [pk, default: `gen_random_uuid()`]
+  sensor_installation_id uuid [not null]
+  variable_id uuid [not null]
   measured_value numeric(12,4) [not null]
   measured_at timestamptz [not null]
-  quality_flag_id smallint [not null]
+  quality_flag_id uuid [not null]
 }
 
 Table environmental_analysis {
-  environmental_analysis_id bigserial [pk]
-  educational_environment_id integer [not null]
+  environmental_analysis_id uuid [pk, default: `gen_random_uuid()`]
+  educational_environment_id uuid [not null]
   period_start timestamptz [not null]
   period_end timestamptz [not null]
-  analysis_status_id smallint [not null]
-  requested_by bigint
+  analysis_status_id uuid [not null]
+  requested_by uuid
   computed_at timestamptz
 }
 
 Table analysis_result {
-  analysis_result_id bigserial [pk]
-  environmental_analysis_id bigint [not null]
-  variable_id smallint [not null]
+  analysis_result_id uuid [pk, default: `gen_random_uuid()`]
+  environmental_analysis_id uuid [not null]
+  variable_id uuid [not null]
   min_value numeric(12,4) [not null]
   max_value numeric(12,4) [not null]
   avg_value numeric(12,4) [not null]
@@ -115,14 +115,14 @@ Table analysis_result {
 }
 
 Table environment_alert {
-  environment_alert_id bigserial [pk]
-  educational_environment_id integer [not null]
-  variable_id smallint [not null]
-  variable_threshold_id integer [not null]
-  triggering_measurement_id bigint [not null]
+  environment_alert_id uuid [pk, default: `gen_random_uuid()`]
+  educational_environment_id uuid [not null]
+  variable_id uuid [not null]
+  variable_threshold_id uuid [not null]
+  triggering_measurement_id uuid [not null]
   raised_at timestamptz [not null, default: `now()`]
   acknowledged_at timestamptz
-  acknowledged_by bigint
+  acknowledged_by uuid
 }
 ```
 

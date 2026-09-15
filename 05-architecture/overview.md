@@ -427,7 +427,7 @@ Transversal concerns that apply to ALL services:
 |----|-------------|--------|---------|--------------|
 | AT-001 | Complete and validate centralized API Gateway routing for all microservices | High | P1 | Sprint 2 |
 | AT-002 | Complete JWT validation and role-based authorization across protected endpoints | High | P1 | Sprint 2 |
-| AT-003 | Define and validate the final domain-to-table organization in MySQL | Medium | P1 | Sprint 2 |
+| AT-003 | Define and validate the final domain-to-table organization in PostgreSQL | Medium | P1 | Sprint 2 |
 | AT-004 | Complete sensor communication integration using MQTT/HTTP | High | P1 | Sprint 3 |
 | AT-005 | Define and validate asynchronous communication through RabbitMQ where necessary | Medium | P2 | Sprint 3 |
 | AT-006 | Implement centralized correlation IDs and structured logging | Medium | P2 | Sprint 3 |
