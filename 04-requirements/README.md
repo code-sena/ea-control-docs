@@ -74,7 +74,7 @@ Table that connects: HU → Requirement → Test case.
 ```markdown
 | HU | FR/NFR | Description | Test case | Status |
 |----|--------|-------------|----------|--------|
-| HU-IAM-001 | FR-001 | Login with email | TC-001 | ✅ |
+| HU-IAM-001 | FR-001 | User registration | TC-001 | ✅ |
 ```
 
 ### `_template-hu.md`
