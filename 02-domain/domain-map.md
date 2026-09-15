@@ -1,4 +1,3 @@
-````markdown
 # Domain Map — Bounded Contexts
 
 > **What to fill in here:** The domain map is the central DDD (Domain-Driven Design) artifact.
@@ -58,7 +57,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Responsibility** | Manages user registration, authentication, access, and user-related information. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-security`, `ms-usuarios` |
-| **Database** | MySQL |
+| **Database** | PostgreSQL 15 |
 | **Ubiquitous Language** | User, Administrator, Account, Authentication, Registration, Access |
 
 **Context-specific terms (Ubiquitous Language):**
@@ -79,7 +78,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Responsibility** | Manages the environmental information collected from educational environments. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-aulas`, `ms-sensores`, `ms-monitoreo` |
-| **Database** | MySQL |
+| **Database** | PostgreSQL 15 |
 | **Ubiquitous Language** | Educational Environment, Temperature, Humidity, CO₂, Noise Level, Environmental Data, Environmental Monitoring |
 
 **Context-specific terms (Ubiquitous Language):**
@@ -249,4 +248,3 @@ Microservices in `09-microservices/service-catalog.md` →
 C4 diagrams in `08-uml/` →
 
 Service separation ADRs in `05-architecture/`
-````

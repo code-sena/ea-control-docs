@@ -263,7 +263,7 @@ INV-006: Required Environmental Measurements
 | co2 | Decimal | Analyzed CO₂ information | Yes | not defined |
 | noiseLevel | Decimal | Analyzed noise information | Yes | not defined |
 | createdAt | DateTime | Creation date | Yes | Immutable, set on creation |
-| updatedAt | DateTime | Last modification | Yes | Updated 
+| updatedAt | DateTime | Last modification | Yes | Updated automatically |
 
 **Lifecycle / States:**
 
