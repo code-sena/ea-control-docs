@@ -120,42 +120,49 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 The Context Map shows relationships between bounded contexts. Relationships define how contexts communicate and who provides the information.
 
 ```text
-┌─────────────────────────┐
-│    User Management      │
-│                         │
-│ User registration,      │
-│ authentication and      │
-│ access management       │
-└─────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           CONTEXT MAP                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
 
+┌─────────────────────────┐         ┌─────────────────────────┐
+│    User Management      │         │   Environmental         │
+│                         │         │   Monitoring            │
+│ • User registration     │         │                         │
+│ • Authentication        │         │ • Sensor management     │
+│ • Access control        │         │ • Data collection       │
+└───────────┬─────────────┘         └───────────┬─────────────┘
+            │                                   │
+            │ REST API                          │ Environmental Data
+            │ (authentication)                  │ (measurements)
+            │                                   │
+            ▼                                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         API Gateway                                         │
+│                    Spring Cloud Gateway                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+            │                                   │
+            │                                   │
+            ▼                                   ▼
+┌─────────────────────────┐         ┌─────────────────────────┐
+│ Environmental Data      │         │ Environmental Data      │
+│ Analysis                │         │ Monitoring              │
+│                         │         │                         │
+│ • Historical analysis   │         │ • Real-time monitoring  │
+│ • Dashboard views       │         │ • Threshold evaluation  │
+│ • Period-based reports  │         │ • Alert generation      │
+└─────────────────────────┘         └─────────────────────────┘
 
-┌─────────────────────────┐
-│ Environmental           │
-│ Monitoring              │
-│                         │
-│ Environmental data from │
-│ educational environments│
-└────────────┬────────────┘
-             │
-             │ Environmental Data
-             ▼
-┌─────────────────────────┐
-│ Environmental Data       │
-│ Analysis                │
-│                         │
-│ Dashboard and historical│
-│ analysis by day, week,  │
-│ month and year          │
-└─────────────────────────┘
+Relationships:
 
-Context relationship:
+User Management ──(REST API)──► API Gateway ──(REST)──► Environmental Monitoring
+                                        │
+                                        │
+Environmental Monitoring ──(data flow)──► Environmental Data Analysis
 
-Environmental Monitoring
-          │
-          │ Environmental Data
-          ▼
-Environmental Data Analysis
-````
+Legend:
+─────► Synchronous communication (REST API)
+─────► Data flow (environmental measurements)
+```
 
 ---
 
@@ -242,6 +249,4 @@ Microservices in `09-microservices/service-catalog.md` →
 C4 diagrams in `08-uml/` →
 
 Service separation ADRs in `05-architecture/`
-
-```
-```
+````

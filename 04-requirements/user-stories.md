@@ -34,99 +34,9 @@
 
 ## User Stories
 
-### HU-IAM-001 — User registration {#HU-IAM-001}
 
-**Epic:** EP-001
 
-> **As** a new user
->
-> **I want** to register an account in EduAirControl
->
-> **so that** I can access the platform's environmental monitoring and analysis functionalities according to my permissions.
 
-**Acceptance Criteria:**
-
-```gherkin
-Scenario 1: Successful user registration
-
-  Given the user is on the registration form
-  When the user enters valid required information and submits the form
-  Then the system creates the user account successfully
-  And the account information is stored in the User Management context
-
-Scenario 2: Registration with an existing email
-
-  Given an account already exists with the entered email
-  When the user attempts to register using the same email
-  Then the system rejects the registration
-  And a message indicating that the email is already registered is shown
-
-Scenario 3: Registration with invalid information
-
-  Given the user has entered incomplete or invalid required information
-  When the user submits the registration form
-  Then the system rejects the request
-  And the corresponding validation messages are displayed
-````
-
-| Field               | Value            |
-| ------------------- | ---------------- |
-| Story Points        | 5                |
-| Priority            | Must Have        |
-| Target sprint       | Sprint 1         |
-| Assigned to         | Development Team |
-| Status              | In Progress      |
-| Dependencies        | None             |
-| Affected service(s) | ms-security      |
-
----
-
-### HU-IAM-002 — User authentication / Login {#HU-IAM-002}
-
-**Epic:** EP-001
-
-> **As** a registered user
->
-> **I want** to authenticate using my credentials
->
-> **so that** I can securely access the EduAirControl platform.
-
-**Acceptance Criteria:**
-
-```gherkin
-Scenario 1: Successful authentication
-
-  Given the user has a valid registered account
-  When the user enters valid credentials and submits the login form
-  Then the system authenticates the user
-  And a valid JWT access token is generated
-
-Scenario 2: Invalid credentials
-
-  Given the user has entered incorrect credentials
-  When the user submits the login form
-  Then the system rejects the authentication
-  And an authentication error message is shown
-
-Scenario 3: Empty required fields
-
-  Given the login form contains empty required fields
-  When the user attempts to authenticate
-  Then the system prevents the request
-  And validation messages are displayed
-```
-
-| Field               | Value            |
-| ------------------- | ---------------- |
-| Story Points        | 5                |
-| Priority            | Must Have        |
-| Target sprint       | Sprint 1         |
-| Assigned to         | Development Team |
-| Status              | In Progress      |
-| Dependencies        | HU-IAM-001       |
-| Affected service(s) | ms-security      |
-
----
 
 ### HU-IAM-003 — Role-based access control {#HU-IAM-003}
 

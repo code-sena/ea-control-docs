@@ -155,6 +155,7 @@ User → [RegisterUser] → System → [UserRegistered]
     "noiseLevel": 42.5
   }
 }
+```
 
 ---
 

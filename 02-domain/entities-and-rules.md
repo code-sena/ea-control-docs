@@ -295,6 +295,104 @@ INV-008: Environment Association
  - Implementation: Validate environmentId during creation.
 ```
 
+### Entity: Sensor
+
+**Context:** Environmental Monitoring
+
+**Description:** Represents an environmental sensor that collects measurements from educational environments.
+
+**Attributes:**
+
+| Attribute | Type | Description | Required | Rules |
+|-----------|------|-------------|---------|-------|
+| id | UUID | Unique identifier | Yes | Auto-generated on creation |
+| serialNumber | String | Sensor serial number | Yes | Must be unique |
+| sensorModelId | UUID | Sensor model identifier | Yes | Must reference an existing model |
+| sensorStatusId | UUID | Sensor status identifier | Yes | Must reference an existing status |
+| lastSeenAt | DateTime | Last communication time | No | Updated when sensor sends data |
+
+**Invariants (Business rules that MUST ALWAYS hold):**
+
+```
+INV-009: Sensor Identity
+
+ - Rule: Every sensor must have a unique identifier.
+ - Violation: A sensor cannot be created without an ID.
+ - Implementation: Generate the identifier during creation.
+
+INV-010: Sensor Serial Number
+
+ - Rule: Every sensor must have a unique serial number.
+ - Violation: A sensor with a duplicate serial number cannot be created.
+ - Implementation: Validate serial number uniqueness during creation.
+```
+
+### Entity: Variable
+
+**Context:** Environmental Monitoring
+
+**Description:** Represents an environmental variable that can be measured (temperature, humidity, CO₂, noise level).
+
+**Attributes:**
+
+| Attribute | Type | Description | Required | Rules |
+|-----------|------|-------------|---------|-------|
+| id | UUID | Unique identifier | Yes | Auto-generated on creation |
+| code | String | Variable code | Yes | Must be unique (TEMP, HUM, CO2, NOISE) |
+| name | String | Variable name | Yes | Not defined |
+| unitId | UUID | Unit of measurement identifier | Yes | Must reference an existing unit |
+
+**Invariants (Business rules that MUST ALWAYS hold):**
+
+```
+INV-011: Variable Identity
+
+ - Rule: Every variable must have a unique identifier.
+ - Violation: A variable cannot be created without an ID.
+ - Implementation: Generate the identifier during creation.
+
+INV-012: Variable Code
+
+ - Rule: Every variable must have a unique code.
+ - Violation: A variable with a duplicate code cannot be created.
+ - Implementation: Validate variable code uniqueness during creation.
+```
+
+### Entity: VariableThreshold
+
+**Context:** Environmental Monitoring
+
+**Description:** Represents the acceptable range for an environmental variable in a specific environment type.
+
+**Attributes:**
+
+| Attribute | Type | Description | Required | Rules |
+|-----------|------|-------------|---------|-------|
+| id | UUID | Unique identifier | Yes | Auto-generated on creation |
+| variableId | UUID | Variable identifier | Yes | Must reference an existing variable |
+| environmentTypeId | UUID | Environment type identifier | Yes | Must reference an existing type |
+| minValue | Decimal | Minimum acceptable value | No | Must be less than maxValue |
+| maxValue | Decimal | Maximum acceptable value | No | Must be greater than minValue |
+| severityId | UUID | Alert severity identifier | Yes | Must reference an existing severity |
+| validFrom | Date | Start date of validity | Yes | Must be before validTo |
+| validTo | Date | End date of validity | No | Must be after validFrom |
+
+**Invariants (Business rules that MUST ALWAYS hold):**
+
+```
+INV-013: Threshold Validity Range
+
+ - Rule: The validFrom date must be before the validTo date.
+ - Violation: A threshold with an invalid date range cannot be created.
+ - Implementation: Validate date range during creation.
+
+INV-014: Threshold Value Range
+
+ - Rule: The minValue must be less than the maxValue.
+ - Violation: A threshold with invalid value range cannot be created.
+ - Implementation: Validate value range during creation.
+```
+
 ---
 
 ## System Value Objects
@@ -483,9 +581,12 @@ EnvironmentalDataAnalysis represents the analysis of environmental information f
 | EducationalEnvironment | Entity | Environmental Monitoring | Yes |
 | EnvironmentalData  | Entity | Environmental Monitoring | Yes |
 | EnvironmentalDataAnalysis | Entity |Environmental Data Analysis | Yes |
+| Sensor | Entity | Environmental Monitoring | No |
+| Variable | Entity | Environmental Monitoring | No |
+| VariableThreshold | Entity | Environmental Monitoring | No |
 | Email | Value Object | Shared | User Management |
 | AnalysisPeriod | Value Object | Environmental Data Analysis | N/A |
-| Domain Service | value Object | Not defined | N/A |
+| Domain Service | Domain Service | Not defined | N/A |
 
 ---
 
@@ -500,7 +601,6 @@ Domain Service: Not defined
 Potential domain logic such as environmental data analysis should remain associated with the Environmental Data Analysis domain until the team determines that the logic does not naturally belong to an entity or aggregate.
 
 No additional Domain Service is introduced because the current project documentation does not formally define one.
-```
 
 ---
 
@@ -512,6 +612,9 @@ No additional Domain Service is introduced because the current project documenta
 | Value Object `Email`                       | `Not defined`            | `Not defined` |
 | Aggregate Root `EducationalEnvironment`    | `Not defined`            | `Not defined` |
 | Entity `EnvironmentalData`                 | `Not defined`            | `Not defined` |
+| Entity `Sensor`                            | `Not defined`            | `Not defined` |
+| Entity `Variable`                          | `Not defined`            | `Not defined` |
+| Entity `VariableThreshold`                 | `Not defined`            | `Not defined` |
 | Aggregate Root `EnvironmentalDataAnalysis` | `Not defined`            | `Not defined` |
 | Value Object `AnalysisPeriod`              | `Not defined`            | `Not defined` |
 | Domain Service                             | `Not defined`            | `Not defined` |

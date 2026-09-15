@@ -19,8 +19,9 @@
 │   └── /forgot-password    → Password recovery
 │
 ├── /dashboard              → Main panel (authenticated)
-│   ├── /overview           → Summary and key metrics
-│   └── /notifications      → Notification center
+│   ├── /Dashboard           → Summary and key metrics
+│   ├── /notifications      → Notification center
+|   └── / 
 │
 ├── /[resource-a]           → [Resource A] list
 │   ├── /new                → Creation form
