@@ -49,11 +49,11 @@ EduAirControl manages the monitoring and analysis of environmental conditions in
 
 A **Bounded Context** is the explicit boundary within which a particular domain model has consistent meaning. Each bounded context has its own Ubiquitous Language.
 
-### Bounded Context: User Management
+### Bounded Context: IAM
 
 | Field | Value |
 |-------|-------|
-| **Name** | User Management |
+| **Name** | IAM |
 | **Responsibility** | Manages user registration, authentication, access, and user-related information. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-security`, `ms-usuarios` |
@@ -64,20 +64,20 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 | Term | Meaning in THIS context | Different in another context? |
 |------|-------------------------|-------------------------------|
-| User | A person with an account who can access the EduAirControl platform. | Yes — in Environmental Monitoring, the user is primarily a consumer of environmental information. |
+| User | A person with an account who can access the EduAirControl platform. | Yes — in Monitoring, the user is primarily a consumer of environmental information. |
 | Administrator | A user with permissions to manage platform information. | Yes — permissions may have a different meaning in other contexts. |
 | Account | The information required to identify and authenticate a user. | No |
 
 ---
 
-### Bounded Context: Environmental Monitoring
+### Bounded Context: Monitoring
 
 | Field | Value |
 |-------|-------|
-| **Name** | Environmental Monitoring |
+| **Name** | Monitoring |
 | **Responsibility** | Manages the environmental information collected from educational environments. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | `ms-aulas`, `ms-sensores`, `ms-monitoreo` |
+| **Microservice(s)** | `ms-environment-monitoring`, `ms-alert` |
 | **Database** | PostgreSQL 15 |
 | **Ubiquitous Language** | Educational Environment, Temperature, Humidity, CO₂, Noise Level, Environmental Data, Environmental Monitoring |
 
@@ -85,21 +85,21 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 | Term | Meaning in THIS context | Different in another context? |
 |------|-------------------------|-------------------------------|
-| Educational Environment | An educational space whose environmental conditions are monitored. | Yes — in Environmental Data Analysis, it is the environment associated with historical data. |
+| Educational Environment | An educational space whose environmental conditions are monitored. | Yes — in Data Analysis, it is the environment associated with historical data. |
 | Environmental Data | Recorded values of temperature, humidity, CO₂, and noise level. | Yes — in Data Analysis, it represents historical information used for analysis. |
 | Environmental Variable | A measurable condition of an educational environment. | No |
-| Environmental Monitoring | The process of collecting and tracking environmental conditions. | No |
+| Monitoring | The process of collecting and tracking environmental conditions. | No |
 
 ---
 
-### Bounded Context: Environmental Data Analysis
+### Bounded Context: Data Analysis
 
 | Field | Value |
 |-------|-------|
-| **Name** | Environmental Data Analysis |
+| **Name** | Data Analysis |
 | **Responsibility** | Analyzes environmental data and presents historical information according to different time periods. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | `ms-monitoreo` in the MVP; extraction remains a future option |
+| **Microservice(s)** | `ms-environment-monitoring` in the MVP; extraction remains a future option |
 | **Database** | PostgreSQL 15 — logical ownership boundary |
 | **Ubiquitous Language** | Environmental Data, Historical Data, Data Analysis, Daily Analysis, Weekly Analysis, Monthly Analysis, Yearly Analysis, Environmental Dashboard |
 
@@ -107,18 +107,18 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 | Term | Meaning in THIS context | Different in another context? |
 |------|-------------------------|-------------------------------|
-| Historical Data | Previously recorded environmental information used for analysis. | Yes — in Environmental Monitoring, data represents current or collected measurements. |
+| Historical Data | Previously recorded environmental information used for analysis. | Yes — in Monitoring, data represents current or collected measurements. |
 | Data Analysis | Process of examining environmental data to identify variations and conditions over time. | No |
 | Environmental Dashboard | Visual interface used to display environmental information and analysis. | No |
 | Analysis Period | The time range used to analyze environmental data. | No |
 
 ---
 
-### Bounded Context: Classroom Management
+### Bounded Context: Classrooms
 
 | Field | Value |
 |-------|-------|
-| **Name** | Classroom Management |
+| **Name** | Classrooms |
 | **Responsibility** | Manages campuses, educational environments (rooms), and environment types. Owns the physical/spatial domain model. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-classroom-management` |
@@ -130,16 +130,16 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | Term | Meaning in THIS context | Different in another context? |
 |------|-------------------------|-------------------------------|
 | Campus | Physical location where educational environments are located. | No |
-| Educational Environment | A physical room/space whose environmental conditions are monitored. | Yes — in Environmental Monitoring, it refers to the monitored entity, not the physical space. |
+| Educational Environment | A physical room/space whose environmental conditions are monitored. | Yes — in Monitoring, it refers to the monitored entity, not the physical space. |
 | Environment Type | Classification of an educational environment (classroom, lab, library, etc.). | No |
 
 ---
 
-### Bounded Context: Sensor Management
+### Bounded Context: Sensors
 
 | Field | Value |
 |-------|-------|
-| **Name** | Sensor Management |
+| **Name** | Sensors |
 | **Responsibility** | Manages physical sensors, models, manufacturers, status, installation history, variables, and measurement units. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-sensor-management` |
@@ -150,7 +150,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 | Term | Meaning in THIS context | Different in another context? |
 |------|-------------------------|-------------------------------|
-| Sensor | Physical device that collects environmental measurements. | Yes — in Environmental Monitoring, it refers to the data source, not the physical device. |
+| Sensor | Physical device that collects environmental measurements. | Yes — in Monitoring, it refers to the data source, not the physical device. |
 | Sensor Model | Technical specification of a sensor type. | No |
 | Sensor Installation | Association between a sensor and an educational environment with time bounds. | No |
 | Variable | Measurable condition (temperature, humidity, CO₂, noise level). | No |
@@ -158,11 +158,11 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 ---
 
-### Bounded Context: User Experience
+### Bounded Context: UX
 
 | Field | Value |
 |-------|-------|
-| **Name** | User Experience |
+| **Name** | UX |
 | **Responsibility** | Manages user interactions: preferences, favorites, ratings, comments, search history, and filters. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-user-experience` |
@@ -173,7 +173,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 
 | Term | Meaning in THIS context | Different in another context? |
 |------|-------------------------|-------------------------------|
-| Preference | User's UI settings (theme, language, notification toggles). | Yes — in User Management, it refers to account-level settings. |
+| Preference | User's UI settings (theme, language, notification toggles). | Yes — in IAM, it refers to account-level settings. |
 | Favorite | An educational environment saved by the user for quick access. | No |
 | Rating | User's qualitative evaluation of an environmental condition or environment. | No |
 | Search History | Record of user's searches within the platform. | No |
@@ -190,7 +190,7 @@ The Context Map shows relationships between bounded contexts. Relationships defi
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
-│  User Management     │  │ Classroom Management │  │  Sensor Management   │
+│        IAM           │  │     Classrooms       │  │       Sensors        │
 │                      │  │                      │  │                      │
 │ • Authentication     │  │ • Campuses           │  │ • Sensor models      │
 │ • User registration  │  │ • Environments       │  │ • Installations      │
@@ -209,7 +209,7 @@ The Context Map shows relationships between bounded contexts. Relationships defi
                          │                         │
                          ▼                         ▼
 ┌──────────────────────────────┐    ┌──────────────────────────────┐
-│  Environmental Monitoring    │    │ Environmental Data Analysis  │
+│         Monitoring           │    │        Data Analysis         │
 │                              │    │                              │
 │ • Real-time monitoring       │    │ • Historical analysis        │
 │ • Threshold evaluation       │    │ • Dashboard views            │
@@ -220,7 +220,7 @@ The Context Map shows relationships between bounded contexts. Relationships defi
                │ (measurements)
                ▼
 ┌──────────────────────────────┐
-│      User Experience         │
+│             UX               │
 │                              │
 │ • Favorites                  │
 │ • Ratings                    │
@@ -229,12 +229,12 @@ The Context Map shows relationships between bounded contexts. Relationships defi
 
 Relationships:
 
-User Management ──(REST API)──► API Gateway
-Classroom Management ──(REST API)──► API Gateway
-Sensor Management ──(REST API)──► API Gateway
-API Gateway ──(REST)──► Environmental Monitoring
-Environmental Monitoring ──(data flow)──► Environmental Data Analysis
-Environmental Monitoring ──(data flow)──► User Experience
+IAM ──(REST API)──► API Gateway
+Classrooms ──(REST API)──► API Gateway
+Sensors ──(REST API)──► API Gateway
+API Gateway ──(REST)──► Monitoring
+Monitoring ──(data flow)──► Data Analysis
+Monitoring ──(data flow)──► UX
 
 Legend:
 ──────► Synchronous communication (REST API)
@@ -247,9 +247,9 @@ Legend:
 
 | Type                  | Symbol | Description                                                 | Example                                                |
 | --------------------- | ------ | ----------------------------------------------------------- | ------------------------------------------------------ |
-| Upstream → Downstream | U → D  | U provides, D consumes. D depends on U                      | Environmental Monitoring → Environmental Data Analysis |
-| Shared Kernel         | SK     | Two teams share part of the model                           | Not defined                                            |
-| Customer/Supplier     | C/S    | Supplier (U) provides information required by Customer (D). | Environmental Monitoring → Environmental Data Analysis |
+| Upstream → Downstream | U → D  | U provides, D consumes. D depends on U                      | Monitoring → Data Analysis |
+| Shared Kernel         | SK     | Two teams share part of the model                           | Not defined                 |
+| Customer/Supplier     | C/S    | Supplier (U) provides information required by Customer (D). | Monitoring → Data Analysis  |
 | Conformist            | CONF   | D adopts U's model without negotiating                      | Not defined                                            |
 | Anti-Corruption Layer | ACL    | D translates U's model to protect its own model             | Not defined                                            |
 | Open Host Service     | OHS    | U publishes a protocol that other contexts can consume      | Not defined                                            |
@@ -257,14 +257,14 @@ Legend:
 
 ## Relationships table
 
-| Context A                | Relationship | Context B                   | Communication channel | Contract     |
-| ------------------------ | ------------ | --------------------------- | --------------------- | ------------ |
-| User Management          | U → D        | API Gateway                 | REST API              | API contract |
-| Classroom Management     | U → D        | API Gateway                 | REST API              | API contract |
-| Sensor Management        | U → D        | API Gateway                 | REST API              | API contract |
-| API Gateway              | U → D        | Environmental Monitoring    | REST API              | API contract |
-| Environmental Monitoring | U → D        | Environmental Data Analysis | Data flow             | Events       |
-| Environmental Monitoring | U → D        | User Experience             | Data flow             | Events       |
+| Context A    | Relationship | Context B       | Communication channel | Contract     |
+| ------------ | ------------ | --------------- | --------------------- | ------------ |
+| IAM          | U → D        | API Gateway     | REST API              | API contract |
+| Classrooms   | U → D        | API Gateway     | REST API              | API contract |
+| Sensors      | U → D        | API Gateway     | REST API              | API contract |
+| API Gateway  | U → D        | Monitoring      | REST API              | API contract |
+| Monitoring   | U → D        | Data Analysis   | Data flow             | Events       |
+| Monitoring   | U → D        | UX              | Data flow             | Events       |
 
 ---
 
@@ -274,20 +274,20 @@ DDD classifies subdomains by their strategic value:
 
 | Type                 | Description                                                                   | Investment                 | Example                     |
 | -------------------- | ----------------------------------------------------------------------------- | -------------------------- | --------------------------- |
-| Core Domain          | Where the business competitive advantage lies. What differentiates the system | MAXIMUM — build, don't buy | Environmental data analysis |
-| Supporting Subdomain | Necessary for the core but not differentiating                                | MEDIUM                     | Environmental monitoring    |
-| Generic Subdomain    | Commodity. Off-the-shelf solution exists                                      | MINIMUM — buy/use OSS      | User authentication         |
+| Core Domain          | Where the business competitive advantage lies. What differentiates the system | MAXIMUM — build, don't buy | Data analysis        |
+| Supporting Subdomain | Necessary for the core but not differentiating                                | MEDIUM                     | Monitoring           |
+| Generic Subdomain    | Commodity. Off-the-shelf solution exists                                      | MINIMUM — buy/use OSS      | User authentication  |
 
 ## Classification of this project's bounded contexts
 
-| Bounded Context             | Type       | Justification                                                                                                                                  |
-| --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Environmental Data Analysis | Core       | It is the main differentiating functionality of EduAirControl, providing historical analysis of environmental conditions through the dashboard |
-| Environmental Monitoring    | Supporting | It provides the environmental information required by the analysis functionality                                                               |
-| Classroom Management        | Supporting | Manages the physical spaces being monitored; necessary for contextualizing environmental data                                                 |
-| Sensor Management           | Supporting | Manages the physical devices that collect data; necessary for the monitoring functionality                                                     |
-| User Experience             | Supporting | Manages user interactions and personalization; enhances the value of core functionality                                                         |
-| User Management             | Generic    | User authentication and account management are common functionalities with standard solutions available                                        |
+| Bounded Context | Type       | Justification                                                                                                  |
+| --------------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
+| Data Analysis   | Core       | Main differentiating functionality; provides historical analysis through the dashboard                         |
+| Monitoring      | Supporting | Provides the environmental information required by the analysis functionality                                   |
+| Classrooms      | Supporting | Manages the physical spaces being monitored; necessary for contextualizing environmental data                  |
+| Sensors         | Supporting | Manages the physical devices that collect data; necessary for the monitoring functionality                      |
+| UX              | Supporting | Manages user interactions and personalization; enhances the value of core functionality                         |
+| IAM             | Generic    | User authentication and account management are common functionalities with standard solutions available         |
 
 ---
 
@@ -307,8 +307,8 @@ Map iterations: Initial version
 
 | Decision                                                          | Discarded alternative                           | Reason                                                                                                             |
 | ----------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Separate Environmental Monitoring and Environmental Data Analysis | Combine both into a single context              | Monitoring focuses on environmental information, while analysis focuses on historical data and time-based analysis |
-| Use Environmental Data Analysis as the Core Domain                | Use Environmental Monitoring as the Core Domain | The dashboard and historical analysis are the main differentiating functionality of the current project            |
+| Separate Monitoring and Data Analysis                             | Combine both into a single context              | Monitoring focuses on environmental information, while analysis focuses on historical data and time-based analysis |
+| Use Data Analysis as the Core Domain                              | Use Monitoring as the Core Domain               | The dashboard and historical analysis are the main differentiating functionality of the current project            |
 | Remove Environmental Ranking from the domain                      | Keep ranking as a system capability             | Ranking is no longer part of the current project scope                                                             |
 | Analyze data by day, week, month, and year                        | Use only current environmental values           | Historical analysis is now a central functionality of EduAirControl                                                |
 
@@ -326,9 +326,7 @@ The context map MUST be synchronized with the C4 system-level diagram (`05-archi
 
 Important correlation:
 
-The bounded contexts in this document →
-
-Microservices in `09-microservices/service-catalog.md` →
+The bounded contexts in this document → Microservices in `06-data/domain/` →
 
 C4 diagrams in `08-uml/` →
 
