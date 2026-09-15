@@ -8,26 +8,36 @@
 
 ---
 
+## Purpose and classification
+
+Non-functional requirements define measurable qualities and technical constraints that apply across EduAirControl. They complement the functional and user requirements in user-stories.md.
+
 ## How to write a measurable NFR?
 
-| Bad | Good |
-|-----|------|
-| "The system must be fast" | "P95 latency must be < 300ms under 100 concurrent requests" |
-| "The system must be secure" | "All private endpoints require a valid JWT; tokens expire in 1 hour" |
-| "The system must scale" | "The system must support up to 500 concurrent users without degradation" |
-| "The system must be available" | "Availability SLO: 99.5% monthly" |
+| ID | Category | Priority | Verification owner |
+|----|----------|----------|--------------------|
+| NFR-001 | Perfomance | P1 | Development and QA |
+| NFR-002 | Availability | P1 | Development and DevOps |
+| NFR-003 | Scalability | P2 | Development and DevOps |
+| NFR-004 | Security | P1 | Development and QA |
+| NFR-005 | Observability | P1 | Development and DevOps |
+| NFR-006 | Maintainability | P2 | Development and QA |
+| NFR-007 | Portability | P2 | DevOps |
+| NFR-008 | Disaster recovery | P2 | DevOps and database owner |
+
+Targets are release criteria unless a documented exception is approved. A target marked for staging or production must be measured in an environment representative of the release.
 
 ---
 
 ## NFR-001: Performance
 
-| Attribute | Metric | Test condition |
+| Measurement | Target | Verification |
 |-----------|--------|---------------|
-| P95 latency — critical endpoints | < 500ms | Under 100 concurrent requests |
-| P99 latency — critical endpoints | < 1000ms | Under 100 concurrent requests |
-| P95 latency — non-critical endpoints | < 1500ms | Normal load |
-| Minimum throughput | ≥ 20 requests/second | Without degradation |
-| Service startup time | < 30 seconds | Cold start |
+| P95 ≤ 500 ms under expected MVP load | P95 ≤ 500 ms under expected MVP load | Automated performance test in staging.s |
+| API response time for historical analysis | P95 ≤ 2 s for a supported period and expected data range | Analysis load test. |
+| Dashboard initial data request | P95 ≤ 3 s after the authenticated request reaches the API | End-to-end staging test |
+| Sensor measurement ingestion acknowledgment | P95 ≤ 1 s under expected ingestion load | Ingestion performance test |
+| Error rate under expected load | < 1% of requests, excluding client validation errors | Load test and service metrics. |
 
 **Defined critical endpoints:**
 
@@ -50,12 +60,15 @@ CI/CD or staging environment before production deployment.
 
 ---
 
-## NFR-002: Availability
+## NFR-002: Availability and resilience
 
-| Environment | SLO | Maintenance window | Max downtime/month |
-|------------|-----|-------------------|-------------------|
-| Production | 99.5% | Scheduled maintenance when required | Approximately 3 hours 39 minutes |
-| Staging | 95% | No restriction | Approximately 36 hours |
+| Requirement | Target | Verification |
+|------------|---------|--------------|
+| API Gateway and critical services | Monthly availability ≥ 99.5% during the agreed service window | Health checks and operational metrics |
+| SHealth endpoints | Every deployable service exposes a machine-readable health signal | Deployment smoke test |
+| Stateless restart | Restart does not lose committed stateless request state | Restart test |
+| Dependency failure | Controlled error with correlation ID when a dependency is unavailable | Fault-injection test |
+| Retried input | Retries do not duplicate accepted measurements or side effects | Idempotency test |
 
 **Monthly error budget in production:** Approximately 3 hours 39 minutes.
 
