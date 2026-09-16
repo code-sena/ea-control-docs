@@ -20,7 +20,7 @@
 - To settings → `../settings/`
 
 ## Bounded Context
-User Management
+User Experience
 
 ## Correlations
 - User entity → `02-domain/entities-and-rules.md`

@@ -2,7 +2,7 @@
 > Main screen with current conditions and charts.
 
 ## Files
-- `index.html` — Screen layout
+- `index.html` — Screen Favorites
 
 ## Components
 
@@ -18,7 +18,7 @@
 - To settings → `../settings/`
 
 ## Bounded Context
-Environmental Data Analysis
+User Experience
 
 ## Correlations
 - FR-008, FR-009-FR-013 → `04-requirements/functional.md`
