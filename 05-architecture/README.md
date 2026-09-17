@@ -38,6 +38,24 @@ were evaluated, and what the consequences are.
 - Authentication library
 - Any decision that, if changed, requires significant refactoring
 
+### ADR Index
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| ADR-001 | Documentation Language | Accepted |
+| ADR-002 | Bounded Contexts and Microservice Boundaries | Accepted |
+| ADR-003 | Database Strategy | Accepted |
+| ADR-004 | Communication Patterns Between Components | Accepted |
+| ADR-005 | API Gateway as the External Backend Entry Point | Accepted |
+| ADR-006 | JWT Authentication and Service-Level RBAC | Accepted |
+| ADR-007 | At-Least-Once Events with Transactional Outbox | Accepted |
+| ADR-008 | Database Migration Tool (Liquibase) | Proposed |
+| ADR-009 | Internal Service Architecture (Hexagonal) | Proposed |
+| ADR-010 | Containerization Strategy (Docker) | Proposed |
+| ADR-011 | Production Deployment Strategy | Proposed |
+| ADR-012 | Observability Stack | Proposed |
+| ADR-013 | Circuit Breaker Adoption | Proposed |
+
 ---
 
 ## Correlations with other sections

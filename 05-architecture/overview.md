@@ -391,7 +391,7 @@ This principle helps maintain consistency between requirements, architecture, de
 | Event Sourcing | No | Not required for current scope |
 | Circuit Breaker | Planned — see ADR-013 | `05-architecture/pattern-guide.md` |
 | Saga | No | Not required for current business flows |
-| Outbox Pattern | Planned / Review | To be evaluated if asynchronous events become critical |
+| Outbox Pattern | Planned — see ADR-007 | To be evaluated if asynchronous events become critical |
 | Hexagonal Architecture | Yes — see ADR-009 | `05-architecture/hexagonal-architecture.md` |
 | Database per physical service | No | Single PostgreSQL infrastructure with domain separation |
 | Containerization | Yes | Docker / Docker Compose |
@@ -413,7 +413,7 @@ Transversal concerns that apply to ALL services:
 | Error format | Standardized API error response | `07-api/contracts/openapi/_shared.yaml` |
 | Rate Limiting | Planned at API Gateway | Gateway configuration |
 | CORS | API Gateway / backend configuration | Gateway configuration |
-| Circuit Breaker | Planned with Resilience4j | `05-architecture/pattern-guide.md` |
+| Circuit Breaker | Planned — see ADR-013 | Resilience4j for inter-service resilience |
 | Database Migrations | Liquibase | Database migration configuration |
 | Configuration | Environment variables / application configuration | Docker and Spring Boot configuration |
 | Containerization | Docker | Dockerfiles / Docker Compose |

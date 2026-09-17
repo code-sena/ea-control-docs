@@ -74,6 +74,7 @@
 ## Correlations
 
 - Architecture → `05-architecture/overview.md`
+- ADRs → `05-architecture/decisions/`
 - API contracts → `07-api/contracts/openapi/`
 - Domain events → `02-domain/domain-events.md`
 - Data models → `06-data/domain/`
