@@ -102,8 +102,8 @@ src/
 
   <!-- ─── DB migrations ────────────────────────────────────────── -->
   <dependency>
-    <groupId>org.flywaydb</groupId>
-    <artifactId>flyway-core</artifactId>
+    <groupId>org.liquibase</groupId>
+    <artifactId>liquibase-core</artifactId>
   </dependency>
 
   <!-- ─── Observability ──────────────────────────────────────────── -->

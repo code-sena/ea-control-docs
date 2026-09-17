@@ -47,9 +47,10 @@
 
 ## Schema migration
 
-**Tool:** [Flyway / Liquibase / Alembic / knex]
-**Script location:** `src/migrations/`
-**Naming convention:** `V[NNN]__[description].sql`
+**Tool:** Liquibase
+**Script location:** `src/main/resources/db/changelog/`
+**Naming convention:** `changelog-<version>.xml` (or .yaml, .json, .sql)
 
 **Rollback policy:**
-- [Is migration rollback supported? How?]
+- Liquibase supports rollback for most change types
+- Use `<rollback>` tag within changesets for explicit rollback SQL

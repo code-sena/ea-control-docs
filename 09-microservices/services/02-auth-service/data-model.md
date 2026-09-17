@@ -95,8 +95,8 @@ Redis soporta búsquedas O(1) con TTL automático, sin necesidad de jobs de limp
 
 ## Migraciones
 
-**Herramienta:** [Flyway / Alembic / golang-migrate — según el stack del proyecto]
-**Ubicación de scripts:** `src/migrations/` (ver guía en `_stacks/[tu-stack].md`)
+**Herramienta:** Liquibase
+**Ubicación de scripts:** `src/main/resources/db/changelog/`
 
 **Política:** Todas las migraciones son forward-only en producción. Los rollbacks de datos se hacen con migraciones adicionales, no revirtiendo scripts.
 

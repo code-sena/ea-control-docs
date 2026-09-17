@@ -125,7 +125,7 @@ The command should show all containers in `healthy` or `running` state.
 | Stack / Tool | Command |
 |--------------|---------|
 | Node.js + knex/Prisma | `npm run db:migrate` |
-| Java + Flyway | `mvn flyway:migrate` (or automatic on startup) |
+| Java + Liquibase | `mvn liquibase:update` (or automatic on startup) |
 | Python + Alembic | `alembic upgrade head` |
 | Go + golang-migrate | `make migrate-up` |
 

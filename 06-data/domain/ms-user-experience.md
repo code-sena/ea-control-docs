@@ -492,19 +492,19 @@ CREATE TABLE searches (
 
 # 13. Migration Strategy
 
-Database changes should be managed using **Flyway** or another version-controlled migration tool.
+Database changes should be managed using **Liquibase** or another version-controlled migration tool.
 
 Example:
 
-```text
-V1__create_user_preferences.sql
-V2__create_favorites.sql
-V3__create_classroom_ratings.sql
-V4__create_searches.sql
-V5__create_indexes.sql
+```xml
+<changeSet id="1" author="developer">
+  <createTable tableName="user_preferences">
+    <!-- table definition -->
+  </createTable>
+</changeSet>
 ```
 
-Each migration should be immutable once it has been executed in a shared environment.
+Each changeset should have a unique ID and be committed to version control. Once executed in a shared environment, changesets should not be modified.
 
 ---
 

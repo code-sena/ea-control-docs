@@ -40,7 +40,7 @@ The service uses:
 * `snake_case` naming convention
 * `TIMESTAMPTZ` for temporal data
 * `pgcrypto` for UUID generation
-* Flyway for database migrations
+* Liquibase for database migrations
 
 Each Sensor Service database is owned exclusively by the service.
 

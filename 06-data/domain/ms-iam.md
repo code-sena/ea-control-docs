@@ -846,16 +846,18 @@ CREATE TABLE password_policies (
 
 ## 19.1 Migration Tool
 
-**Recommended Tool: Flyway**
+**Recommended Tool: Liquibase**
 
-Flyway is recommended because it provides:
+Liquibase is recommended because it provides:
 
 * Version-controlled database migrations.
-* Simple SQL-based migrations.
+* Multiple format support (XML, YAML, JSON, SQL).
+* Rollback capabilities for safe schema changes.
 * Integration with Spring Boot.
 * Automatic migration execution.
-* Migration history tracking.
+* Migration history tracking in DATABASECHANGELOG table.
 * Support for CI/CD pipelines.
+* Diff tools for comparing environments.
 * Clear versioning of schema changes.
 
 ## 19.2 Migration Naming Convention
@@ -863,25 +865,23 @@ Flyway is recommended because it provides:
 Migration files should follow:
 
 ```text
-V<version>__<description>.sql
+changelog-<version>.xml (or .yaml, .json, .sql)
 ```
 
 Examples:
 
 ```text
-V1__create_user_statuses.sql
-V2__create_users.sql
-V3__create_roles.sql
-V4__create_user_roles.sql
-V5__create_permissions.sql
-V6__create_role_permissions.sql
-V7__create_session_statuses.sql
-V8__create_user_sessions.sql
-V9__create_audit_actions.sql
-V10__create_audit_logs.sql
-V11__create_error_logs.sql
-V12__create_security_configurations.sql
-V13__create_password_policies.sql
+changelog-1.0.xml
+changelog-1.1.xml
+changelog-2.0.xml
+```
+
+Each changeset within the file should have a unique ID:
+
+```xml
+<changeSet id="1" author="developer">
+  <!-- SQL or XML changes -->
+</changeSet>
 ```
 
 ## 19.3 Migration Rules
