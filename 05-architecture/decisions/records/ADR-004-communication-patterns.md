@@ -1,8 +1,8 @@
 ## ADR-004 — Communication Patterns Between Components
 
-- **ID:** ADR-002
+- **ID:** ADR-004
 - **Date:** 2026-09-09
-- **Status:** Proposed 
+- **Status:** Accepted
 - **Authors:** EduAirControl Development Team
 
 ---

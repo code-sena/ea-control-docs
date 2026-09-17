@@ -1,8 +1,8 @@
 ## ADR-006 — JWT Authentication and Service-Level RBAC
 
-- **ID:** ADR-002
+- **ID:** ADR-006
 - **Date:** 2026-09-09
-- **Status:** Proposed 
+- **Status:** Accepted
 - **Authors:** EduAirControl Development Team
 
 ---

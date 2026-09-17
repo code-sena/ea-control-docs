@@ -1,8 +1,8 @@
 ## ADR-005 — API Gateway as the External Backend Entry Point
 
-- **ID:** ADR-002
+- **ID:** ADR-005
 - **Date:** 2026-09-09
-- **Status:** Proposed 
+- **Status:** Accepted
 - **Authors:** EduAirControl Development Team
 
 ---

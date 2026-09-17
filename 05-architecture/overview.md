@@ -330,6 +330,8 @@ For example:
 - `ms-aulas` handles educational classrooms.
 - `ms-sensores` handles environmental sensors.
 - `ms-monitoreo` handles environmental measurements, monitoring and analysis.
+- `ms-alert` handles alert generation and management.
+- `ms-user-experience` handles user preferences and experience.
 
 A service should not absorb responsibilities belonging to another bounded context without an architectural justification.
 
@@ -387,10 +389,10 @@ This principle helps maintain consistency between requirements, architecture, de
 | Event-Driven Communication | Partial / Planned | RabbitMQ integration |
 | CQRS | No | Not required for current scope |
 | Event Sourcing | No | Not required for current scope |
-| Circuit Breaker | Planned | `05-architecture/pattern-guide.md` |
+| Circuit Breaker | Planned — see ADR-013 | `05-architecture/pattern-guide.md` |
 | Saga | No | Not required for current business flows |
 | Outbox Pattern | Planned / Review | To be evaluated if asynchronous events become critical |
-| Hexagonal Architecture | Yes | `05-architecture/hexagonal-architecture.md` |
+| Hexagonal Architecture | Yes — see ADR-009 | `05-architecture/hexagonal-architecture.md` |
 | Database per physical service | No | Single PostgreSQL infrastructure with domain separation |
 | Containerization | Yes | Docker / Docker Compose |
 

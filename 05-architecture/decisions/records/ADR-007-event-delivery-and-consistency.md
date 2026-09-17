@@ -1,8 +1,8 @@
 ## ADR-007 — At-Least-Once Events with Transactional Outbox
 
-- **ID:** ADR-002
+- **ID:** ADR-007
 - **Date:** 2026-09-09
-- **Status:** Proposed 
+- **Status:** Accepted
 - **Authors:** EduAirControl Development Team
 
 ---

@@ -544,14 +544,14 @@ Kubernetes Pod:
 
 | Pattern | Adopted? | Justification / ADR |
 |---------|---------|---------------------|
-| API Gateway | [Yes / No — see ADR-NNN] | [Brief reason] |
-| Database per Service | [Yes / No — see ADR-NNN] | [Brief reason] |
-| Circuit Breaker | [Yes / No — see ADR-NNN] | [Brief reason] |
-| Saga (choreographed) | [Yes / No — see ADR-NNN] | [Brief reason] |
-| Outbox Pattern | [Yes / No — see ADR-NNN] | [Brief reason] |
-| CQRS | [Yes / No — see ADR-NNN] | [Brief reason] |
-| Event Sourcing | [Yes / No — see ADR-NNN] | [Brief reason] |
-| BFF | [Yes / No — see ADR-NNN] | [Brief reason] |
+| API Gateway | Yes — see ADR-005 | Single entry point for routing and auth |
+| Database per Service | No — see ADR-003 | Shared PostgreSQL with domain schemas |
+| Circuit Breaker | Planned — see ADR-013 | Resilience for inter-service calls |
+| Saga (choreographed) | No — see pattern-guide.md | Transactions fit in single service |
+| Outbox Pattern | Planned — see ADR-007 | At-least-once event delivery |
+| CQRS | No — see pattern-guide.md | Read/write models are similar |
+| Event Sourcing | No — see pattern-guide.md | Full history not required |
+| BFF | No — see pattern-guide.md | Clients have similar needs |
 
 ---
 
