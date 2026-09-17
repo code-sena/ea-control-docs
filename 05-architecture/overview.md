@@ -419,6 +419,7 @@ Transversal concerns that apply to ALL services:
 | Containerization | Docker | Dockerfiles / Docker Compose |
 | Messaging | RabbitMQ when asynchronous communication is required | Messaging configuration |
 | Sensor Communication | MQTT / HTTP | `ms-sensores` |
+| Environmental Variables | CO₂, Humidity, Noise, Temperature — see ADR-014 | `06-data/domain/ms-environment-monitoring.md` |
 | API Documentation | OpenAPI | `07-api/contracts/openapi/` |
 
 ---

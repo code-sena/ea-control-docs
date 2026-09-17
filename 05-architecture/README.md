@@ -55,6 +55,7 @@ were evaluated, and what the consequences are.
 | ADR-011 | Production Deployment Strategy | Proposed |
 | ADR-012 | Observability Stack | Proposed |
 | ADR-013 | Circuit Breaker Adoption | Proposed |
+| ADR-014 | Environmental Sensor Variables and Thresholds | Proposed |
 
 ---
 
