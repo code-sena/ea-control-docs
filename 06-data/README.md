@@ -15,6 +15,7 @@
 | [domain/ms-environment-monitoring.md](./domain/ms-environment-monitoring.md) | Environmental monitoring data model |
 | [domain/ms-classroom-management.md](./domain/ms-classroom-management.md) | Classroom management data model |
 | [domain/ms-user-experience.md](./domain/ms-user-experience.md) | User experience data model |
+| [normalization-assessment.md](./normalization-assessment.md) | Cross-domain normalization verdicts, entity→table crosswalk, and open items |
 
 ---
 

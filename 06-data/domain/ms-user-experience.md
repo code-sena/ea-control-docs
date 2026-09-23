@@ -191,7 +191,7 @@ classroom_id
 
 ```text
 variable_id
-→ Sensor Management Service.variables.variable_id
+→ Sensor Management Service.variable.variable_id
 ```
 
 These references should remain logical references rather than physical PostgreSQL foreign keys because the referenced entities belong to other services.
@@ -336,7 +336,7 @@ The User Experience Service interacts with several other domains.
 | -------------- | ---------------------------- | ------------------------- |
 | `user_id`      | IAM Service                  | `users.user_id`           |
 | `classroom_id` | Classroom Management Service | `classrooms.classroom_id` |
-| `variable_id`  | Sensor Management Service    | `variables.variable_id`   |
+| `variable_id`  | Sensor Management Service    | `variable.variable_id`     |
 
 These are **logical references**.
 
@@ -492,16 +492,16 @@ CREATE TABLE searches (
 
 # 13. Migration Strategy
 
-Database changes should be managed using **Liquibase** or another version-controlled migration tool.
+Database changes should be managed using **Liquibase**, the migration tool standardized for the project.
 
 Example:
 
-```xml
-<changeSet id="1" author="developer">
-  <createTable tableName="user_preferences">
-    <!-- table definition -->
-  </createTable>
-</changeSet>
+```text
+db/changelog/changes/001-create-user-preferences.yaml
+db/changelog/changes/002-create-favorites.yaml
+db/changelog/changes/003-create-classroom-ratings.yaml
+db/changelog/changes/004-create-searches.yaml
+db/changelog/changes/005-add-indexes.yaml
 ```
 
 Each changeset should have a unique ID and be committed to version control. Once executed in a shared environment, changesets should not be modified.

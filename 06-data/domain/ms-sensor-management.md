@@ -77,7 +77,7 @@ Table sensor_statuses {
   description varchar(255)
 }
 
-Table sensors {
+Table sensor {
   sensor_id uuid [pk, default: `gen_random_uuid()`]
   serial_number varchar(60) [not null, unique]
   sensor_model_id uuid [not null]
@@ -89,16 +89,16 @@ Table sensors {
   Note: 'Physical sensor installed in an educational environment'
 }
 
-Table sensor_installations {
+Table sensor_installation {
   sensor_installation_id uuid [pk, default: `gen_random_uuid()`]
   sensor_id uuid [not null]
-  environment_id uuid [not null]
+  educational_environment_id uuid [not null]
   installed_at timestamptz [not null]
   removed_at timestamptz
 
   indexes {
     (sensor_id, installed_at)
-    (environment_id, installed_at)
+    (educational_environment_id, installed_at)
   }
 
   Note: 'Historical record of sensor installation in an educational environment'
@@ -111,7 +111,7 @@ Table measurement_units {
   symbol varchar(20) [not null]
 }
 
-Table variables {
+Table variable {
   variable_id uuid [pk, default: `gen_random_uuid()`]
   code varchar(30) [not null, unique]
   name varchar(80) [not null]
@@ -122,7 +122,7 @@ Table variables {
   Note: 'Environmental variable that can be measured by a sensor'
 }
 
-Table sensor_variables {
+Table sensor_variable {
   sensor_id uuid [not null]
   variable_id uuid [not null]
 
@@ -133,12 +133,12 @@ Table sensor_variables {
   Note: 'Many-to-many relationship between physical sensors and measurable variables'
 }
 
-Ref: sensors.sensor_model_id > sensor_models.sensor_model_id
-Ref: sensors.sensor_status_id > sensor_statuses.sensor_status_id
-Ref: sensor_installations.sensor_id > sensors.sensor_id
-Ref: variables.measurement_unit_id > measurement_units.measurement_unit_id
-Ref: sensor_variables.sensor_id > sensors.sensor_id
-Ref: sensor_variables.variable_id > variables.variable_id
+Ref: sensor.sensor_model_id > sensor_models.sensor_model_id
+Ref: sensor.sensor_status_id > sensor_statuses.sensor_status_id
+Ref: sensor_installation.sensor_id > sensor.sensor_id
+Ref: variable.measurement_unit_id > measurement_units.measurement_unit_id
+Ref: sensor_variable.sensor_id > sensor.sensor_id
+Ref: sensor_variable.variable_id > variable.variable_id
 ```
 
 ---
@@ -147,7 +147,7 @@ Ref: sensor_variables.variable_id > variables.variable_id
 
 ### 4.1 Sensor Model
 
-`senor_models` stores technical information shared by multiple physical sensor units.
+`sensor_models` stores technical information shared by multiple physical sensor units.
 
 A model can represent a commercial or technical device specification.
 
@@ -166,7 +166,7 @@ This follows normalization principles because these attributes describe the **mo
 
 ### 4.2 Sensor
 
-`sensors` represents an individual physical device.
+`sensor` represents an individual physical device.
 
 Each physical sensor is identified by a unique serial number.
 
@@ -182,7 +182,7 @@ last_seen_at: 2026-09-09T10:35:00
 
 The sensor itself does not store its current educational environment.
 
-Its location is managed through `sensor_installations`.
+Its location is managed through `sensor_installation`.
 
 This allows the system to preserve installation history.
 
@@ -202,13 +202,13 @@ OFFLINE
 DECOMMISSIONED
 ```
 
-Using a catalog avoids storing inconsistent free-text values in `sensors`.
+Using a catalog avoids storing inconsistent free-text values in `sensor`.
 
 ---
 
 ### 4.4 Sensor Installation
 
-`sensor_installations` represents the relationship between a physical sensor and an educational environment over a period of time.
+`sensor_installation` represents the relationship between a physical sensor and an educational environment over a period of time.
 
 Example:
 
@@ -228,11 +228,11 @@ Sensor S001
 
 This provides historical traceability.
 
-The `environment_id` is a logical reference to:
+The `educational_environment_id` is a logical reference to:
 
 ```text
 Environment Service
-└── educational_environments.environment_id
+└── educational_environment.educational_environment_id
 ```
 
 There must be no physical foreign key to the Environment Service database.
@@ -283,7 +283,7 @@ Sensor N ───────── N Variable
 This relationship is represented by:
 
 ```text
-sensor_variables
+sensor_variable
 ```
 
 Example:
@@ -309,7 +309,7 @@ The composite primary key prevents the same variable from being associated with 
 
 ## 7. Measurement Unit
 
-`measurement_units` is a normalized catalog of units used by environmental variables.
+`measurement_units` is a normalized catalog of units used by environmental `variable` rows.
 
 Examples:
 
@@ -362,11 +362,11 @@ The external relationship is:
 ```text
 Sensor Installation
         │
-        │ environment_id
+        │ educational_environment_id
         ▼
 Environment Service
         │
-        └── educational_environments
+        └── educational_environment
 ```
 
 ---
@@ -378,18 +378,18 @@ The Sensor Service owns:
 ```text
 sensor_models
 sensor_statuses
-sensors
-sensor_installations
+sensor
+sensor_installation
 measurement_units
-variables
-sensor_variables
+variable
+sensor_variable
 ```
 
 The Environment Service owns:
 
 ```text
 campuses
-educational_environments
+educational_environment
 environment_types
 ```
 
@@ -404,7 +404,7 @@ Therefore:
 ```text
 Environment
      │
-     │ environment_id
+     │ educational_environment_id
      ▼
 Sensor
      │
@@ -455,7 +455,7 @@ Maximum: 1000 ppm
 Severity: WARNING
 ```
 
-This information must not be stored directly inside `sensors` or `variables`.
+This information must not be stored directly inside `sensor` or `variable`.
 
 ### Notifications
 
@@ -559,7 +559,7 @@ Temporal fields should use:
 TIMESTAMPTZ
 ```
 
-Database changes should be managed through Flyway migrations.
+Database changes should be managed through Liquibase changesets.
 
 ---
 

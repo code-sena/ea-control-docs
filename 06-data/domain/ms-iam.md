@@ -3,8 +3,11 @@
 ## 1. Service
 
 **Service Name:** IAM Service
+**Owning services:** `ms-security` and `ms-user-management` (see `01-context/glossary.md` → Canonical service names)
 **Domain:** Identity and Access Management
 **Database Engine:** PostgreSQL 15
+
+This file documents the data model of the IAM bounded context, which is served by two microservices: `ms-security` (registration, authentication, refresh tokens, access control) and `ms-user-management` (user information management). Each service owns its own logical schema; this document covers both because they share the identity core (users, roles, permissions, sessions, audit).
 
 The IAM Service is responsible for managing user identities, authentication, authorization, sessions, security policies, password policies, auditing, and security-related errors.
 
@@ -31,7 +34,7 @@ PostgreSQL 15 was selected for the IAM Service because it provides:
 * Native `BOOLEAN`, `TIMESTAMPTZ`, and JSON-related capabilities.
 * Support for database constraints.
 * Good compatibility with Java and Spring Boot.
-* Mature support for migration tools such as Flyway and Liquibase.
+* Mature support for migration tools such as Liquibase.
 * Suitable performance for authentication, authorization, session management, and audit operations.
 
 PostgreSQL also provides the reliability required for security-sensitive information such as users, roles, permissions, sessions, and audit records.
@@ -850,48 +853,48 @@ CREATE TABLE password_policies (
 
 Liquibase is recommended because it provides:
 
-* Version-controlled database migrations.
-* Multiple format support (XML, YAML, JSON, SQL).
+* Version-controlled database migrations through changesets.
+* YAML, XML, JSON or SQL changelog formats.
 * Rollback capabilities for safe schema changes.
 * Integration with Spring Boot.
 * Automatic migration execution.
-* Migration history tracking in DATABASECHANGELOG table.
+* Migration history tracking through `DATABASECHANGELOG`.
 * Support for CI/CD pipelines.
 * Diff tools for comparing environments.
 * Clear versioning of schema changes.
 
 ## 19.2 Migration Naming Convention
 
-Migration files should follow:
+Migrations are organized as a master changelog that includes ordered changeset files:
 
 ```text
-changelog-<version>.xml (or .yaml, .json, .sql)
-```
-
-Examples:
-
-```text
-changelog-1.0.xml
-changelog-1.1.xml
-changelog-2.0.xml
-```
-
-Each changeset within the file should have a unique ID:
-
-```xml
-<changeSet id="1" author="developer">
-  <!-- SQL or XML changes -->
-</changeSet>
+src/main/resources/db/
+├── changelog/
+│   ├── db.changelog-master.yaml
+│   └── changes/
+│       ├── 001-create-user-statuses.yaml
+│       ├── 002-create-users.yaml
+│       ├── 003-create-roles.yaml
+│       ├── 004-create-user-roles.yaml
+│       ├── 005-create-permissions.yaml
+│       ├── 006-create-role-permissions.yaml
+│       ├── 007-create-session-statuses.yaml
+│       ├── 008-create-user-sessions.yaml
+│       ├── 009-create-audit-actions.yaml
+│       ├── 010-create-audit-logs.yaml
+│       ├── 011-create-error-logs.yaml
+│       ├── 012-create-security-configurations.yaml
+│       └── 013-create-password-policies.yaml
 ```
 
 ## 19.3 Migration Rules
 
 Each migration must:
 
-1. Have a unique version.
+1. Have a unique changeset id.
 2. Have a descriptive name.
 3. Be committed to version control.
-4. Avoid modifying already executed migrations.
+4. Never modify already executed changesets.
 5. Be tested before deployment.
 6. Preserve referential integrity.
 7. Include required indexes and constraints.

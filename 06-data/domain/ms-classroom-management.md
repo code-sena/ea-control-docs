@@ -14,7 +14,7 @@ This domain is responsible for:
 * Educational Environments
 * Environment Types
 
-EduAirControl currently uses a **monolithic application architecture with a centralized relational database**. Therefore, the tables defined in this domain are part of the same PostgreSQL database and may establish physical foreign key relationships with tables belonging to other domains.
+EduAirControl follows a microservices architecture on a **shared PostgreSQL 15 instance with logical domain separation** (ADR-002, ADR-003). Therefore, the tables defined in this domain live in the same PostgreSQL instance and may establish physical foreign key relationships with tables belonging to other domains.
 
 The database uses:
 
@@ -56,7 +56,7 @@ Table environment_types {
   deleted_at timestamptz
 }
 
-Table educational_environments {
+Table educational_environment {
   educational_environment_id uuid [pk, default: `gen_random_uuid()`]
   campus_id uuid [not null]
   code varchar(30) [not null]
@@ -78,8 +78,8 @@ Table educational_environments {
   }
 }
 
-Ref: educational_environments.campus_id > campuses.campus_id
-Ref: educational_environments.environment_type_id > environment_types.environment_type_id
+Ref: educational_environment.campus_id > campuses.campus_id
+Ref: educational_environment.environment_type_id > environment_types.environment_type_id
 ```
 
 ---
@@ -100,7 +100,7 @@ An educational environment:
 * Can be associated with many alerts.
 * Can be used as the subject of environmental analyses.
 
-Because EduAirControl currently uses a centralized database, these relationships are represented using physical foreign keys.
+Because all domains share the same PostgreSQL instance (ADR-003), these relationships are represented using physical foreign keys.
 
 ---
 
@@ -122,7 +122,7 @@ The `code` is unique and can be used as a stable business identifier.
 
 ### Educational Environment
 
-`educational_environments` represents the physical educational spaces monitored by EduAirControl.
+`educational_environment` represents the physical educational spaces monitored by EduAirControl.
 
 The term is intentionally broader than `classroom` because the platform can monitor different types of educational spaces.
 
@@ -260,24 +260,24 @@ Soft deletion preserves historical traceability.
 
 ## 8. Database Integrity
 
-Because EduAirControl uses a monolithic database, foreign keys are used to maintain referential integrity.
+Because all domains share the same PostgreSQL instance (ADR-003), foreign keys are used to maintain referential integrity.
 
 ```text
 campuses
     │
     │ 1:N
     ▼
-educational_environments
+educational_environment
     │
     └──────────► environment_types
 ```
 
-Other domains may reference `educational_environments` directly when their data requires an association with a monitored environment.
+Other domains may reference `educational_environment` directly when their data requires an association with a monitored environment.
 
 For example:
 
 ```text
-educational_environments
+educational_environment
         │
         ├──────────► environment_measurement
         │
@@ -297,7 +297,7 @@ Classroom Management is responsible for:
 ```text
 Classroom Management
 ├── campuses
-├── educational_environments
+├── educational_environment
 └── environment_types
 ```
 
@@ -317,7 +317,7 @@ However, other domains should not directly modify Classroom Management data outs
 
 ## 10. Domain Events
 
-Although EduAirControl currently uses a monolithic architecture, domain events may be used internally to decouple application modules and prepare the system for future architectural evolution.
+Domain events may be used to decouple modules and services, so cross-service integration does not depend on direct shared-table access.
 
 Potential events include:
 
@@ -334,7 +334,7 @@ EnvironmentTypeCreated
 EnvironmentTypeUpdated
 ```
 
-These events are optional implementation details and do not require distributed messaging infrastructure in the current monolithic architecture.
+These events are optional implementation details and do not require distributed messaging infrastructure during the MVP; they can be introduced incrementally.
 
 ---
 
@@ -509,9 +509,9 @@ These tables allow Liquibase to determine which changesets have already been exe
 ```mermaid
 erDiagram
 
-    CAMPUSES ||--o{ EDUCATIONAL_ENVIRONMENTS : contains
+    CAMPUSES ||--o{ EDUCATIONAL_ENVIRONMENT : contains
 
-    ENVIRONMENT_TYPES ||--o{ EDUCATIONAL_ENVIRONMENTS : classifies
+    ENVIRONMENT_TYPES ||--o{ EDUCATIONAL_ENVIRONMENT : classifies
 
     CAMPUSES {
         uuid campus_id PK
@@ -534,7 +534,7 @@ erDiagram
         timestamptz deleted_at
     }
 
-    EDUCATIONAL_ENVIRONMENTS {
+    EDUCATIONAL_ENVIRONMENT {
         uuid educational_environment_id PK
         uuid campus_id FK
         varchar code
@@ -571,8 +571,8 @@ Campus
              └── Environmental Analyses
 ```
 
-Using PostgreSQL as a centralized database allows the domains to maintain strong referential integrity through physical foreign keys while keeping their business responsibilities separated at the application and domain levels.
+Using a single shared PostgreSQL instance allows the domains to maintain strong referential integrity through physical foreign keys while keeping service ownership separated at the application and domain levels.
 
 Liquibase provides controlled, versioned, and traceable schema evolution without requiring manual database modifications.
 
-This approach is appropriate for the current monolithic implementation while keeping the domain boundaries clear enough to support future architectural evolution.
+This approach fits the shared-instance MVP deployment (ADR-003) while keeping domain boundaries clear enough to allow a later physical database split.

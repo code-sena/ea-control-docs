@@ -2,7 +2,7 @@
 
 > **Purpose:** Define the data model used to manage alerts generated when an environmental measurement exceeds a configured threshold in an educational environment.
 >
-> EduAirControl currently uses a **monolithic database architecture**. Although the application is designed to evolve toward a microservices-oriented architecture, the current data model uses a shared relational database and can therefore use physical foreign key relationships between related tables.
+> EduAirControl follows a microservices architecture on a **single shared PostgreSQL instance with logical domain separation per service** (ADR-002, ADR-003). Because related tables live in the same instance, the data model can use physical foreign key relationships between them.
 >
 > Schema changes are managed through versioned migrations and should not be applied manually to production databases.
 
@@ -10,9 +10,9 @@
 
 ## Data modeling principles
 
-### 1. Monolithic database
+### 1. Shared PostgreSQL instance
 
-EduAirControl currently uses a centralized PostgreSQL database.
+EduAirControl uses a single PostgreSQL 15 instance shared by all services, each within its own ownership boundary (ADR-003).
 
 Related domains can establish physical foreign key relationships because the entities are stored within the same database.
 
@@ -21,13 +21,13 @@ Related domains can establish physical foreign key relationships because the ent
 ✓ environment_alert → variable
 ✓ environment_alert → variable_threshold
 ✓ environment_alert → environment_measurement
-✓ environment_alert → app_user
+✓ environment_alert → users
 
 ✗ No duplicated data when an existing entity can be referenced
 ✗ No unnecessary cross-database references
 ```
 
-The current monolithic model does not prevent the application from evolving toward a microservices-oriented architecture in the future.
+Logical ownership boundaries are preserved inside the shared instance, so each service can later move to a dedicated physical database without changing the logical model (ADR-003).
 
 ---
 
@@ -191,7 +191,7 @@ CREATE TABLE environment_alert (
   raised_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   acknowledged_at            TIMESTAMPTZ,
   acknowledged_by            UUID
-    REFERENCES app_user(user_id)
+    REFERENCES users(user_id)
     ON DELETE RESTRICT,
   resolved_at                TIMESTAMPTZ,
 

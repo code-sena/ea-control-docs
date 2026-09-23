@@ -51,6 +51,8 @@ Table sensor {
   sensor_model_id uuid [not null]
   sensor_status_id uuid [not null]
   last_seen_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz
 }
 
 Table sensor_installation {
@@ -65,12 +67,21 @@ Table variable {
   variable_id uuid [pk, default: `gen_random_uuid()`]
   code varchar(30) [not null, unique]
   name varchar(80) [not null]
-  unit_id uuid [not null]
+  measurement_unit_id uuid [not null]
+  description varchar(255)
+  created_at timestamptz [not null, default: `now()`]
 }
 
 Table sensor_variable {
   sensor_id uuid [pk, not null]
   variable_id uuid [pk, not null]
+}
+
+Table severity {
+  severity_id uuid [pk, default: `gen_random_uuid()`]
+  code varchar(20) [not null, unique]
+  name varchar(40) [not null]
+  level smallint [not null, unique]
 }
 
 Table variable_threshold {
@@ -83,6 +94,8 @@ Table variable_threshold {
   valid_from date [not null]
   valid_to date
 }
+
+Ref: variable_threshold.severity_id > severity.severity_id
 
 Table environment_measurement {
   environment_measurement_id uuid [pk, default: `gen_random_uuid()`]
@@ -306,17 +319,23 @@ This allows the system to correctly:
 
 ---
 
-## 8. Environmental Status
+## 8. Environmental Analysis Status
 
-`environmental_status` represents the calculated current environmental condition of an educational environment.
+`environmental_analysis.analysis_status` represents the processing state of a period analysis for an educational environment.
 
-It is derived from recent environmental measurements and configured business rules.
-
-Possible concepts include:
+It is part of the `environmental_analysis` row (not a separate table):
 
 ```text
-comfort_level
-air_quality
+analysis_status
+```
+
+Possible values include:
+
+```text
+PENDING
+RUNNING
+COMPLETED
+FAILED
 ```
 
 Example:
@@ -324,62 +343,50 @@ Example:
 ```text
 Educational Environment
         │
-        │ recent measurements
+        │ request analysis for a period
         ▼
-Environmental Status
+Environmental Analysis
         │
-        ├── Comfort Level
-        └── Air Quality
+        ├── period_start / period_end
+        └── analysis_status
 ```
 
-The status is calculated at a specific point in time:
+The analysis is computed for a specific period and recorded with:
 
 ```text
-calculated_at
+computed_at
 ```
 
-This timestamp indicates when the status calculation was performed.
+This timestamp indicates when the analysis calculation was performed.
 
 ---
 
-## 9. Environmental Status Constraints
+## 9. Environmental Analysis Constraints
 
-Recommended values for `comfort_level` could include:
+`period_start` must be earlier than `period_end`:
 
-```text
-GOOD
-ACCEPTABLE
-POOR
+```sql
+CHECK (period_start < period_end)
 ```
 
-Recommended values for `air_quality` could include:
+`analysis_status` should use the catalog values above (not free text).
 
-```text
-GOOD
-MODERATE
-POOR
-```
-
-These values are examples and should be aligned with the project's final environmental classification rules.
-
-The system should avoid treating `comfort_level` and `air_quality` as raw sensor measurements.
-
-They are **derived values** calculated from one or more measurements.
+Each analysis produces one `analysis_result` row per variable, holding min/max/avg/sample_count/exceedance_count for that period. Those are **derived values** computed from one or more `environmental_measurement` rows — never raw sensor readings.
 
 ---
 
-## 10. Environmental Statistics
+## 10. Analysis Results (aggregates)
 
-`environmental_statistics` stores aggregated values that can be used for operational dashboards and queries.
+`analysis_result` stores aggregated values for a defined period, used by dashboards and operational queries.
 
-For a specific educational environment and variable, the entity can store:
+For a specific analysis and variable, each row stores:
 
 ```text
-average
-minimum
-maximum
+min_value
+max_value
+avg_value
 sample_count
-calculated_at
+exceedance_count
 ```
 
 Conceptually:
@@ -387,9 +394,9 @@ Conceptually:
 ```text
 environment_measurement
         │
-        │ aggregation
+        │ aggregation over period
         ▼
-environmental_statistics
+analysis_result
 ```
 
 Example:
@@ -403,76 +410,46 @@ Maximum: 25.1000
 Sample Count: 120
 ```
 
-The statistics table stores derived information and does not replace the raw measurement history.
+These aggregates never replace the raw measurement history.
 
 ---
 
-## 11. Statistics Constraints
+## 11. Analysis Result Constraints
 
 The following relationship must be maintained:
 
 ```text
-minimum <= maximum
+min_value <= max_value
 ```
 
 When both values are available:
 
 ```sql
 CHECK (
-    minimum IS NULL
-    OR maximum IS NULL
-    OR minimum <= maximum
+    min_value IS NULL
+    OR max_value IS NULL
+    OR min_value <= max_value
 )
 ```
 
-If `sample_count` is included, it should satisfy:
+`sample_count` and `exceedance_count` must satisfy:
 
 ```sql
-CHECK (
-    sample_count IS NULL
-    OR sample_count >= 0
-)
+CHECK (sample_count >= 0)
+CHECK (exceedance_count >= 0)
 ```
 
-If the application requires `average`, `minimum`, and `maximum` to always exist after a successful calculation, those fields can instead be defined as `NOT NULL`.
+If the application requires min/max/avg to always exist after a successful calculation, those fields can instead be defined as `NOT NULL` (the DBML already marks them `[not null]`).
 
 ---
 
-## 12. Statistics and Environmental Analysis
+## 12. Aggregates and Environmental Analysis
 
-`environmental_statistics` and `environmental_analysis` have different responsibilities.
+Aggregates (`analysis_result`) and the analysis header (`environmental_analysis`) have different responsibilities.
 
-### Environmental Statistics
+### Analysis Result (aggregates)
 
-Provides aggregated operational information:
-
-```text
-Average
-Minimum
-Maximum
-Sample Count
-```
-
-It is useful for:
-
-* Dashboards.
-* Quick summaries.
-* Current operational views.
-* Frequently requested aggregations.
-
-### Environmental Analysis
-
-Provides analysis for a defined period:
-
-```text
-period_start
-period_end
-analysis_status
-requested_by
-computed_at
-```
-
-with results such as:
+Provides aggregated operational information per variable:
 
 ```text
 min_value
@@ -482,14 +459,33 @@ sample_count
 exceedance_count
 ```
 
+It is useful for:
+
+* Dashboards.
+* Quick summaries.
+* Current operational views.
+* Frequently requested aggregations.
+
+### Environmental Analysis (header)
+
+Provides the analysis context for a defined period:
+
+```text
+period_start
+period_end
+analysis_status
+requested_by
+computed_at
+```
+
 Therefore:
 
 ```text
 Measurements
      │
-     ├──────────────► Environmental Statistics
-     │
      └──────────────► Environmental Analysis
+                              │
+                              └──► Analysis Result (per variable)
 ```
 
 The raw measurements remain the source of truth.
@@ -539,19 +535,19 @@ Get measurements for a variable in an environment during a period.
 
 Because this table can receive a large number of inserts, indexes should be kept purposeful.
 
-### Environmental Status
+### Environmental Analysis
 
 ```text
 educational_environment_id
-calculated_at
+period_start
+period_end
 ```
 
-### Environmental Statistics
+### Analysis Result
 
 ```text
-educational_environment_id
+environmental_analysis_id
 variable_id
-calculated_at
 ```
 
 ---
@@ -562,9 +558,9 @@ Potential events produced by this domain include:
 
 ```text
 MeasurementRecorded
-EnvironmentalStatusCalculated
-EnvironmentalStatusChanged
-EnvironmentalStatisticsCalculated
+EnvironmentalAnalysisRequested
+EnvironmentalAnalysisCompleted
+EducationalEnvironmentStatusChanged
 ```
 
 Potential events consumed from other domains include:
@@ -576,9 +572,9 @@ VariableConfigurationUpdated
 EducationalEnvironmentStatusChanged
 ```
 
-Because EduAirControl is currently monolithic, these events can initially be implemented as **internal domain/application events**.
+These events can initially be implemented as **internal domain/application events** owned by Environmental Monitoring.
 
-If the system is later divided into microservices, these events can be exposed through the selected messaging infrastructure.
+Cross-service delivery can be exposed through the selected messaging infrastructure when integration with other services requires it.
 
 ---
 
@@ -588,21 +584,24 @@ The Environmental Monitoring domain owns:
 
 ```text
 environment_measurement
-environmental_status
-environmental_statistics
+variable_threshold
+severity
+environmental_analysis
+analysis_result
+environment_alert
 ```
 
 It does not own:
 
 ```text
-educational_environments
+educational_environment
 variable
 sensor
 ```
 
 Those entities belong to their respective domains.
 
-The domain may read and reference them through the centralized database, but changes to their master data should follow the rules of their owning domains.
+The domain may read and reference them through the shared PostgreSQL instance, but changes to their master data should follow the rules of their owning domains.
 
 ---
 
@@ -715,15 +714,14 @@ DATABASECHANGELOGLOCK
 ```mermaid
 erDiagram
 
-    EDUCATIONAL_ENVIRONMENTS ||--o{ ENVIRONMENT_MEASUREMENT : "has"
+    EDUCATIONAL_ENVIRONMENT ||--o{ ENVIRONMENT_MEASUREMENT : "has"
     VARIABLE ||--o{ ENVIRONMENT_MEASUREMENT : "measured_as"
 
-    EDUCATIONAL_ENVIRONMENTS ||--o{ ENVIRONMENTAL_STATUS : "has"
+    EDUCATIONAL_ENVIRONMENT ||--o{ ENVIRONMENTAL_ANALYSIS : "has"
+    ENVIRONMENTAL_ANALYSIS ||--o{ ANALYSIS_RESULT : "produces"
+    VARIABLE ||--o{ ANALYSIS_RESULT : "aggregated_as"
 
-    EDUCATIONAL_ENVIRONMENTS ||--o{ ENVIRONMENTAL_STATISTICS : "has"
-    VARIABLE ||--o{ ENVIRONMENTAL_STATISTICS : "aggregated_as"
-
-    EDUCATIONAL_ENVIRONMENTS {
+    EDUCATIONAL_ENVIRONMENT {
         uuid educational_environment_id PK
     }
 
@@ -732,35 +730,33 @@ erDiagram
     }
 
     ENVIRONMENT_MEASUREMENT {
-        uuid measurement_id PK
-        uuid educational_environment_id FK
+        uuid environment_measurement_id PK
+        uuid sensor_installation_id FK
         uuid variable_id FK
-        numeric value
-        timestamptz measurement_at
-        varchar data_quality
-        timestamptz created_at
+        numeric measured_value
+        timestamptz measured_at
+        uuid quality_flag_id
     }
 
-    ENVIRONMENTAL_STATUS {
-        uuid environmental_status_id PK
+    ENVIRONMENTAL_ANALYSIS {
+        uuid environmental_analysis_id PK
         uuid educational_environment_id FK
-        varchar comfort_level
-        varchar air_quality
-        timestamptz calculated_at
-        timestamptz updated_at
+        timestamptz period_start
+        timestamptz period_end
+        uuid analysis_status_id
+        uuid requested_by
+        timestamptz computed_at
     }
 
-    ENVIRONMENTAL_STATISTICS {
-        uuid statistic_id PK
-        uuid educational_environment_id FK
+    ANALYSIS_RESULT {
+        uuid analysis_result_id PK
+        uuid environmental_analysis_id FK
         uuid variable_id FK
-        numeric average
-        numeric minimum
-        numeric maximum
+        numeric min_value
+        numeric max_value
+        numeric avg_value
         integer sample_count
-        timestamptz calculated_at
-        timestamptz created_at
-        timestamptz updated_at
+        integer exceedance_count
     }
 ```
 
@@ -804,7 +800,7 @@ Telemetry / Ingestion
 This evolution does not change the ownership of:
 
 ```text
-educational_environments
+educational_environment
 variable
 ```
 
@@ -826,18 +822,19 @@ Classroom Management
 Environmental Monitoring
         │
         ├── environment_measurement
-        ├── environmental_status
-        └── environmental_statistics
+        ├── variable_threshold
+        ├── environmental_analysis
+        └── analysis_result
                 │
                 ▼
         Analytics / Analysis
                 │
                 ├── rankings
-                └── environmental_analysis
+                └── analysis_result aggregates
 ```
 
 The important architectural principle is:
 
-> **EduAirControl uses a monolithic database, but domain responsibilities remain separated.**
+> **EduAirControl uses a single shared PostgreSQL instance (ADR-003), but domain responsibilities remain separated per service.**
 
 Physical foreign keys are therefore allowed and recommended where they provide referential integrity, while application-level domain boundaries determine which module is responsible for creating, updating, and validating each entity.
