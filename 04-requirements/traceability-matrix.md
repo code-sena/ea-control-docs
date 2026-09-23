@@ -30,21 +30,21 @@ If there is code without an HU: possible gold-plating or bug introduced without 
 | ------ | --------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------ | -------------- | -------------- |
 | FR-001 | The system allows user registration.                                                                            | HU-IAM-001   | `auth.register.test`           | `ms-security`  | 🟡 In progress |
 | FR-002 | The system allows user authentication through login.                                                            | HU-IAM-002   | `auth.login.test`              | `ms-security`  | 🟡 In progress |
-| FR-003 | The system allows administrators to manage users and their information.                                         | HU-USER-001  | `users.management.test`        | `ms-usuarios`  | 🟡 In progress |
-| FR-004 | The system allows authorized users to manage educational classrooms or environments.                            | HU-CLASS-001 | `classroom.management.test`    | `ms-aulas`     | 🟡 In progress |
-| FR-005 | The system allows the registration and management of environmental sensors.                                     | HU-SENS-001  | `sensor.management.test`       | `ms-sensores`  | 🟡 In progress |
-| FR-006 | The system receives environmental measurements from sensors.                                                    | HU-MON-001   | `environmental.data.test`      | `ms-monitoreo` | 🟡 In progress |
-| FR-007 | The system stores environmental measurements for historical consultation.                                       | HU-MON-002   | `environmental.history.test`   | `ms-monitoreo` | 🟡 In progress |
-| FR-008 | The system allows users to consult current environmental conditions.                                            | HU-MON-003   | `environmental.current.test`   | `ms-monitoreo` | 🟡 In progress |
-| FR-009 | The system allows users to consult historical environmental information by day.                                 | HU-ANA-001   | `analysis.daily.test`          | `ms-monitoreo` | 🟡 In progress |
-| FR-010 | The system allows users to consult historical environmental information by week.                                | HU-ANA-002   | `analysis.weekly.test`         | `ms-monitoreo` | 🟡 In progress |
-| FR-011 | The system allows users to consult historical environmental information by month.                               | HU-ANA-003   | `analysis.monthly.test`        | `ms-monitoreo` | 🟡 In progress |
-| FR-012 | The system allows users to consult historical environmental information by year.                                | HU-ANA-004   | `analysis.yearly.test`         | `ms-monitoreo` | 🟡 In progress |
-| FR-013 | The system displays environmental information through a dashboard.                                              | HU-ANA-005   | `dashboard.environmental.test` | `ms-monitoreo` | 🟡 In progress |
-| FR-014 | The system provides information about temperature, humidity, CO₂ and noise levels.                              | HU-MON-004   | `environmental.variables.test` | `ms-monitoreo` | 🟡 In progress |
+| FR-003 | The system allows administrators to manage users and their information.                                         | HU-USER-001  | `users.management.test`        | `ms-user-management`  | 🟡 In progress |
+| FR-004 | The system allows authorized users to manage educational classrooms or environments.                            | HU-CLASS-001 | `classroom.management.test`    | `ms-classroom-management`     | 🟡 In progress |
+| FR-005 | The system allows the registration and management of environmental sensors.                                     | HU-SENS-001  | `sensor.management.test`       | `ms-sensor-management`  | 🟡 In progress |
+| FR-006 | The system receives environmental measurements from sensors.                                                    | HU-MON-001   | `environmental.data.test`      | `ms-environment-monitoring` | 🟡 In progress |
+| FR-007 | The system stores environmental measurements for historical consultation.                                       | HU-MON-002   | `environmental.history.test`   | `ms-environment-monitoring` | 🟡 In progress |
+| FR-008 | The system allows users to consult current environmental conditions.                                            | HU-MON-003   | `environmental.current.test`   | `ms-environment-monitoring` | 🟡 In progress |
+| FR-009 | The system allows users to consult historical environmental information by day.                                 | HU-ANA-001   | `analysis.daily.test`          | `ms-environment-monitoring` | 🟡 In progress |
+| FR-010 | The system allows users to consult historical environmental information by week.                                | HU-ANA-002   | `analysis.weekly.test`         | `ms-environment-monitoring` | 🟡 In progress |
+| FR-011 | The system allows users to consult historical environmental information by month.                               | HU-ANA-003   | `analysis.monthly.test`        | `ms-environment-monitoring` | 🟡 In progress |
+| FR-012 | The system allows users to consult historical environmental information by year.                                | HU-ANA-004   | `analysis.yearly.test`         | `ms-environment-monitoring` | 🟡 In progress |
+| FR-013 | The system displays environmental information through a dashboard.                                              | HU-ANA-005   | `dashboard.environmental.test` | `ms-environment-monitoring` | 🟡 In progress |
+| FR-014 | The system provides information about temperature, humidity, CO₂ and noise levels.                              | HU-MON-004   | `environmental.variables.test` | `ms-environment-monitoring` | 🟡 In progress |
 | FR-015 | The system controls access to protected functionalities according to user roles.                                | HU-IAM-003   | `authorization.roles.test`     | `ms-security`  | 🟡 In progress |
 | FR-016 | The system communicates between the frontend and backend services through the API Gateway.                      | HU-ARCH-001  | `gateway.routing.test`         | `API Gateway`  | 🟡 In progress |
-| FR-017 | The system allows environmental data to be transmitted from sensors using the defined communication mechanisms. | HU-SENS-002  | `sensor.communication.test`    | `ms-sensores`  | 🟡 In progress |
+| FR-017 | The system allows environmental data to be transmitted from sensors using the defined communication mechanisms. | HU-SENS-002  | `sensor.communication.test`    | `ms-sensor-management`  | 🟡 In progress |
 
 ---
 
@@ -59,7 +59,27 @@ If there is code without an HU: possible gold-plating or bug introduced without 
 | NFR-005 | Services must provide structured logs and correlation identifiers for request tracing.            | Log and observability tests               | Logback / Grafana        | 🔴 Pending     |
 | NFR-006 | Application code should maintain at least 80% test coverage.                                      | Automated coverage analysis               | JaCoCo / SonarQube       | 🔴 Pending     |
 | NFR-007 | Services must be deployable as Docker containers independently of the host operating system.      | Docker image build and execution          | Docker / Docker Compose  | 🟡 In progress |
-| NFR-008 | Critical services and database must have documented backup and recovery procedures.               | Backup and restoration test               | MySQL / Docker           | 🔴 Pending     |
+| NFR-008 | Critical services and database must have documented backup and recovery procedures.               | Backup and restoration test               | PostgreSQL / Docker     | 🔴 Pending     |
+
+---
+
+## Entity → table traceability
+
+> Maps every domain entity in `02-domain/entities-and-rules.md` to its
+> canonical table in `06-data/domain/`. Full detail:
+> [`06-data/normalization-assessment.md`](../06-data/normalization-assessment.md)
+
+| Entity | Domain context | Canonical table | Owning service | Documented |
+| ------ | -------------- | --------------- | -------------- | ---------- |
+| `User` | User Management | `users` | `ms-iam` | ✅ |
+| `EducationalEnvironment` | Environmental Monitoring | `educational_environment` | `ms-classroom-management` | ✅ |
+| `EnvironmentalData` | Environmental Monitoring | `environment_measurement` | `ms-environment-monitoring` | ✅ |
+| `EnvironmentalDataAnalysis` | Environmental Data Analysis | `environmental_analysis` + `analysis_result` | `ms-environment-monitoring` | ✅ |
+| `Sensor` | Environmental Monitoring | `sensor` | `ms-sensor-management` | ✅ |
+| `Variable` | Environmental Monitoring | `variable` | `ms-sensor-management` | ✅ |
+| `VariableThreshold` | Environmental Monitoring | `variable_threshold` | `ms-environment-monitoring` | ✅ |
+
+**Coverage: 7/7 entities mapped to a canonical table.**
 
 ---
 
@@ -138,3 +158,5 @@ If there is code without an HU: possible gold-plating or bug introduced without 
 * Definition of Done → `00-governance/definition-of-done.md`
 * Microservice catalog → `09-microservices/service-catalog.md`
 * Architecture overview → `05-architecture/overview.md`
+* Domain entities → `02-domain/entities-and-rules.md`
+* Entity → table crosswalk → `06-data/normalization-assessment.md`

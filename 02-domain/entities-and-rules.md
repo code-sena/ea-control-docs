@@ -84,9 +84,9 @@ For EduAirControl, the rules below represent the currently identified domain con
 | Attribute | Type | Description | Required | Rules |
 |-----------|------|-------------|---------|-------|
 | id | UUID | Unique identifier | Yes | Auto-generated on creation |
+| username | String | User login name | Yes | Must be unique; maps to `users.username` |
 | email | String | User email address | Yes | Must have a valid email format |
-| name | String | User name | Yes | Not defined |
-| password | String | User authentication | Yes | Must satisfy authentication requirements |
+| password | String | User authentication | Yes | Must satisfy authentication requirements; stored as `password_hash` |
 | createdAt | DateTime | Creation date | Yes | Immutable, set on creation |
 | updatedAt | DateTime | Last modification | Yes | Updated automatically |
 
@@ -130,21 +130,21 @@ class User {
 
   private constructor(
     private readonly id: UserId,
+    private username: string,
     private email: Email,
-    private name: string,
     private password: string,
   ) {}
 
   static create(
+    username: string,
     email: Email,
-    name: string,
     password: string
   ): User {
 
     return new User(
       UserId.new(),
+      username,
       email,
-      name,
       password
     );
   }
@@ -195,7 +195,7 @@ INV-004: Environment Name
  - Violation: An environment cannot be created without a name.
  - Implementation: Validate the name during creation.
 ```
-### Entity: EnvironmentData
+### Entity: EnvironmentalData
 
 **Context:** Environmental Monitoring
 
@@ -340,7 +340,7 @@ INV-010: Sensor Serial Number
 | id | UUID | Unique identifier | Yes | Auto-generated on creation |
 | code | String | Variable code | Yes | Must be unique (TEMP, HUM, CO2, NOISE) |
 | name | String | Variable name | Yes | Not defined |
-| unitId | UUID | Unit of measurement identifier | Yes | Must reference an existing unit |
+| measurementUnitId | UUID | Unit of measurement identifier | Yes | Must reference an existing unit; maps to `variable.measurement_unit_id` |
 
 **Invariants (Business rules that MUST ALWAYS hold):**
 

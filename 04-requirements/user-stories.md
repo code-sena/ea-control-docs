@@ -214,7 +214,7 @@ Scenario 3: User does not exist
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-IAM-003       |
-| Affected service(s) | ms-usuarios      |
+| Affected service(s) | ms-user-management      |
 
 ---
 
@@ -259,7 +259,7 @@ Scenario 3: Invalid classroom information
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-IAM-003       |
-| Affected service(s) | ms-aulas         |
+| Affected service(s) | ms-classroom-management         |
 
 ---
 
@@ -305,7 +305,7 @@ Scenario 3: Duplicate sensor
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-CLASS-001     |
-| Affected service(s) | ms-sensores      |
+| Affected service(s) | ms-sensor-management      |
 
 ---
 
@@ -351,7 +351,7 @@ Scenario 3: Unregistered sensor
 | Assigned to         | Development Team          |
 | Status              | Backlog                   |
 | Dependencies        | HU-SENS-001               |
-| Affected service(s) | ms-sensores, ms-monitoreo |
+| Affected service(s) | ms-sensor-management, ms-environment-monitoring |
 
 ---
 
@@ -391,7 +391,7 @@ Scenario 2: Measurement outside valid format
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-SENS-002      |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -431,7 +431,7 @@ Scenario 2: Database persistence failure
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-001       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -469,7 +469,7 @@ Scenario 2: No current data available
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-002       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -509,7 +509,7 @@ Scenario 2: Partial environmental data
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-003       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -548,7 +548,7 @@ Scenario 2: No data for selected day
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-002       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -586,7 +586,7 @@ Scenario 2: No data for selected week
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-002       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -624,7 +624,7 @@ Scenario 2: No data for selected month
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-002       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -662,7 +662,7 @@ Scenario 2: No data for selected year
 | Assigned to         | Development Team |
 | Status              | Backlog          |
 | Dependencies        | HU-MON-002       |
-| Affected service(s) | ms-monitoreo     |
+| Affected service(s) | ms-environment-monitoring     |
 
 ---
 
@@ -701,7 +701,7 @@ Scenario 2: Dashboard without available data
 | Assigned to         | Development Team       |
 | Status              | Backlog                |
 | Dependencies        | HU-MON-003, HU-ANA-001 |
-| Affected service(s) | ms-monitoreo, Frontend |
+| Affected service(s) | ms-environment-monitoring, Frontend |
 
 ---
 
@@ -747,7 +747,7 @@ Scenario 3: Protected route without authentication
 | Assigned to         | Development Team                                                           |
 | Status              | Backlog                                                                    |
 | Dependencies        | HU-IAM-002                                                                 |
-| Affected service(s) | API Gateway, ms-security, ms-usuarios, ms-aulas, ms-sensores, ms-monitoreo |
+| Affected service(s) | API Gateway, ms-security, ms-user-management, ms-classroom-management, ms-sensor-management, ms-environment-monitoring |
 
 ---
 

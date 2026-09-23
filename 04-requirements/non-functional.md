@@ -16,7 +16,7 @@ Non-functional requirements define measurable qualities and technical constraint
 
 | ID | Category | Priority | Verification owner |
 |----|----------|----------|--------------------|
-| NFR-001 | Perfomance | P1 | Development and QA |
+| NFR-001 | Performance | P1 | Development and QA |
 | NFR-002 | Availability | P1 | Development and DevOps |
 | NFR-003 | Scalability | P2 | Development and DevOps |
 | NFR-004 | Security | P1 | Development and QA |
@@ -33,7 +33,7 @@ Targets are release criteria unless a documented exception is approved. A target
 
 | Measurement | Target | Verification |
 |-----------|--------|---------------|
-| P95 ≤ 500 ms under expected MVP load | P95 ≤ 500 ms under expected MVP load | Automated performance test in staging.s |
+| P95 ≤ 500 ms under expected MVP load | P95 ≤ 500 ms under expected MVP load | Automated performance test in staging |
 | API response time for historical analysis | P95 ≤ 2 s for a supported period and expected data range | Analysis load test. |
 | Dashboard initial data request | P95 ≤ 3 s after the authenticated request reaches the API | End-to-end staging test |
 | Sensor measurement ingestion acknowledgment | P95 ≤ 1 s under expected ingestion load | Ingestion performance test |
@@ -43,10 +43,10 @@ Targets are release criteria unless a documented exception is approved. A target
 
 - `POST /api/auth/register` — Critical because it is responsible for creating user accounts and is part of the authentication flow.
 - `POST /api/auth/login` — Critical because it allows users to authenticate and obtain access to the platform.
-- `GET /api/usuarios/{id}` — Critical because authenticated services may require user information.
-- `GET /api/aulas/{id}` — Critical because educational environments are required for environmental monitoring.
-- `GET /api/monitoreo/ambiente` — Critical because it provides environmental information to the frontend.
-- `GET /api/monitoreo/historial` — Critical because it provides historical environmental information used by the analysis and dashboard functionality.
+- `GET /api/users/{id}` — Critical because authenticated services may require user information.
+- `GET /api/environments/{id}` — Critical because educational environments are required for environmental monitoring.
+- `GET /api/monitoring/current` — Critical because it provides environmental information to the frontend.
+- `GET /api/monitoring/history` — Critical because it provides historical environmental information used by the analysis and dashboard functionality.
 
 **Load testing tools:**
 
@@ -65,7 +65,7 @@ CI/CD or staging environment before production deployment.
 | Requirement | Target | Verification |
 |------------|---------|--------------|
 | API Gateway and critical services | Monthly availability ≥ 99.5% during the agreed service window | Health checks and operational metrics |
-| SHealth endpoints | Every deployable service exposes a machine-readable health signal | Deployment smoke test |
+| Health endpoints | Every deployable service exposes a machine-readable health signal | Deployment smoke test |
 | Stateless restart | Restart does not lose committed stateless request state | Restart test |
 | Dependency failure | Controlled error with correlation ID when a dependency is unavailable | Fault-injection test |
 | Retried input | Retries do not duplicate accepted measurements or side effects | Idempotency test |
@@ -96,9 +96,9 @@ If more than 50% of the monthly error budget is consumed before the middle of th
 
 Stateless horizontal scaling. Microservice instances should not depend on local in-memory state to maintain user sessions or persistent application data.
 
-Persistent information is stored in the corresponding MySQL database. Temporary information and caching may use an appropriate distributed cache if required by the implementation.
+Persistent information is stored in the corresponding PostgreSQL database (see ADR-003). Temporary information and caching may use an appropriate distributed cache if required by the implementation.
 
-The architecture allows services such as `ms-security`, `ms-usuarios`, `ms-aulas`, `ms-sensores` and `ms-monitoreo` to be scaled independently according to their workload.
+The architecture allows services such as `ms-security`, `ms-user-management`, `ms-classroom-management`, `ms-sensor-management` and `ms-environment-monitoring` to be scaled independently according to their workload.
 
 ---
 
