@@ -7,11 +7,10 @@
 ## Components
 
 - Avatar (upload/change)
-- User information (name, email, job title, phone, location)
+- User information (username, email, job title, phone, location)
 - Profile editing form
 - Password change form
 - Log out (with confirmation)
-
 ## Navigation
 - To dashboard → `../dashboard/` 
 - To environments → `../all-environments/`

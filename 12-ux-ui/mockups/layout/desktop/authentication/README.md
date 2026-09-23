@@ -5,9 +5,8 @@
 - `index.html` — Screen layout
 
 ## Components
-
 - Login form (company code, email, password)
-- Registration form (company code, name, email, password)
+- Registration form (company code, username, email, password)
 - Password recovery
 - Tab/toggle to switch between login and registration
 - Terms and security policies

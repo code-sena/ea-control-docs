@@ -4,7 +4,7 @@
 - `index.html` — Screen layout
 ## Components
 - Login form (email, password)
-- Registration form (name, email, password)
+- Registration form (username, email, password)
 - Password recovery
 - Tab/segment to switch between Login/Register
 ## Navigation

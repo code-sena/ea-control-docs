@@ -4,7 +4,7 @@
 - `index.html` — Screen layout
 ## Components
 - Avatar (upload/change)
-- User info (name, email, role)
+- User info (username, email, role)
 - Edit profile form
 - Change password form
 ## Navigation
