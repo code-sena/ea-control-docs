@@ -1,109 +1,109 @@
-# Modelo de Datos — Auth Service
+# Data Model — Auth Service
 
-> El Auth Service es el **dueño autoritativo** de la identidad del usuario.
-> Ningún otro servicio lee directamente estas tablas. Si necesitan datos del usuario,
-> los obtienen del token JWT o consultan vía API.
-
----
-
-## Motor de base de datos
-
-**Motor principal:** PostgreSQL — para usuarios, roles y tokens de actualización.
-**Motor de caché:** Redis — para la blacklist de tokens y contadores de intentos fallidos.
-
-**Justificación PostgreSQL:** Transacciones ACID son críticas: no puede existir un usuario
-sin rol asignado, y no pueden perderse registros de intentos de login fallidos.
-
-**Justificación Redis:** La verificación del token blacklist ocurre en cada request al gateway.
-Redis soporta búsquedas O(1) con TTL automático, sin necesidad de jobs de limpieza.
+> The Auth Service is the **authoritative owner** of user identity.
+> No other service reads these tables directly. If they need user data,
+> they get it from the JWT token or query via API.
 
 ---
 
-## Esquema PostgreSQL
+## Database engine
 
-### Tabla: `users`
+**Primary engine:** PostgreSQL — for users, roles, and refresh tokens.
+**Cache engine:** Redis — for the token blacklist and failed-attempt counters.
 
-**Propósito:** Credenciales de autenticación. Solo los datos necesarios para autenticar — perfil de aplicación va en el servicio de negocio correspondiente.
+**PostgreSQL rationale:** ACID transactions are critical: a user cannot exist
+without an assigned role, and failed login attempt records cannot be lost.
 
-| Campo | Tipo | Nullable | Descripción | Restricciones |
-|-------|------|----------|-------------|---------------|
-| id | UUID | No | Identificador único | PK, gen_random_uuid() |
-| email | VARCHAR(255) | No | Email del usuario | UNIQUE, NOT NULL |
-| password_hash | VARCHAR(255) | No | Hash bcrypt (cost 12) | NOT NULL |
-| email_verified | BOOLEAN | No | Si el email fue verificado | DEFAULT false |
-| failed_attempts | INT | No | Intentos de login fallidos | DEFAULT 0 |
-| locked_until | TIMESTAMPTZ | Sí | Bloqueado hasta esta fecha | NULL = no bloqueado |
-| created_at | TIMESTAMPTZ | No | Fecha de registro | DEFAULT NOW() |
-| updated_at | TIMESTAMPTZ | No | Última modificación | DEFAULT NOW() |
-| deleted_at | TIMESTAMPTZ | Sí | Soft delete | NULL = activo |
+**Redis rationale:** Token blacklist verification happens on every request to the gateway.
+Redis supports O(1) lookups with automatic TTL, without cleanup jobs.
 
-**Índices:**
-| Nombre | Campos | Justificación |
-|--------|--------|---------------|
-| idx_users_email | email | Búsqueda por email en login (principal lookup) |
-| idx_users_deleted_at | deleted_at | Filtrar usuarios activos |
+---
 
-### Tabla: `roles`
+## PostgreSQL schema
 
-**Propósito:** Catálogo de roles del sistema.
+### Table: `users`
 
-| Campo | Tipo | Nullable | Descripción |
+**Purpose:** Authentication credentials. Only the data needed to authenticate — application profile data belongs to the corresponding business service.
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| id | UUID | No | Unique identifier | PK, gen_random_uuid() |
+| email | VARCHAR(255) | No | User email | UNIQUE, NOT NULL |
+| password_hash | VARCHAR(255) | No | bcrypt hash (cost 12) | NOT NULL |
+| email_verified | BOOLEAN | No | Whether the email was verified | DEFAULT false |
+| failed_attempts | INT | No | Failed login attempts | DEFAULT 0 |
+| locked_until | TIMESTAMPTZ | Yes | Locked until this date | NULL = not locked |
+| created_at | TIMESTAMPTZ | No | Registration date | DEFAULT NOW() |
+| updated_at | TIMESTAMPTZ | No | Last modification | DEFAULT NOW() |
+| deleted_at | TIMESTAMPTZ | Yes | Soft delete | NULL = active |
+
+**Indexes:**
+| Name | Fields | Rationale |
+|------|--------|-----------|
+| idx_users_email | email | Email lookup on login (primary lookup) |
+| idx_users_deleted_at | deleted_at | Filter active users |
+
+### Table: `roles`
+
+**Purpose:** System role catalog.
+
+| Field | Type | Nullable | Description |
 |-------|------|----------|-------------|
 | id | UUID | No | PK |
-| name | VARCHAR(50) | No | Nombre del rol (UNIQUE): ADMIN, USER, VIEWER |
-| description | TEXT | Sí | Descripción legible del rol |
+| name | VARCHAR(50) | No | Role name (UNIQUE): ADMIN, USER, VIEWER |
+| description | TEXT | Yes | Human-readable role description |
 | created_at | TIMESTAMPTZ | No | DEFAULT NOW() |
 
-### Tabla: `user_roles`
+### Table: `user_roles`
 
-**Propósito:** Relación many-to-many entre usuarios y roles.
+**Purpose:** Many-to-many relation between users and roles.
 
-| Campo | Tipo | Nullable | Descripción |
+| Field | Type | Nullable | Description |
 |-------|------|----------|-------------|
 | user_id | UUID | No | FK → users.id ON DELETE CASCADE |
 | role_id | UUID | No | FK → roles.id ON DELETE RESTRICT |
-| assigned_at | TIMESTAMPTZ | No | Cuándo se asignó el rol |
-| assigned_by | UUID | Sí | FK → users.id — quién asignó el rol |
+| assigned_at | TIMESTAMPTZ | No | When the role was assigned |
+| assigned_by | UUID | Yes | FK → users.id — who assigned the role |
 
-**PK compuesta:** (user_id, role_id)
+**Composite PK:** (user_id, role_id)
 
-### Tabla: `refresh_tokens`
+### Table: `refresh_tokens`
 
-**Propósito:** Tokens de actualización activos. Permite rotación y revocación.
+**Purpose:** Active refresh tokens. Enables rotation and revocation.
 
-| Campo | Tipo | Nullable | Descripción |
+| Field | Type | Nullable | Description |
 |-------|------|----------|-------------|
 | id | UUID | No | PK |
 | user_id | UUID | No | FK → users.id ON DELETE CASCADE |
-| token_hash | VARCHAR(255) | No | Hash SHA-256 del token (nunca el token real) |
-| expires_at | TIMESTAMPTZ | No | Expiración del refresh token |
-| revoked_at | TIMESTAMPTZ | Sí | NULL = activo, fecha = revocado |
+| token_hash | VARCHAR(255) | No | SHA-256 hash of the token (never the real token) |
+| expires_at | TIMESTAMPTZ | No | Refresh token expiration |
+| revoked_at | TIMESTAMPTZ | Yes | NULL = active, date = revoked |
 | created_at | TIMESTAMPTZ | No | DEFAULT NOW() |
-| user_agent | TEXT | Sí | Para mostrar sesiones activas al usuario |
+| user_agent | TEXT | Yes | To show active sessions to the user |
 
 ---
 
-## Esquema Redis
+## Redis schema
 
-| Key pattern | Tipo | TTL | Propósito |
-|-------------|------|-----|-----------|
-| `blacklist:{jti}` | String | Hasta expiración del JWT | Tokens revocados (logout) |
-| `attempts:{email}` | String (int) | 5 minutos | Contador de intentos fallidos |
-| `locked:{email}` | String | Hasta unlock | Email bloqueado temporalmente |
-
----
-
-## Migraciones
-
-**Herramienta:** Liquibase
-**Ubicación de scripts:** `src/main/resources/db/changelog/`
-
-**Política:** Todas las migraciones son forward-only en producción. Los rollbacks de datos se hacen con migraciones adicionales, no revirtiendo scripts.
+| Key pattern | Type | TTL | Purpose |
+|-------------|------|-----|---------|
+| `blacklist:{jti}` | String | Until JWT expiration | Revoked tokens (logout) |
+| `attempts:{email}` | String (int) | 5 minutes | Failed attempt counter |
+| `locked:{email}` | String | Until unlock | Temporarily locked email |
 
 ---
 
-## Correlaciones
+## Migrations
 
-- Runbook del servicio → `runbook.md`
-- Eventos que emite → `events.md`
-- Política de seguridad y JWT → `00-governance/security-policy.md`
+**Tool:** Liquibase (project standard)
+**Script location:** `db/changelog/changes/` (see `10-devops/local-setup.md`)
+
+**Policy:** All migrations are forward-only in production. Data rollbacks are done with additional migrations, not by reverting scripts.
+
+---
+
+## Correlations
+
+- Service runbook → `runbook.md`
+- Emitted events → `events.md`
+- Security and JWT policy → `00-governance/security-policy.md`

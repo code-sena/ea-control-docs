@@ -1,114 +1,114 @@
 # Runbook — Auth Service
 
-> Procedimientos de operación para quien esté en guardia.
-> Este servicio es crítico — un P0 en auth-service impide que TODOS los usuarios accedan al sistema.
+> Operational procedures for whoever is on call.
+> This service is critical — a P0 in auth-service prevents ALL users from accessing the system.
 
-**Servicio:** auth-service
-**Puerto local:** 8081
-**Versión:** 1.0
-**Última actualización:** [YYYY-MM-DD]
+**Service:** auth-service
+**Local port:** 8081
+**Version:** 1.0
+**Last updated:** [YYYY-MM-DD]
 
 ---
 
-## 1. Información rápida
+## 1. Quick reference
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
-| Puerto local | 8081 |
-| URL producción | `https://api.[dominio]/api/v1/auth` |
-| URL staging | `https://staging.api.[dominio]/api/v1/auth` |
-| Dashboard Grafana | [URL del panel de auth-service] |
-| Canal de alertas | [#alerts] |
-| Escalamiento | [Tech Lead — contacto — URGENTE si auth está caído] |
-| RTO objetivo | 5 min (autenticación bloqueada = sistema inoperable) |
-| RPO objetivo | 0 (PostgreSQL con réplica en tiempo real) |
+| Local port | 8081 |
+| Production URL | `https://api.[domain]/api/v1/auth` |
+| Staging URL | `https://staging.api.[domain]/api/v1/auth` |
+| Grafana dashboard | [auth-service dashboard URL] |
+| Alerts channel | [#alerts] |
+| Escalation | [Tech Lead — contact — URGENT if auth is down] |
+| Target RTO | 5 min (authentication blocked = system inoperable) |
+| Target RPO | 0 (PostgreSQL with real-time replica) |
 
 ---
 
-## 2. Verificar salud
+## 2. Health check
 
 ```bash
 # Health check
-curl https://api.[dominio]/api/v1/auth/health
+curl https://api.[domain]/api/v1/auth/health
 
-# Respuesta esperada:
+# Expected response:
 # {"status": "ok", "db": "connected", "redis": "connected"}
 
-# Si hay problemas, verificar las dependencias:
+# If there are problems, check the dependencies:
 
-# Verificar PostgreSQL
+# Check PostgreSQL
 kubectl exec -n [ns] [postgres-pod] -- pg_isready -U [user]
 
-# Verificar Redis
+# Check Redis
 kubectl exec -n [ns] [redis-pod] -- redis-cli ping
-# Respuesta esperada: PONG
+# Expected response: PONG
 ```
 
 ---
 
-## 3. Alertas frecuentes
+## 3. Common alerts
 
-### Alta tasa de errores 401 en login
+### High rate of 401 errors on login
 
-**Síntoma:** Muchos intentos de login fallidos en poco tiempo (posible ataque).
+**Symptom:** Many failed login attempts in a short time (possible attack).
 
 ```bash
-# Ver IPs con más intentos
+# See IPs with the most attempts
 kubectl logs -n [ns] -l app=auth-service --tail=500 | \
   grep '"eventType":"user.login_failed"' | jq '.payload.ipAddress' | \
   sort | uniq -c | sort -rn | head -10
 ```
 
-**Acción:** Si una IP supera [N] intentos en 5 minutos, agregar a denylist del gateway.
+**Action:** If one IP exceeds [N] attempts in 5 minutes, add it to the gateway denylist.
 
-### Tokens de actualización no funcionan (usuarios con sesión activa no pueden renovar)
+### Refresh tokens not working (users with active sessions cannot renew)
 
-**Causa probable:** Redis caído o la clave JWT fue rotada sin actualizar todos los servicios.
+**Likely cause:** Redis is down or the JWT key was rotated without updating all services.
 
 ```bash
-# Verificar Redis
+# Check Redis
 kubectl exec -n [ns] [redis-pod] -- redis-cli ping
 
-# Verificar que la clave pública en el gateway coincide con la del auth-service
+# Verify the public key in the gateway matches the one in auth-service
 kubectl exec -n [ns] [auth-pod] -- curl localhost:8081/api/v1/auth/jwks
 ```
 
-### Accounts being locked out en masa
+### Mass account lockouts
 
-**Síntoma:** Muchos usuarios reportan "cuenta bloqueada" simultáneamente.
+**Symptom:** Many users report "account locked" simultaneously.
 
-**Causa probable:** (A) ataque coordinado, (B) bug de contador que se incrementa incorrectamente.
+**Likely cause:** (A) coordinated attack, (B) counter bug incrementing incorrectly.
 
 ```bash
-# Ver cantidad de cuentas bloqueadas actualmente
+# Count currently locked accounts
 kubectl exec -n [ns] [redis-pod] -- redis-cli keys "locked:*" | wc -l
 
-# Desbloquear una cuenta específica (solo emergencias, aprobación Tech Lead)
-kubectl exec -n [ns] [redis-pod] -- redis-cli del "locked:usuario@example.com"
+# Unlock a specific account (emergencies only, Tech Lead approval)
+kubectl exec -n [ns] [redis-pod] -- redis-cli del "locked:user@example.com"
 ```
 
 ---
 
-## 4. Rotación de claves JWT
+## 4. JWT key rotation
 
-> Solo ejecutar con aprobación del Tech Lead. Tiene impacto en todos los servicios.
+> Only run with Tech Lead approval. Impacts all services.
 
 ```bash
-# 1. Generar nuevo par de claves
+# 1. Generate a new key pair
 openssl genrsa -out new-private.pem 2048
 openssl rsa -in new-private.pem -pubout -out new-public.pem
 
-# 2. Actualizar el secreto en el vault del ambiente
-# (seguir el proceso del vault de tu infraestructura)
+# 2. Update the secret in the environment vault
+# (follow your infrastructure's vault process)
 
-# 3. El JWKS endpoint soporta múltiples claves — agregar la nueva sin remover la vieja
-# Esto permite que los tokens existentes (firmados con la clave vieja) sigan siendo válidos
-# hasta su expiración (máx 1 hora)
+# 3. The JWKS endpoint supports multiple keys — add the new one without removing the old one
+# This allows existing tokens (signed with the old key) to remain valid
+# until they expire (max 1 hour)
 
-# 4. Después de 1 hora: remover la clave vieja del JWKS
+# 4. After 1 hour: remove the old key from JWKS
 
-# 5. Verificar que el gateway puede usar la nueva clave pública
-curl https://api.[dominio]/api/v1/auth/jwks
+# 5. Verify the gateway can use the new public key
+curl https://api.[domain]/api/v1/auth/jwks
 ```
 
 ---
@@ -121,22 +121,22 @@ kubectl rollout undo deployment/auth-service -n [ns]
 kubectl rollout status deployment/auth-service -n [ns]
 ```
 
-**Si hay migraciones de BD en el deploy que se está revirtiendo:**
-Contactar al Tech Lead antes de hacer rollback — puede requerirse una migración de rollback.
+**If there are DB migrations in the deploy being rolled back:**
+Contact the Tech Lead before rolling back — a rollback migration may be required.
 
 ---
 
-## 6. Operaciones de mantenimiento
+## 6. Maintenance operations
 
-### Limpiar refresh tokens expirados
+### Clean up expired refresh tokens
 
 ```bash
-# Si el job automático de limpieza falla:
+# If the automatic cleanup job fails:
 kubectl exec -n [ns] [postgres-pod] -- psql -U [user] -d [db] \
   -c "DELETE FROM refresh_tokens WHERE expires_at < NOW() AND revoked_at IS NOT NULL;"
 ```
 
-### Revocar todas las sesiones de un usuario (emergencia)
+### Revoke all sessions for a user (emergency)
 
 ```bash
 kubectl exec -n [ns] [postgres-pod] -- psql -U [user] -d [db] \
@@ -145,10 +145,10 @@ kubectl exec -n [ns] [postgres-pod] -- psql -U [user] -d [db] \
 
 ---
 
-## 7. Post-incidente
+## 7. Post-incident
 
-- [ ] Login y refresh funcionando normalmente
-- [ ] Zero 5xx en los últimos 5 minutos
-- [ ] Cuentas bloqueadas incorrectamente desbloqueadas (si aplica)
-- [ ] Incidente registrado en `13-operations/incident-management.md`
-- [ ] Si hubo breach de credenciales: escalar a protocolo de seguridad
+- [ ] Login and refresh working normally
+- [ ] Zero 5xx in the last 5 minutes
+- [ ] Incorrectly locked accounts unlocked (if applicable)
+- [ ] Incident recorded in `13-operations/incident-management.md`
+- [ ] If there was a credential breach: escalate to the security protocol

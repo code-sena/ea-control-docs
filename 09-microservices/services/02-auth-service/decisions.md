@@ -1,68 +1,68 @@
-# Decisiones técnicas — Auth Service
+# Technical Decisions — Auth Service
 
-> Decisiones de diseño del servicio de autenticación que complementan los ADRs globales.
-
----
-
-## Decisión: Algoritmo de firma JWT — RS256 vs HS256
-
-**Fecha:** [fecha]
-**Contexto:** JWT puede firmarse con HMAC-SHA256 (HS256, clave simétrica compartida) o
-RSA-SHA256 (RS256, par de claves pública/privada).
-
-**Decisión:** RS256 — clave privada solo en auth-service, clave pública disponible en
-`GET /api/v1/auth/jwks` para que cualquier servicio pueda verificar tokens sin llamar al auth-service.
-
-**Consecuencias:**
-- Cada servicio puede verificar tokens de forma independiente (sin latencia de red)
-- La rotación de claves es operativamente más compleja (hay que distribuir la nueva clave pública)
-- El JWKS endpoint permite rotación gradual con múltiples claves activas simultáneamente
+> Authentication service design decisions that complement the global ADRs.
 
 ---
 
-## Decisión: Refresh tokens en base de datos vs. stateless
+## Decision: JWT signing algorithm — RS256 vs HS256
 
-**Fecha:** [fecha]
-**Contexto:** Los refresh tokens pueden ser stateless (JWT largo) o stateful (ID en BD).
+**Date:** [date]
+**Context:** JWT can be signed with HMAC-SHA256 (HS256, shared symmetric key) or
+RSA-SHA256 (RS256, public/private key pair).
 
-**Decisión:** Stateful — el refresh token es un UUID almacenado en la tabla `refresh_tokens`.
-Solo el hash SHA-256 se persiste (nunca el valor real).
+**Decision:** RS256 — private key only in auth-service, public key available at
+`GET /api/v1/auth/jwks` so any service can verify tokens without calling auth-service.
 
-**Consecuencias:**
-- Revocación inmediata posible (logout de dispositivo específico, suspensión de cuenta)
-- Requiere un lookup a PostgreSQL en cada uso del refresh token
-- La BD de refresh_tokens puede convertirse en bottleneck si hay millones de sesiones activas
-
----
-
-## Decisión: Dónde vive la verificación de permisos por recurso
-
-**Fecha:** [fecha]
-**Contexto:** Los permisos granulares (ej: "solo puede ver sus propias citas") pueden vivir
-en auth-service o en cada servicio de negocio.
-
-**Decisión:** Auth-service gestiona roles (ADMIN, USER, VIEWER). Los permisos granulares
-por recurso son responsabilidad de cada microservicio de negocio.
-
-**Razón:** Auth-service no conoce el dominio de cada servicio. Centralizar permisos granulares
-crearía un acoplamiento bidireccional y haría al auth-service dependiente de todos los demás.
+**Consequences:**
+- Each service can verify tokens independently (no network latency)
+- Key rotation is operationally more complex (the new public key must be distributed)
+- The JWKS endpoint allows gradual rotation with multiple active keys simultaneously
 
 ---
 
-## Decisión: Política de bloqueo de cuentas
+## Decision: Refresh tokens in database vs. stateless
 
-**Fecha:** [fecha]
-**Decisión:** [N] intentos fallidos → bloqueo por [M] minutos. El contador se resetea
-en login exitoso. El bloqueo se almacena en Redis (TTL = M minutos, autolimpieza).
+**Date:** [date]
+**Context:** Refresh tokens can be stateless (long JWT) or stateful (ID in DB).
 
-**Consecuencias:**
-- Un atacante puede hacer DoS a un usuario específico forzando el bloqueo
-- Mitigación: el bloqueo gradual (5 min → 30 min → 24 hours) reduce el impacto
+**Decision:** Stateful — the refresh token is a UUID stored in the `refresh_tokens` table.
+Only the SHA-256 hash is persisted (never the real value).
+
+**Consequences:**
+- Immediate revocation possible (specific device logout, account suspension)
+- Requires a PostgreSQL lookup on every refresh token use
+- The refresh_tokens DB can become a bottleneck if there are millions of active sessions
 
 ---
 
-## Correlaciones
+## Decision: Where resource-level permission checks live
 
-- ADRs de arquitectura global → `05-architecture/decisions/records/`
-- Reglas de seguridad técnica → `00-governance/security-rules.md`
-- Modelo de datos → `data-model.md`
+**Date:** [date]
+**Context:** Granular permissions (e.g., "can only see their own appointments") can live
+in auth-service or in each business service.
+
+**Decision:** Auth-service manages roles (ADMIN, USER, VIEWER). Granular resource
+permissions are the responsibility of each business microservice.
+
+**Rationale:** Auth-service does not know each service's domain. Centralizing granular permissions
+would create bidirectional coupling and make auth-service dependent on all others.
+
+---
+
+## Decision: Account lockout policy
+
+**Date:** [date]
+**Decision:** [N] failed attempts → lock for [M] minutes. The counter resets
+on successful login. The lock is stored in Redis (TTL = M minutes, self-cleaning).
+
+**Consequences:**
+- An attacker can DoS a specific user by forcing lockouts
+- Mitigation: gradual lockout (5 min → 30 min → 24 hours) reduces the impact
+
+---
+
+## Correlations
+
+- Global architecture ADRs → `05-architecture/decisions/records/`
+- Technical security rules → `00-governance/security-rules.md`
+- Data model → `data-model.md`

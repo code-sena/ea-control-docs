@@ -46,7 +46,7 @@ curl http://localhost:8081/health
 # Create a test user
 curl -X POST http://localhost:8081/api/v1/auth/register \
   -H 'Content-Type: application/json' \
-  -d '{"email": "dev@example.com", "password": "DevPass123!", "name": "Dev User"}'
+  -d '{"email": "dev@example.com", "password": "DevPass123!", "username": "dev.user"}'
 ```
 
 ---

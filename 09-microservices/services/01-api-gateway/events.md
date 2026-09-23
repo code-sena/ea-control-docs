@@ -1,27 +1,27 @@
-# Eventos — API Gateway
+# Events — API Gateway
 
-> El API Gateway **no emite eventos de dominio**. Su responsabilidad es de infraestructura
-> (enrutamiento, autenticación, rate limiting), no de negocio.
+> The API Gateway **does not emit domain events**. Its responsibility is infrastructure
+> (routing, authentication, rate limiting), not business.
 >
-> Los eventos de dominio (cosas que le importan al negocio) los emiten los servicios detrás del gateway.
+> Domain events (things the business cares about) are emitted by the services behind the gateway.
 
 ---
 
-## Eventos publicados
+## Published events
 
-**Ninguno.** El API Gateway no publica al message broker.
-
----
-
-## Eventos consumidos
-
-**Ninguno.** El API Gateway no suscribe al message broker.
+**None.** The API Gateway does not publish to the message broker.
 
 ---
 
-## Logs de acceso (no son eventos de dominio)
+## Consumed events
 
-El gateway sí genera **logs de acceso** estructurados por cada petición HTTP:
+**None.** The API Gateway does not subscribe to the message broker.
+
+---
+
+## Access logs (not domain events)
+
+The gateway does produce structured **access logs** for every HTTP request:
 
 ```json
 {
@@ -39,12 +39,12 @@ El gateway sí genera **logs de acceso** estructurados por cada petición HTTP:
 }
 ```
 
-Estos logs van a la plataforma de observabilidad (`13-operations/observability.md`) pero
-**no se publican al broker de mensajes** — no son eventos de negocio.
+These logs go to the observability platform (`13-operations/observability.md`) but are
+**not published to the message broker** — they are not business events.
 
 ---
 
-## Correlaciones
+## Correlations
 
-- Observabilidad y logs → `13-operations/observability.md`
-- Eventos de negocio de los servicios → `09-microservices/services/02-auth-service/events.md`
+- Observability and logs → `13-operations/observability.md`
+- Business events of the services → `09-microservices/services/02-auth-service/events.md`

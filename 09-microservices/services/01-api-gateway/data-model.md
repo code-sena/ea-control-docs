@@ -1,54 +1,54 @@
-# Modelo de Datos — API Gateway
+# Data Model — API Gateway
 
-> El API Gateway es **stateless**: no tiene base de datos propia.
-> Su estado de configuración (rutas, rate limits, allowlists) se gestiona
-> mediante variables de ambiente y archivos de configuración versionados en Git,
-> no en tablas de base de datos.
-
----
-
-## Motor de base de datos
-
-**Motor:** No aplica — sin base de datos persistente.
-
-**Justificación:** Un API Gateway que requiere una BD propia introduce un punto de falla
-adicional en la capa que todo el tráfico atraviesa. El estado de routing se gestiona
-via configuración (archivos YAML o variables de ambiente), y el estado de sesión
-(token blacklist, rate limits) se delega a Redis compartido.
+> The API Gateway is **stateless**: it has no database of its own.
+> Its configuration state (routes, rate limits, allowlists) is managed
+> through environment variables and configuration files versioned in Git,
+> not in database tables.
 
 ---
 
-## Estado en memoria / Redis
+## Database engine
 
-El API Gateway sí mantiene estado efímero:
+**Engine:** N/A — no persistent database.
 
-| Dato | Almacenamiento | TTL | Propósito |
-|------|---------------|-----|-----------|
-| Rate limit counters | Redis | 60 segundos | Conteo de peticiones por IP |
-| Token blacklist check | Redis (read-only) | Según expiración del token | Verificar tokens revocados |
-
-El auth-service es el **dueño** del token blacklist — el gateway solo lo consulta.
+**Rationale:** An API Gateway that requires its own database introduces an extra failure
+point in the layer every request traverses. Routing state is managed
+via configuration (YAML files or environment variables), and session state
+(token blacklist, rate limits) is delegated to shared Redis.
 
 ---
 
-## Archivos de configuración de rutas
+## In-memory / Redis state
 
-En lugar de tablas, las rutas se definen en:
+The API Gateway does keep ephemeral state:
+
+| Data | Storage | TTL | Purpose |
+|------|---------|-----|---------|
+| Rate limit counters | Redis | 60 seconds | Request counting per IP |
+| Token blacklist check | Redis (read-only) | Per token expiration | Verify revoked tokens |
+
+The auth-service **owns** the token blacklist — the gateway only reads it.
+
+---
+
+## Route configuration files
+
+Instead of tables, routes are defined in:
 
 ```
 config/
-├── routes.yaml          # Mapa de rutas: path → servicio + puerto
-├── rate-limits.yaml     # Límites por ruta y por rol
-└── cors.yaml            # Configuración CORS por origen
+├── routes.yaml          # Route map: path → service + port
+├── rate-limits.yaml     # Limits per route and per role
+└── cors.yaml            # CORS configuration per origin
 ```
 
-Estos archivos están versionados en Git y se recargo en el startup del servicio.
-Un cambio de rutas requiere un redeploy (intencional: los cambios de routing son cambios de infraestructura).
+These files are versioned in Git and reloaded on service startup.
+A route change requires a redeploy (intentional: routing changes are infrastructure changes).
 
 ---
 
-## Correlaciones
+## Correlations
 
-- Configuración de ambientes → `10-devops/environments.md`
-- Runbook del gateway → `runbook.md`
-- Catálogo de rutas disponibles → `09-microservices/service-catalog.md`
+- Environment configuration → `10-devops/environments.md`
+- Gateway runbook → `runbook.md`
+- Available route catalog → `09-microservices/service-catalog.md`
