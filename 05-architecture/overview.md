@@ -21,10 +21,12 @@ The main characteristics of the adopted architecture are:
 - **Spring Security + JWT** for authentication and authorization.
 - Independent microservices for the main business domains:
   - `ms-security`
-  - `ms-usuarios`
-  - `ms-aulas`
-  - `ms-sensores`
-  - `ms-monitoreo`
+  - `ms-user-management`
+  - `ms-classroom-management`
+  - `ms-sensor-management`
+  - `ms-environment-monitoring`
+  - `ms-alert`
+  - `ms-user-experience`
 - **PostgreSQL 15** as the persistence technology.
 -The MVP uses one PostgreSQL instance with **logical ownership boundaries per service.** Services do not access another service's tables directly. 
 - **REST/HTTP** for synchronous communication between the frontend, API Gateway and services.
@@ -70,8 +72,8 @@ The architecture also facilitates the independent evolution of each domain witho
 │                  │               │               │                         │
 │                  ▼               ▼               ▼                         │
 │          ┌────────────┐  ┌────────────┐  ┌──────────────┐                 │
-│          │ Security   │  │ Usuarios   │  │    Aulas     │                 │
-│          │   Service  │  │  Service   │  │   Service    │                 │
+│          │ Security   │  │   Users    │  │ Classrooms   │                 │
+│          │  Service   │  │  Service   │  │   Service    │                 │
 │          └──────┬─────┘  └──────┬─────┘  └──────┬───────┘                 │
 │                 │                │               │                         │
 │                 └────────────────┼───────────────┘                         │
@@ -150,13 +152,17 @@ graph TB
 
         SEC["ms-security<br/>Spring Boot<br/>Authentication + JWT"]
 
-        USR["ms-usuarios<br/>Spring Boot<br/>User Management"]
+        USR["ms-user-management<br/>Spring Boot<br/>User Management"]
 
-        AUL["ms-aulas<br/>Spring Boot<br/>Classroom Management"]
+        AUL["ms-classroom-management<br/>Spring Boot<br/>Classroom Management"]
 
-        SEN["ms-sensores<br/>Spring Boot<br/>Sensor Management"]
+        SEN["ms-sensor-management<br/>Spring Boot<br/>Sensor Management"]
 
-        MON["ms-monitoreo<br/>Spring Boot<br/>Monitoring + Analysis"]
+        MON["ms-environment-monitoring<br/>Spring Boot<br/>Monitoring + Analysis"]
+
+        ALR["ms-alert<br/>Spring Boot<br/>Alert Generation"]
+
+        UX["ms-user-experience<br/>Spring Boot<br/>User Preferences + Favorites"]
 
         MQ["RabbitMQ<br/>Asynchronous Events"]
 
@@ -174,6 +180,8 @@ graph TB
     GW -->|REST| AUL
     GW -->|REST| SEN
     GW -->|REST| MON
+    GW -->|REST| ALR
+    GW -->|REST| UX
 
     SEC -->|Authentication / JWT| GW
 
@@ -184,11 +192,16 @@ graph TB
     SEN -->|Events when required| MQ
     MQ -->|Asynchronous messages| MON
 
+    MON -->|Threshold breaches| ALR
+    MON -->|EnvironmentalDataAnalyzed| UX
+
     SEC -->|Persistence| DB
     USR -->|Persistence| DB
     AUL -->|Persistence| DB
     SEN -->|Persistence| DB
     MON -->|Persistence| DB
+    ALR -->|Persistence| DB
+    UX -->|Persistence| DB
 
     MON -->|Historical analysis| DB
 ```
@@ -200,10 +213,12 @@ graph TB
 | React Frontend | Provides the web interface for authentication, management, monitoring and environmental analysis |
 | API Gateway | Central entry point, routing and access control for backend services |
 | `ms-security` | User registration, authentication, password management and JWT generation/validation |
-| `ms-usuarios` | Management and consultation of registered users |
-| `ms-aulas` | Management of educational classrooms/environments |
-| `ms-sensores` | Registration, configuration and management of environmental sensors |
-| `ms-monitoreo` | Reception, storage, consultation and analysis of environmental measurements |
+| `ms-user-management` | Management and consultation of registered users |
+| `ms-classroom-management` | Management of educational classrooms/environments |
+| `ms-sensor-management` | Registration, configuration and management of environmental sensors |
+| `ms-environment-monitoring` | Reception, storage, consultation and analysis of environmental measurements |
+| `ms-alert` | Generation and management of environmental threshold alerts |
+| `ms-user-experience` | User preferences, favorites, ratings and search experience features |
 | RabbitMQ | Optional asynchronous communication between services when events need to be decoupled |
 | PostgreSQL 15 | Persistent storage organized logically according to project domains |
 
@@ -214,11 +229,11 @@ Environmental Sensor
         │
         │ MQTT / HTTP
         ▼
-   ms-sensores
+   ms-sensor-management
         │
         │ Environmental measurement
         ▼
-   ms-monitoreo
+   ms-environment-monitoring
         │
         ├──────────────► PostgreSQL 15
         │
@@ -246,12 +261,14 @@ Daily / Weekly / Monthly / Yearly Analysis
 |---|---------|---------------|------|-----|-------------------|
 | 1 | `api-gateway` | Central entry point, routing and request control | 8080 | No direct DB | HTTP/REST Proxy |
 | 2 | `ms-security` | Registration, authentication, JWT and access control | 8081 | PostgreSQL - Security ownership boundary | REST |
-| 3 | `ms-usuarios` | User management and user information | 8082 | PostgreSQL - Users ownership boundary | REST |
-| 4 | `ms-aulas` | Educational classroom/environment management | 8083 | PostgreSQL - Classrooms ownership boundary | REST |
-| 5 | `ms-sensores` | Environmental sensor registration and communication | 8084 | 	PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
-| 6 | `ms-monitoreo` | Environmental data reception, storage, monitoring and analysis | 8085 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
-| 7 | `RabbitMQ` | Asynchronous messaging between services when required | 5672 | No | AMQP |
-| 8 | `Frontend React` | User interface and visualization of environmental information | 80 | No | HTTP/HTTPS |
+| 3 | `ms-user-management` | User management and user information | 8082 | PostgreSQL - Users ownership boundary | REST |
+| 4 | `ms-classroom-management` | Educational classroom/environment management | 8083 | PostgreSQL - Classrooms ownership boundary | REST |
+| 5 | `ms-sensor-management` | Environmental sensor registration and communication | 8084 | 	PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
+| 6 | `ms-environment-monitoring` | Environmental data reception, storage, monitoring and analysis | 8085 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
+| 7 | `ms-alert` | Alert generation and management from environmental thresholds | 8086 | PostgreSQL - Alerts ownership boundary | REST + Events |
+| 8 | `ms-user-experience` | User preferences, favorites, ratings and search | 8087 | PostgreSQL - UX ownership boundary | REST |
+| 9 | `RabbitMQ` | Asynchronous messaging between services when required | 5672 | No | AMQP |
+| 10 | `Frontend React` | User interface and visualization of environmental information | 80 | No | HTTP/HTTPS |
 
 > Full detail per service in `09-microservices/service-catalog.md`
 
@@ -326,10 +343,10 @@ Each microservice must have a clearly defined business responsibility.
 For example:
 
 - `ms-security` handles authentication and access control.
-- `ms-usuarios` handles user management.
-- `ms-aulas` handles educational classrooms.
-- `ms-sensores` handles environmental sensors.
-- `ms-monitoreo` handles environmental measurements, monitoring and analysis.
+- `ms-user-management` handles user management.
+- `ms-classroom-management` handles educational classrooms.
+- `ms-sensor-management` handles environmental sensors.
+- `ms-environment-monitoring` handles environmental measurements, monitoring and analysis.
 - `ms-alert` handles alert generation and management.
 - `ms-user-experience` handles user preferences and experience.
 
@@ -418,7 +435,7 @@ Transversal concerns that apply to ALL services:
 | Configuration | Environment variables / application configuration | Docker and Spring Boot configuration |
 | Containerization | Docker | Dockerfiles / Docker Compose |
 | Messaging | RabbitMQ when asynchronous communication is required | Messaging configuration |
-| Sensor Communication | MQTT / HTTP | `ms-sensores` |
+| Sensor Communication | MQTT / HTTP | `ms-sensor-management` |
 | Environmental Variables | CO₂, Humidity, Noise, Temperature — see ADR-014 | `06-data/domain/ms-environment-monitoring.md` |
 | API Documentation | OpenAPI | `07-api/contracts/openapi/` |
 

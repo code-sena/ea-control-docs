@@ -56,7 +56,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Name** | IAM |
 | **Responsibility** | Manages user registration, authentication, access, and user-related information. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | `ms-security`, `ms-usuarios` |
+| **Microservice(s)** | `ms-security`, `ms-user-management` |
 | **Database** | PostgreSQL 15 |
 | **Ubiquitous Language** | User, Administrator, Account, Authentication, Registration, Access |
 

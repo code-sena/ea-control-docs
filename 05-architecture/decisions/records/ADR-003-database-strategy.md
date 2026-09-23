@@ -53,7 +53,7 @@ This ADR supersedes the undocumented MySQL assumption. It does not require an im
 - A future physical split will require migration and operational planning.
 
 **Impact on the system:**
-- Affected services: all persistence-owning services, especially ms-security, ms-usuarios, ms-aulas, ms-sensores, and ms-monitoreo.
+- Affected services: all persistence-owning services, especially ms-security, ms-user-management, ms-classroom-management, ms-sensor-management, and ms-environment-monitoring.
 - Documents that must be updated: 01-context/overview.md, 01-context/scope.md, 05-architecture/overview.md, 06-data/models.md, 04-requirements/non-functional.md, 04-requirements/traceability-matrix.md, 10-devops/local-setup.md.
 
 ---

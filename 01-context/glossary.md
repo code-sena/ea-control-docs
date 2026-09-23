@@ -14,6 +14,30 @@
 
 ---
 
+## Canonical service names
+
+> Binding per ADR-001 and `00-governance/documentation-rules.md`: all technical and business
+> terminology is English. These are the canonical microservice names — use them everywhere.
+> Spanish legacy names are listed only as aliases for reading older references; never write them
+> in new or updated documents.
+
+| Canonical name | Legacy alias (do not use) | Bounded context |
+|----------------|---------------------------|-----------------|
+| `api-gateway` | — | Platform |
+| `ms-security` | — | IAM |
+| `ms-user-management` | `ms-usuarios` | IAM |
+| `ms-classroom-management` | `ms-aulas` | Classrooms |
+| `ms-sensor-management` | `ms-sensores` | Sensors |
+| `ms-environment-monitoring` | `ms-monitoreo` | Monitoring, Data Analysis |
+| `ms-alert` | — | Monitoring |
+| `ms-user-experience` | — | UX |
+
+> **Note on IAM data:** `06-data/domain/ms-iam.md` documents the data model shared by both
+> IAM-context services (`ms-security` and `ms-user-management`) in a single file; each service
+> still owns its own logical schema per ADR-003.
+
+---
+
 ## Domain terms
 
 | Term | Definition | Notes / Synonyms |

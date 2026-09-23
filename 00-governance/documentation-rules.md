@@ -40,7 +40,7 @@ All project artifacts must use consistent naming in English, with `snake_case` f
 ✓ educational_environment
 ✓ environment_measurement
 ✓ variable_threshold
-✓ app_user
+✓ users
 ✓ analysis_result
 
 ✗ educacion_ambiente

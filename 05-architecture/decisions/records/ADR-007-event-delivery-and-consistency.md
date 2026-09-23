@@ -55,7 +55,7 @@ The outbox closes the most important failure window between committing business 
 - Operational monitoring is required for outbox backlog, retries, and dead-letter messages.
 
 **Impact on the system:**
-- Affected services: ms-sensores, ms-monitoreo, RabbitMQ, and future event consumers.
+- Affected services: ms-sensor-management, ms-environment-monitoring, RabbitMQ, and future event consumers.
 - dcfdDocuments that must be updated: 02-domain/domain-events.md, 05-architecture/overview.md, 05-architecture/pattern-guide.md, 06-data/models.md, 09-microservices/service-catalog.md, 13-operations/observability.md.
 
 ---

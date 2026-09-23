@@ -21,7 +21,7 @@ The decision is needed to prevent accidental coupling and to make API contracts,
 
 ## Decision
 
-**We decided:** Use REST/HTTPS with OpenAPI contracts for frontend-to-gateway and synchronous request/response operations. Use MQTT or HTTPS for sensor-to-ms-sensores ingestion, depending on the sensor capability. Use RabbitMQ with versioned domain events for asynchronous propagation from ms-sensores/ms-monitoreo to downstream processing when the operation does not require an immediate response.
+**We decided:** Use REST/HTTPS with OpenAPI contracts for frontend-to-gateway and synchronous request/response operations. Use MQTT or HTTPS for sensor-to-ms-sensor-management ingestion, depending on the sensor capability. Use RabbitMQ with versioned domain events for asynchronous propagation from ms-sensor-management/ms-environment-monitoring to downstream processing when the operation does not require an immediate response.
 The API Gateway is the only public backend entry point. Services must not expose direct public endpoints for frontend access.
 
 **Justification:**
@@ -54,7 +54,7 @@ REST is appropriate for immediate queries and commands, while asynchronous messa
 - Each event requires schema ownership and compatibility rules.
 
 **Impact on the system:**
-- Affected services: api-gateway, ms-sensores, ms-monitoreo, React frontend, and any future analysis consumer.
+- Affected services: api-gateway, ms-sensor-management, ms-environment-monitoring, React frontend, and any future analysis consumer.
 - Documents that must be updated: 05-architecture/overview.md, 02-domain/dominio-map.md, 02-domain/domain-events.md, 07-api/README.md, 09-microservices/service-catalog.md, 10-devops/environments.md.
 
 ---
@@ -65,7 +65,7 @@ REST is appropriate for immediate queries and commands, while asynchronous messa
 |------|------------|--------|-----------|
 | REST and events expose inconsistent domain models | Medium | High | Define canonical contracts and anti-corruption mappings per consumer |
 | Message backlog delays historical analysis | Medium | High | Monitor queue depth, define alerts, and scale consumers independently |
-| Sensor protocols produce incompatible payloads | Medium | High | Normalize all input in ms-sensores before publishing domain events |
+| Sensor protocols produce incompatible payloads | Medium | High | Normalize all input in ms-sensor-management before publishing domain events |
 
 ---
 

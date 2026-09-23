@@ -56,7 +56,7 @@ This decision resolves the current one-hour versus fifteen-minute inconsistency 
 - Service teams must maintain permission checks consistently.
 
 **Impact on the system:**
-- Affected services: ms-security, api-gateway, ms-usuarios, ms-aulas, ms-sensores, ms-monitoreo, and React frontend.
+- Affected services: ms-security, api-gateway, ms-user-management, ms-classroom-management, ms-sensor-management, ms-environment-monitoring, and React frontend.
 - Documents that must be updated: 00-governance/security-policy.md, 04-requirements/non-functional.md, 04-requirements/user-stories.md, 05-architecture/overview.md, 09-microservices/service-catalog.md.
 
 ---

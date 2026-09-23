@@ -39,10 +39,11 @@ The system is organized around the following deployable components:
 |-------|-----------|---------------|
 | api-gateway | Single external backend entry point |
 | ms-security | Registration, authentication, refresh tokens, and access control |
-| ms-usuarios | User information management |
-| ms-aulas | Educational environment management |
-| ms-sensores | Sensor registration and measurement ingestion normalization |
-| ms-monitoreo | Environmental measurement persistence, current monitoring, historical analysis, and dashboard queries for the MVP |
+| ms-user-management | User information management |
+| ms-classroom-management | Educational environment management |
+| ms-sensor-management | Sensor registration and measurement ingestion normalization |
+| ms-environment-monitoring | Environmental measurement persistence, current monitoring, historical analysis, and dashboard queries for the MVP |
+| ms-alert | Alert generation and management from environmental thresholds |
 | ms-user-experience | User experience features such as environment favorites and ratings |
 | React frontend | User interface and visualization |
 

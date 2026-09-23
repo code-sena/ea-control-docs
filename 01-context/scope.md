@@ -15,11 +15,11 @@ This document defines the boundaries of the EduAirControl MVP. It is the baselin
 | # | Capability | Description | Responsible service |
 |---|---------|-------------|---------------------|
 | 1 | User Authentication and Registration | Allows users to register,sign up and access the platform securely. | ms-security |
-| 2 | Educational Environment management | Allows authorized users to manage and consult information about educational environments | ms-aulas |
-| 3 | Sensor management | Allows the registration, configuration and status management of environmental sensors | ms-sensores |
-| 4 | Environmental monitoring |Allows users to view temperature, humidity, CO₂ and noise measurements for educational environments | ms-monitoreo |
-| 5 | Environmental dashboard | Presents current and historical environmental information in an organized visual interface | ms-monitoreo and frontend |
-| 6 | Historical analysis | Allows consultation of environmental data by day, week, month and year | ms-monitoreo |
+| 2 | Educational Environment management | Allows authorized users to manage and consult information about educational environments | ms-classroom-management |
+| 3 | Sensor management | Allows the registration, configuration and status management of environmental sensors | ms-sensor-management |
+| 4 | Environmental monitoring |Allows users to view temperature, humidity, CO₂ and noise measurements for educational environments | ms-environment-monitoring |
+| 5 | Environmental dashboard | Presents current and historical environmental information in an organized visual interface | ms-environment-monitoring and frontend |
+| 6 | Historical analysis | Allows consultation of environmental data by day, week, month and year | ms-environment-monitoring |
 | 7 | Environment Favorites | Allows users to add and remove educational environments from a personal favorites list | ms-user-experience |
 | 8 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment | ms-user-experience |
 
