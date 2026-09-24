@@ -145,7 +145,7 @@ Each threshold is defined with:
 - May need tuning based on real-world observations
 
 **Impact on the system:**
-- Affected services: ms-sensores, ms-monitoreo, ms-alert
+- Affected services: ms-sensor-management, ms-environment-monitoring, ms-alert
 - Documents that must be updated: `06-data/domain/ms-environment-monitoring.md`, `06-data/domain/ms-sensor-management.md`
 
 ---

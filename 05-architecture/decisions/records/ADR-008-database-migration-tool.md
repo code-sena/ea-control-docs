@@ -60,7 +60,7 @@ Liquibase provides comprehensive schema management with support for XML, YAML, J
 - Commercial features (Pro, Enterprise) require paid license
 
 **Impact on the system:**
-- Affected services: All microservices (ms-security, ms-aulas, ms-sensores, ms-monitoreo, ms-alert, ms-user-experience)
+- Affected services: All microservices (ms-security, ms-classroom-management, ms-sensor-management, ms-environment-monitoring, ms-alert, ms-user-experience)
 - Documents that must be updated: `05-architecture/overview.md`, `06-data/domain/ms-iam.md`, service-specific documentation
 
 ---

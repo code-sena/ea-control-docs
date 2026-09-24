@@ -64,7 +64,7 @@ Hexagonal Architecture cleanly separates business logic (domain) from infrastruc
 - Risk of over-engineering for simple services
 
 **Impact on the system:**
-- Affected services: All microservices (ms-security, ms-aulas, ms-sensores, ms-monitoreo, ms-alert, ms-user-experience)
+- Affected services: All microservices (ms-security, ms-classroom-management, ms-sensor-management, ms-environment-monitoring, ms-alert, ms-user-experience)
 - Documents that must be updated: `05-architecture/hexagonal-architecture.md`, service-specific documentation, coding standards
 
 ---
