@@ -57,7 +57,7 @@ This allows the service to store timestamps with timezone information.
 
 The database follows these conventions:
 
-* Table names use plural `snake_case`.
+* Table names in this service use plural `snake_case` (service-local convention; the project-wide singular rule for core domain tables applies elsewhere — see the exemption in `00-governance/documentation-rules.md`).
 * Column names use singular `snake_case`.
 * Primary keys use the `<entity>_id` format.
 * Boolean fields use descriptive names such as `notifications_enabled`.
