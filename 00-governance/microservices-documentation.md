@@ -54,7 +54,7 @@ Minimum content:
 - ER diagram (Mermaid) of the service's tables
 - Description of each table with its columns, types, constraints, and purpose
 - Justification of the chosen DB engine (PostgreSQL, MongoDB, Redis, etc.)
-- Migration strategy (Liquibase, Flyway, or manual scripts)
+- Migration strategy (Liquibase)
 
 **Rule:** A field whose reason for existing is not obvious MUST have a comment in the diagram.
 
