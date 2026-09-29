@@ -19,6 +19,29 @@
 
 ---
 
+## Domain split ↔ bounded contexts ↔ services
+
+Physical organization of the business model (one schema per domain, per ADR-003):
+
+| Schema | Bounded context | Microservice(s) | Tables |
+|--------|-----------------|------------------|--------|
+| `classrooms` | Classrooms | `ms-classroom-management` | `campuses`, `environment_types`, `educational_environment` |
+| `sensors` | Sensors | `ms-sensor-management` | `sensor`, `sensor_installation`, `variable`, `sensor_variable` |
+| `monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (alerts deployed by `ms-alert`, see `09-microservices/service-catalog.md`) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
+| `ux` | UX | `ms-user-experience` | `user_preferences`, `favorites`, `classroom_ratings`, `searches` |
+| `seguridad` | IAM | `ms-security`, `ms-user-management` | 13 tables from `domain/ms-iam.md` (see `database/identidad-seguridad/`) |
+
+Rules that hold across the split:
+
+- **FKs**: physical *within* a domain; *logical UUID* (no FK) *across* domains — matching the
+  `Ref:` pattern in `domain/*.md` and ADR-003 (cross-service access only via API/events).
+- **Catalogs**: the implementation keeps `sensor_models`, `sensor_statuses`, `measurement_units`
+  and `alert_status` as logical UUID references instead of tables (21 canonical business tables
+  → 17 implemented); `severity` remains a physical table (open item #5).
+- Implementation: `EduAirControl/database/negocio/` (Liquibase changelog, one folder per domain).
+
+---
+
 ## Fundamental principle
 
 > **Each microservice owns its own data.**
