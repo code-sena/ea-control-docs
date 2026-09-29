@@ -184,7 +184,7 @@ user_id
 
 ```text
 classroom_id
-→ Classroom Management Service.classrooms.classroom_id
+→ Classroom Management Service.educational_environment.educational_environment_id
 ```
 
 `variable_id`:
@@ -253,7 +253,7 @@ user_id
 → IAM Service.users.user_id
 
 classroom_id
-→ Classroom Management Service.classrooms.classroom_id
+→ Classroom Management Service.educational_environment.educational_environment_id
 ```
 
 No physical foreign keys should be created for these references.
@@ -327,7 +327,7 @@ The User Experience Service interacts with several other domains.
                  │                  │
                  │ classroom_id     │ variable_id
                  ▼                  ▼
-            classrooms          variables
+    educational_environment      variables
 ```
 
 ### Reference matrix
@@ -335,7 +335,7 @@ The User Experience Service interacts with several other domains.
 | Local Field    | External Service             | External Entity           |
 | -------------- | ---------------------------- | ------------------------- |
 | `user_id`      | IAM Service                  | `users.user_id`           |
-| `classroom_id` | Classroom Management Service | `classrooms.classroom_id` |
+| `classroom_id` | Classroom Management Service | `educational_environment.educational_environment_id` |
 | `variable_id`  | Sensor Management Service    | `variable.variable_id`     |
 
 These are **logical references**.
@@ -698,7 +698,7 @@ The User Experience Service fits into the overall EduAirControl architecture as 
 │ Classroom Management   │  │ Sensor Management        │
 │ Service                │  │ Service                  │
 │                        │  │                          │
-│ classrooms             │  │ variables                │
+│ educational_environment│  │ variables                │
 └────────────────────────┘  └──────────────────────────┘
 ```
 
