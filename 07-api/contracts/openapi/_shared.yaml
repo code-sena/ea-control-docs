@@ -158,6 +158,16 @@ components:
             error: NOT_FOUND
             message: The requested resource does not exist
 
+    Conflict:
+      description: The operation conflicts with the current state of the resource (duplicate keys, constraint violations)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: CONFLICT
+            message: The resource already exists
+
     InternalError:
       description: Internal server error
       content:

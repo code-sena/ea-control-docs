@@ -17,7 +17,7 @@
           ▼           ▼                        ▼                  ▼
  ┌────────────────┐ ┌────────────────────┐ ┌─────────────────────────┐ ┌────────────────────┐
  │  ms-security   │ │ms-user-management  │ │ ms-environment-monitoring│ │ms-sensor-management│
- │     :3001      │ │       :3007        │ │          :3003           │ │       :3004        │
+ │     :8081      │ │       :3007        │ │          :3003           │ │       :3004        │
  └────────────────┘ └────────────────────┘ └────────────┬────────────┘ └────────────────────┘
                                                         │
  ┌────────────────────┐ ┌────────────────────┐          │
@@ -37,8 +37,8 @@
 | # | Service | Main responsibility | Port | DB | Status |
 |---|---------|-------------------|------|-----|--------|
 | 01 | `api-gateway` | Routing, authentication, rate limiting | 8080 | Redis | 🟢 Active |
-| 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 3001 | PostgreSQL | 🟢 Active |
-| 03 | `ms-classroom-management` | Educational environment management | 3002 | PostgreSQL | 🟢 Active |
+| 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 8081 | PostgreSQL | 🟢 Active |
+| 03 | `ms-classroom-management` | Educational environment management | 3002 | PostgreSQL | 🟡 In development |
 | 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟢 Active |
 | 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
 | 06 | `ms-alert` | Alert generation and management | 3005 | PostgreSQL | 🟢 Active |
@@ -72,7 +72,7 @@
 |---------------|---------------|--------------------------|
 | User / Identity | ms-security | REST API (`GET /users/:id`) |
 | User information | ms-user-management | REST API (`GET /users/:id`) |
-| Educational Environment | ms-classroom-management | REST API (`GET /environments/:id`) |
+| Educational Environment | ms-classroom-management | REST API (`GET /api/v1/educational-environments/{id}`) |
 | Sensor | ms-sensor-management | REST API (`GET /sensors/:id`) |
 | Environmental Data | ms-environment-monitoring | Event `EnvironmentalDataRecorded` |
 | Alert | ms-alert | REST API (`GET /alerts/:id`) |
