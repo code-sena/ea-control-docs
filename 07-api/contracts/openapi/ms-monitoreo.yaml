@@ -1,0 +1,375 @@
+openapi: 3.0.3
+info:
+  title: Ms-monitoreo API
+  version: 1.0.0
+  description: |
+    Recolección y análisis de datos ambientales: ingesta de mediciones, snapshots y
+    análisis histórico por periodo (día, semana, mes, año).
+
+    ## Alcance
+    Este servicio es dueño de las mediciones ambientales (`environment_measurement`),
+    de la evaluación de umbrales y de los análisis históricos materializados
+    (`environmental_analysis` + `analysis_result`). No es dueño de ambientes, variables
+    ni sensores: los referencia por UUID y los resuelve por API.
+
+    ## Análisis histórico
+    Un análisis materializa el periodo analizado y produce un resultado agregado por
+    variable (mínimo, máximo, promedio, cantidad de muestras y excedencias). El cálculo
+    se ejecuta de forma síncrona: la solicitud se persiste en `PENDING`, pasa a
+    `RUNNING` y termina en `COMPLETED` o `FAILED`, por lo que la respuesta ya incluye
+    los resultados. Las mediciones crudas siguen siendo la fuente de verdad.
+
+    ## Estados del análisis
+    | Estado      | Significado                                        |
+    |-------------|----------------------------------------------------|
+    | `PENDING`   | Solicitado, aún sin procesar                       |
+    | `RUNNING`   | En proceso de agregación                           |
+    | `COMPLETED` | Agregación finalizada; hay `analysis_result`        |
+    | `FAILED`    | La agregación falló; no produce resultados          |
+
+servers:
+  - url: http://localhost:3003
+    description: Local development
+  - url: https://api.dev.{domain}/api/v1
+    description: Development
+    variables:
+      domain:
+        default: example.com
+  - url: https://api.{domain}/api/v1
+    description: Production
+    variables:
+      domain:
+        default: example.com
+
+tags:
+  - name: Analysis
+    description: Análisis histórico de datos ambientales por periodo
+  - name: Dashboard
+    description: Indicadores y series para el dashboard ambiental
+
+paths:
+  /analyses:
+    post:
+      summary: Solicitar el análisis de un ambiente en un periodo
+      operationId: requestAnalysis
+      tags: [Analysis]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+            example:
+              environmentId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+              period: WEEK
+              referenceDate: '2026-09-04'
+      responses:
+        '201':
+          description: Análisis creado y procesado
+          headers:
+            Location:
+              description: URI del análisis creado
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Ya existe un análisis para el mismo ambiente y periodo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Listar análisis históricos
+      operationId: listAnalyses
+      tags: [Analysis]
+      parameters:
+        - name: environmentId
+          in: query
+          description: Filtra por ambiente educativo
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: period
+          in: query
+          description: Filtra por granularidad del periodo
+          schema:
+            $ref: '#/components/schemas/AnalysisPeriod'
+        - name: status
+          in: query
+          description: Filtra por estado del análisis
+          schema:
+            $ref: '#/components/schemas/AnalysisStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Página de análisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /analyses/{id}:
+    get:
+      summary: Obtener un análisis con sus resultados por variable
+      operationId: getAnalysis
+      tags: [Analysis]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Análisis encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /dashboard/summary:
+    get:
+      summary: Indicadores globales del dashboard ambiental
+      operationId: getDashboardSummary
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Resumen de conteos y promedios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  counts:
+                    type: object
+                    properties:
+                      environments:
+                        type: integer
+                      measurements:
+                        type: integer
+                      analyses:
+                        type: integer
+                  averages:
+                    type: object
+                    additionalProperties:
+                      type: number
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/series:
+    get:
+      summary: Serie histórica agregada del dashboard
+      operationId: getDashboardSeries
+      tags: [Dashboard]
+      parameters:
+        - name: period
+          in: query
+          description: Granularidad de la serie
+          schema:
+            type: string
+            enum: [day, week, month, year]
+            default: day
+        - name: variable
+          in: query
+          description: Variable ambiental
+          schema:
+            type: string
+            default: temperature
+        - name: environmentId
+          in: query
+          description: Restringe la serie a un ambiente
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Puntos de la serie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SeriesPoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  schemas:
+    AnalysisRequest:
+      type: object
+      required: [environmentId, period]
+      properties:
+        environmentId:
+          $ref: '#/components/schemas/UUID'
+        period:
+          $ref: '#/components/schemas/AnalysisPeriod'
+        referenceDate:
+          type: string
+          format: date
+          description: |
+            Ancla del periodo en formato `YYYY-MM-DD`. Si se omite se usa la fecha actual.
+            El periodo se resuelve en UTC.
+
+    AnalysisResponse:
+      type: object
+      required: [id, environmentId, period, periodStart, periodEnd, status, results]
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        environmentId:
+          $ref: '#/components/schemas/UUID'
+        period:
+          $ref: '#/components/schemas/AnalysisPeriod'
+        periodStart:
+          $ref: '#/components/schemas/Timestamp'
+        periodEnd:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          $ref: '#/components/schemas/AnalysisStatus'
+        requestedBy:
+          $ref: '#/components/schemas/UUID'
+        computedAt:
+          $ref: '#/components/schemas/Timestamp'
+        results:
+          type: array
+          description: Resultado agregado por variable
+          items:
+            $ref: '#/components/schemas/AnalysisResult'
+
+    AnalysisResult:
+      type: object
+      required: [variableId, variableCode, minValue, maxValue, avgValue, sampleCount, exceedanceCount]
+      properties:
+        variableId:
+          $ref: '#/components/schemas/UUID'
+        variableCode:
+          type: string
+          description: Código de la variable (TEMP, HUM, CO2, NOISE)
+          example: TEMP
+        minValue:
+          type: number
+        maxValue:
+          type: number
+        avgValue:
+          type: number
+        sampleCount:
+          type: integer
+          description: Cantidad de mediciones agregadas
+        exceedanceCount:
+          type: integer
+          description: Muestras fuera del umbral de advertencia vigente
+
+    AnalysisPage:
+      type: object
+      required: [items, meta]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisResponse'
+        meta:
+          $ref: '#/components/schemas/PaginatedMeta'
+
+    AnalysisPeriod:
+      type: string
+      description: Granularidad del periodo analizado
+      enum: [DAY, WEEK, MONTH, YEAR]
+
+    AnalysisStatus:
+      type: string
+      description: Estado del ciclo de vida del análisis
+      enum: [PENDING, RUNNING, COMPLETED, FAILED]
+
+    SeriesPoint:
+      type: object
+      required: [bucket, value, samples]
+      properties:
+        bucket:
+          $ref: '#/components/schemas/Timestamp'
+        value:
+          type: number
+        samples:
+          type: integer
+
+    UUID:
+      type: string
+      format: uuid
+
+    Timestamp:
+      type: string
+      format: date-time
+
+    PaginatedMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        traceId:
+          type: string
+
+  parameters:
+    PageParam:
+      $ref: './_shared.yaml#/components/parameters/PageParam'
+
+    LimitParam:
+      $ref: './_shared.yaml#/components/parameters/LimitParam'
+
+    IdParam:
+      $ref: './_shared.yaml#/components/parameters/IdParam'
+
+  responses:
+    BadRequest:
+      $ref: './_shared.yaml#/components/responses/BadRequest'
+
+    Unauthorized:
+      $ref: './_shared.yaml#/components/responses/Unauthorized'
+
+    Forbidden:
+      $ref: './_shared.yaml#/components/responses/Forbidden'
+
+    NotFound:
+      $ref: './_shared.yaml#/components/responses/NotFound'
+
+security:
+  - bearerAuth: []

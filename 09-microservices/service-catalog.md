@@ -36,7 +36,7 @@
 | 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 3001 | PostgreSQL | 🟢 Active |
 | 03 | `ms-aulas` | Educational environment management | 3002 | PostgreSQL | 🟢 Active |
 | 04 | `ms-sensores` | Sensor registration and management | 3004 | PostgreSQL | 🟢 Active |
-| 05 | `ms-monitoreo` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
+| 05 | `ms-monitoreo` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟡 In development |
 | 06 | `ms-alert` | Alert generation and management | 3005 | PostgreSQL | 🟢 Active |
 | 07 | `ms-user-experience` | User preferences and experience | 3006 | PostgreSQL | 🟢 Active |
 
@@ -75,6 +75,16 @@
 
 - Architecture → `05-architecture/overview.md`
 - ADRs → `05-architecture/decisions/`
+- Service documentation → `09-microservices/services/`
+- API contracts → `07-api/contracts/openapi/`
+
+### Documented services
+
+| Service | Service documentation | API contract |
+|---------|----------------------|--------------|
+| `api-gateway` | [services/01-api-gateway](services/01-api-gateway/README.md) | [api-gateway.yaml](../07-api/contracts/openapi/api-gateway.yaml) |
+| `ms-security` | [services/02-auth-service](services/02-auth-service/README.md) | [auth-service.yaml](../07-api/contracts/openapi/auth-service.yaml) |
+| `ms-monitoreo` | [services/05-monitoreo](services/05-monitoreo/README.md) | [ms-monitoreo.yaml](../07-api/contracts/openapi/ms-monitoreo.yaml) |
 - API contracts → `07-api/contracts/openapi/`
 - Domain events → `02-domain/domain-events.md`
 - Data models → `06-data/domain/`
