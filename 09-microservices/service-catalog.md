@@ -37,7 +37,7 @@
 | # | Service | Main responsibility | Port | DB | Status |
 |---|---------|-------------------|------|-----|--------|
 | 01 | `api-gateway` | Routing, authentication, rate limiting | 8080 | Redis | 🟢 Active |
-| 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 8081 | PostgreSQL | 🟢 Active |
+| 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 8081 | PostgreSQL | 🟡 In development |
 | 03 | `ms-classroom-management` | Educational environment management | 3002 | PostgreSQL | 🟡 In development |
 | 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟡 In development |
 | 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
