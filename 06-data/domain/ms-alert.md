@@ -1,5 +1,9 @@
 # Data Model — Alert
 
+> **Service ownership:** Alert generation and management is served by **`ms-environment-monitoring`**.
+> `ms-alert` is **deprecated** as a separate deployable (ADR-015); its tables remain in the
+> `monitoring` schema, owned by `ms-environment-monitoring`.
+>
 > **Purpose:** Define the data model used to manage alerts generated when an environmental measurement exceeds a configured threshold in an educational environment.
 >
 > EduAirControl follows a microservices architecture on a **single shared PostgreSQL instance with logical domain separation per service** (ADR-002, ADR-003). Because related tables live in the same instance, the data model can use physical foreign key relationships between them.

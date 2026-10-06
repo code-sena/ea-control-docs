@@ -25,7 +25,7 @@ The main characteristics of the adopted architecture are:
   - `ms-classroom-management`
   - `ms-sensor-management`
   - `ms-environment-monitoring`
-  - `ms-alert`
+  - `ms-alert` (⏸ deprecated — folded into `ms-environment-monitoring`, ADR-015)
   - `ms-user-experience`
 - **PostgreSQL 15** as the persistence technology.
 -The MVP uses one PostgreSQL instance with **logical ownership boundaries per service.** Services do not access another service's tables directly. 
@@ -158,9 +158,7 @@ graph TB
 
         SEN["ms-sensor-management<br/>Spring Boot<br/>Sensor Management"]
 
-        MON["ms-environment-monitoring<br/>Spring Boot<br/>Monitoring + Analysis"]
-
-        ALR["ms-alert<br/>Spring Boot<br/>Alert Generation"]
+        MON["ms-environment-monitoring<br/>Spring Boot<br/>Monitoring + Analysis + Alerts"]
 
         UX["ms-user-experience<br/>Spring Boot<br/>User Preferences + Favorites"]
 
@@ -180,7 +178,6 @@ graph TB
     GW -->|REST| AUL
     GW -->|REST| SEN
     GW -->|REST| MON
-    GW -->|REST| ALR
     GW -->|REST| UX
 
     SEC -->|Authentication / JWT| GW
@@ -192,7 +189,6 @@ graph TB
     SEN -->|Events when required| MQ
     MQ -->|Asynchronous messages| MON
 
-    MON -->|Threshold breaches| ALR
     MON -->|EnvironmentalDataAnalyzed| UX
 
     SEC -->|Persistence| DB
@@ -200,7 +196,6 @@ graph TB
     AUL -->|Persistence| DB
     SEN -->|Persistence| DB
     MON -->|Persistence| DB
-    ALR -->|Persistence| DB
     UX -->|Persistence| DB
 
     MON -->|Historical analysis| DB
@@ -216,8 +211,8 @@ graph TB
 | `ms-user-management` | Management and consultation of registered users |
 | `ms-classroom-management` | Management of educational classrooms/environments |
 | `ms-sensor-management` | Registration, configuration and management of environmental sensors |
-| `ms-environment-monitoring` | Reception, storage, consultation and analysis of environmental measurements |
-| `ms-alert` | Generation and management of environmental threshold alerts |
+| `ms-environment-monitoring` | Reception, storage, consultation and analysis of environmental measurements, plus generation and management of environmental threshold alerts |
+| `ms-alert` | ⏸ Deprecated — folded into `ms-environment-monitoring` (ADR-015) |
 | `ms-user-experience` | User preferences, favorites, ratings and search experience features |
 | RabbitMQ | Optional asynchronous communication between services when events need to be decoupled |
 | PostgreSQL 15 | Persistent storage organized logically according to project domains |
@@ -264,8 +259,8 @@ Daily / Weekly / Monthly / Yearly Analysis
 | 3 | `ms-user-management` | User management and user information | 8082 | PostgreSQL - Users ownership boundary | REST |
 | 4 | `ms-classroom-management` | Educational classroom/environment management | 8083 | PostgreSQL - Classrooms ownership boundary | REST |
 | 5 | `ms-sensor-management` | Environmental sensor registration and communication | 8084 | 	PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
-| 6 | `ms-environment-monitoring` | Environmental data reception, storage, monitoring and analysis | 8085 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
-| 7 | `ms-alert` | Alert generation and management from environmental thresholds | 8086 | PostgreSQL - Alerts ownership boundary | REST + Events |
+| 6 | `ms-environment-monitoring` | Environmental data reception, storage, monitoring, analysis and alerting | 8085 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
+| 7 | `ms-alert` ⏸ | Deprecated — folded into `ms-environment-monitoring` (ADR-015) | — (was 8086) | — | — |
 | 8 | `ms-user-experience` | User preferences, favorites, ratings and search | 8087 | PostgreSQL - UX ownership boundary | REST |
 | 9 | `RabbitMQ` | Asynchronous messaging between services when required | 5672 | No | AMQP |
 | 10 | `Frontend React` | User interface and visualization of environmental information | 80 | No | HTTP/HTTPS |
@@ -346,8 +341,8 @@ For example:
 - `ms-user-management` handles user management.
 - `ms-classroom-management` handles educational classrooms.
 - `ms-sensor-management` handles environmental sensors.
-- `ms-environment-monitoring` handles environmental measurements, monitoring and analysis.
-- `ms-alert` handles alert generation and management.
+- `ms-environment-monitoring` handles environmental measurements, monitoring, analysis and alerting.
+- `ms-alert` is deprecated; alert generation belongs to `ms-environment-monitoring` (ADR-015).
 - `ms-user-experience` handles user preferences and experience.
 
 A service should not absorb responsibilities belonging to another bounded context without an architectural justification.

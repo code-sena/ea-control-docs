@@ -42,8 +42,8 @@ The system is organized around the following deployable components:
 | ms-user-management | User information management |
 | ms-classroom-management | Educational environment management |
 | ms-sensor-management | Sensor registration and measurement ingestion normalization |
-| ms-environment-monitoring | Environmental measurement persistence, current monitoring, historical analysis, and dashboard queries for the MVP |
-| ms-alert | Alert generation and management from environmental thresholds |
+| ms-environment-monitoring | Environmental measurement persistence, current monitoring, historical analysis, dashboard queries, and alert generation for the MVP |
+| ms-alert (⏸ deprecated) | Folded into ms-environment-monitoring (ADR-015) |
 | ms-user-experience | User experience features such as environment favorites and ratings |
 | React frontend | User interface and visualization |
 
