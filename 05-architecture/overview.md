@@ -256,12 +256,12 @@ Daily / Weekly / Monthly / Yearly Analysis
 |---|---------|---------------|------|-----|-------------------|
 | 1 | `api-gateway` | Central entry point, routing and request control | 8080 | No direct DB | HTTP/REST Proxy |
 | 2 | `ms-security` | Registration, authentication, JWT and access control | 8081 | PostgreSQL - Security ownership boundary | REST |
-| 3 | `ms-user-management` | User management and user information | 8082 | PostgreSQL - Users ownership boundary | REST |
-| 4 | `ms-classroom-management` | Educational classroom/environment management | 8083 | PostgreSQL - Classrooms ownership boundary | REST |
-| 5 | `ms-sensor-management` | Environmental sensor registration and communication | 8084 | 	PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
-| 6 | `ms-environment-monitoring` | Environmental data reception, storage, monitoring, analysis and alerting | 8085 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
-| 7 | `ms-alert` ⏸ | Deprecated — folded into `ms-environment-monitoring` (ADR-015) | — (was 8086) | — | — |
-| 8 | `ms-user-experience` | User preferences, favorites, ratings and search | 8087 | PostgreSQL - UX ownership boundary | REST |
+| 3 | `ms-user-management` | User management and user information | 3007 | PostgreSQL - Users ownership boundary | REST |
+| 4 | `ms-classroom-management` | Educational classroom/environment management | 3002 | PostgreSQL - Classrooms ownership boundary | REST |
+| 5 | `ms-sensor-management` | Environmental sensor registration and communication | 3004 | PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
+| 6 | `ms-environment-monitoring` | Environmental data reception, storage, monitoring, analysis and alerting | 3003 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
+| 7 | `ms-alert` ⏸ | Deprecated — folded into `ms-environment-monitoring` (ADR-015) | — (was 3005) | — | — |
+| 8 | `ms-user-experience` | User preferences, favorites, ratings and search | 3006 | PostgreSQL - UX ownership boundary | REST |
 | 9 | `RabbitMQ` | Asynchronous messaging between services when required | 5672 | No | AMQP |
 | 10 | `Frontend React` | User interface and visualization of environmental information | 80 | No | HTTP/HTTPS |
 
