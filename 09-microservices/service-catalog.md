@@ -39,7 +39,7 @@
 | 01 | `api-gateway` | Routing, authentication, rate limiting | 8080 | Redis | 🟢 Active |
 | 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 8081 | PostgreSQL | 🟢 Active |
 | 03 | `ms-classroom-management` | Educational environment management | 3002 | PostgreSQL | 🟡 In development |
-| 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟢 Active |
+| 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟡 In development |
 | 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
 | 06 | `ms-alert` ⏸ | Deprecated — alert generation folded into `ms-environment-monitoring` (ADR-015) | — (was 3005) | — | ⏸ Deprecated |
 | 07 | `ms-user-experience` | User preferences and experience | 3006 | PostgreSQL | 🟢 Active |
