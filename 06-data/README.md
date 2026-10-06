@@ -10,7 +10,7 @@
 | File | Purpose |
 |------|---------|
 | [domain/ms-iam.md](./domain/ms-iam.md) | Identity and Access Management data model |
-| [domain/ms-alert.md](./domain/ms-alert.md) | Alert management data model |
+| [domain/ms-alert.md](./domain/ms-alert.md) | Alert management data model (served by `ms-environment-monitoring`, ADR-015) |
 | [domain/ms-sensor-management.md](./domain/ms-sensor-management.md) | Sensor management data model |
 | [domain/ms-environment-monitoring.md](./domain/ms-environment-monitoring.md) | Environmental monitoring data model |
 | [domain/ms-classroom-management.md](./domain/ms-classroom-management.md) | Classroom management data model |
@@ -27,7 +27,7 @@ Physical organization of the business model (one schema per domain, per ADR-003)
 |--------|-----------------|------------------|--------|
 | `classrooms` | Classrooms | `ms-classroom-management` | `campuses`, `environment_types`, `educational_environment` |
 | `sensors` | Sensors | `ms-sensor-management` | `sensor`, `sensor_installation`, `variable`, `sensor_variable` |
-| `monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (alerts deployed by `ms-alert`, see `09-microservices/service-catalog.md`) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
+| `monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (owns alerts — `ms-alert` deprecated, ADR-015) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
 | `ux` | UX | `ms-user-experience` | `user_preferences`, `favorites`, `classroom_ratings`, `searches` |
 | `seguridad` | IAM | `ms-security`, `ms-user-management` | 13 tables from `domain/ms-iam.md` (see `database/identidad-seguridad/`) |
 
