@@ -43,7 +43,7 @@
 | 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
 | 06 | `ms-alert` ⏸ | Deprecated — alert generation folded into `ms-environment-monitoring` (ADR-015) | — (was 3005) | — | ⏸ Deprecated |
 | 07 | `ms-user-experience` | User preferences and experience | 3006 | PostgreSQL | 🟢 Active |
-| 08 | `ms-user-management` | User information management | 3007 | PostgreSQL | 🟢 Active |
+| 08 | `ms-user-management` | User information management | 3007 | PostgreSQL | 🟡 In development |
 
 **Statuses:** 🟢 Active | 🟡 In development | 🔴 Planned | ⏸ Deprecated
 
