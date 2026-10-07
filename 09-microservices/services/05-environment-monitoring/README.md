@@ -1,4 +1,4 @@
-# ms-monitoreo
+# ms-environment-monitoring
 
 > Environmental data collection and analysis. Owns the environmental measurements,
 > threshold evaluation and the materialized historical analyses consumed by the dashboard.
@@ -9,14 +9,14 @@
 |-------|-------|
 | Number in catalog | 05 |
 | Local port | 3003 |
-| Repository | `EduAirControl` (`Web/backend`, module `analysis`) |
+| Repository | `ms-environment-monitoring` (standalone service repository) |
 | Owner team | Development Team |
-| DB engine | PostgreSQL 15 (`monitoring` schema) |
+| DB engine | PostgreSQL 15 (`environment_monitoring` schema) |
 | Status | In development |
 
 ## Responsibility
 
-`ms-monitoreo` is the authoritative owner of:
+`ms-environment-monitoring` is the authoritative owner of:
 
 ```text
 environment_measurement
@@ -24,13 +24,14 @@ environmental_analysis
 analysis_result
 ```
 
-One sentence: **it records environmental readings and turns them into historical
+One sentence: **it projects environmental readings and turns them into historical
 analysis per period for an educational environment.**
 
 ### Responsibilities (what this service DOES)
 
-- Ingest environmental measurements coming from sensors.
-- Evaluate the active threshold per variable and environment type.
+- Consume `EnvironmentalDataRecorded` from `ms-sensor-management` through RabbitMQ.
+- Maintain a local atomic projection of measurements plus read-only catalog replicas.
+- Evaluate the replicated warning threshold active for each variable and environment type.
 - Resolve the analysis period (`DAY`, `WEEK`, `MONTH`, `YEAR`) into a concrete
   `[period_start, period_end)` window in UTC.
 - Materialize the aggregation of a period into `environmental_analysis` plus one
@@ -40,14 +41,14 @@ analysis per period for an educational environment.**
 
 ### Out of scope
 
-- Educational environments, environment types and campuses — owned by `ms-aulas`.
-- Sensors, installations and the variable catalog — owned by `ms-sensores`.
+- Educational environments, environment types and campuses — owned by `ms-classroom-management`.
+- Sensors, installations and the variable catalog — owned by `ms-sensor-management`.
 - Alert generation and lifecycle — owned by `ms-alert`.
 - User preferences and experience — owned by `ms-user-experience`.
 
 ## Main endpoints
 
-Base path `/api/v1`. Full contract: [ms-monitoreo.yaml](../../../07-api/contracts/openapi/ms-monitoreo.yaml).
+Base path `/api/v1`. Full contract: [ms-environment-monitoring.yaml](../../../07-api/contracts/openapi/ms-environment-monitoring.yaml).
 
 | Method | Path | Purpose |
 |--------|------|---------|

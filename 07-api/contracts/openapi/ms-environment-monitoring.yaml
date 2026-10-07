@@ -1,31 +1,31 @@
 openapi: 3.0.3
 info:
-  title: Ms-monitoreo API
+  title: ms-environment-monitoring API
   version: 1.0.0
   description: |
-    Recolección y análisis de datos ambientales: ingesta de mediciones, snapshots y
-    análisis histórico por periodo (día, semana, mes, año).
+    Recolecci├│n y an├ílisis de datos ambientales: ingesta de mediciones, snapshots y
+    an├ílisis hist├│rico por periodo (d├¡a, semana, mes, a├▒o).
 
     ## Alcance
-    Este servicio es dueño de las mediciones ambientales (`environment_measurement`),
-    de la evaluación de umbrales y de los análisis históricos materializados
-    (`environmental_analysis` + `analysis_result`). No es dueño de ambientes, variables
+    Este servicio es due├▒o de las mediciones ambientales (`environment_measurement`),
+    de la evaluaci├│n de umbrales y de los an├ílisis hist├│ricos materializados
+    (`environmental_analysis` + `analysis_result`). No es due├▒o de ambientes, variables
     ni sensores: los referencia por UUID y los resuelve por API.
 
-    ## Análisis histórico
-    Un análisis materializa el periodo analizado y produce un resultado agregado por
-    variable (mínimo, máximo, promedio, cantidad de muestras y excedencias). El cálculo
-    se ejecuta de forma síncrona: la solicitud se persiste en `PENDING`, pasa a
+    ## An├ílisis hist├│rico
+    Un an├ílisis materializa el periodo analizado y produce un resultado agregado por
+    variable (m├¡nimo, m├íximo, promedio, cantidad de muestras y excedencias). El c├ílculo
+    se ejecuta de forma s├¡ncrona: la solicitud se persiste en `PENDING`, pasa a
     `RUNNING` y termina en `COMPLETED` o `FAILED`, por lo que la respuesta ya incluye
     los resultados. Las mediciones crudas siguen siendo la fuente de verdad.
 
-    ## Estados del análisis
+    ## Estados del an├ílisis
     | Estado      | Significado                                        |
     |-------------|----------------------------------------------------|
-    | `PENDING`   | Solicitado, aún sin procesar                       |
-    | `RUNNING`   | En proceso de agregación                           |
-    | `COMPLETED` | Agregación finalizada; hay `analysis_result`        |
-    | `FAILED`    | La agregación falló; no produce resultados          |
+    | `PENDING`   | Solicitado, a├║n sin procesar                       |
+    | `RUNNING`   | En proceso de agregaci├│n                           |
+    | `COMPLETED` | Agregaci├│n finalizada; hay `analysis_result`        |
+    | `FAILED`    | La agregaci├│n fall├│; no produce resultados          |
 
 servers:
   - url: http://localhost:3003
@@ -43,14 +43,14 @@ servers:
 
 tags:
   - name: Analysis
-    description: Análisis histórico de datos ambientales por periodo
+    description: An├ílisis hist├│rico de datos ambientales por periodo
   - name: Dashboard
     description: Indicadores y series para el dashboard ambiental
 
 paths:
   /analyses:
     post:
-      summary: Solicitar el análisis de un ambiente en un periodo
+      summary: Solicitar el an├ílisis de un ambiente en un periodo
       operationId: requestAnalysis
       tags: [Analysis]
       requestBody:
@@ -65,10 +65,10 @@ paths:
               referenceDate: '2026-09-04'
       responses:
         '201':
-          description: Análisis creado y procesado
+          description: An├ílisis creado y procesado
           headers:
             Location:
-              description: URI del análisis creado
+              description: URI del an├ílisis creado
               schema:
                 type: string
           content:
@@ -84,14 +84,14 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: Ya existe un análisis para el mismo ambiente y periodo
+          description: Ya existe un an├ílisis para el mismo ambiente y periodo
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
     get:
-      summary: Listar análisis históricos
+      summary: Listar an├ílisis hist├│ricos
       operationId: listAnalyses
       tags: [Analysis]
       parameters:
@@ -107,14 +107,14 @@ paths:
             $ref: '#/components/schemas/AnalysisPeriod'
         - name: status
           in: query
-          description: Filtra por estado del análisis
+          description: Filtra por estado del an├ílisis
           schema:
             $ref: '#/components/schemas/AnalysisStatus'
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
       responses:
         '200':
-          description: Página de análisis
+          description: P├ígina de an├ílisis
           content:
             application/json:
               schema:
@@ -126,14 +126,14 @@ paths:
 
   /analyses/{id}:
     get:
-      summary: Obtener un análisis con sus resultados por variable
+      summary: Obtener un an├ílisis con sus resultados por variable
       operationId: getAnalysis
       tags: [Analysis]
       parameters:
         - $ref: '#/components/parameters/IdParam'
       responses:
         '200':
-          description: Análisis encontrado
+          description: An├ílisis encontrado
           content:
             application/json:
               schema:
@@ -142,6 +142,152 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /measurements:
+    post:
+      summary: Ingesta HTTP alternativa a MQTT (HU-MON-001)
+      operationId: ingestMeasurement
+      tags: [Measurements]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementIngest'
+      responses:
+        '201':
+          description: Medicion registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /environments/{id}/current:
+    get:
+      summary: Ultimos valores por variable de un ambiente (HU-MON-003)
+      operationId: getCurrentValues
+      tags: [Measurements]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Valores actuales por variable
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CurrentValue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /environments/{id}/measurements:
+    get:
+      summary: Historial paginado por variable y ventana (HU-MON-004)
+      operationId: listMeasurements
+      tags: [Measurements]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: variable
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Mediciones del periodo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeasurementView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /alerts:
+    get:
+      summary: Listar alertas con filtros
+      operationId: listAlerts
+      tags: [Alerts]
+      parameters:
+        - name: environment
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, acknowledged]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Alertas filtradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /alerts/{id}/acknowledge:
+    post:
+      summary: Reconocer una alerta activa
+      operationId: acknowledgeAlert
+      tags: [Alerts]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Alerta reconocida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: La alerta ya fue reconocida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /dashboard/summary:
     get:
@@ -177,7 +323,7 @@ paths:
 
   /dashboard/series:
     get:
-      summary: Serie histórica agregada del dashboard
+      summary: Serie hist├│rica agregada del dashboard
       operationId: getDashboardSeries
       tags: [Dashboard]
       parameters:
@@ -262,7 +408,7 @@ components:
           $ref: '#/components/schemas/UUID'
         variableCode:
           type: string
-          description: Código de la variable (TEMP, HUM, CO2, NOISE)
+          description: C├│digo de la variable (TEMP, HUM, CO2, NOISE)
           example: TEMP
         minValue:
           type: number
@@ -295,7 +441,7 @@ components:
 
     AnalysisStatus:
       type: string
-      description: Estado del ciclo de vida del análisis
+      description: Estado del ciclo de vida del an├ílisis
       enum: [PENDING, RUNNING, COMPLETED, FAILED]
 
     SeriesPoint:
@@ -308,6 +454,70 @@ components:
           type: number
         samples:
           type: integer
+
+    MeasurementIngest:
+      type: object
+      required: [sensorInstallationId, variableId, value]
+      properties:
+        sensorInstallationId:
+          $ref: '#/components/schemas/UUID'
+        variableId:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: number
+        measuredAt:
+          $ref: '#/components/schemas/Timestamp'
+
+    CurrentValue:
+      type: object
+      required: [variableId, variableCode, value, measuredAt]
+      properties:
+        variableId:
+          $ref: '#/components/schemas/UUID'
+        variableCode:
+          type: string
+        value:
+          type: number
+        measuredAt:
+          $ref: '#/components/schemas/Timestamp'
+
+    MeasurementView:
+      type: object
+      required: [id, variableId, variableCode, value, measuredAt]
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        variableId:
+          $ref: '#/components/schemas/UUID'
+        variableCode:
+          type: string
+        value:
+          type: number
+        measuredAt:
+          $ref: '#/components/schemas/Timestamp'
+
+    AlertView:
+      type: object
+      required: [id, environmentId, variableId, variableCode, raisedAt]
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        environmentId:
+          $ref: '#/components/schemas/UUID'
+        variableId:
+          $ref: '#/components/schemas/UUID'
+        variableCode:
+          type: string
+        severityCode:
+          type: string
+        triggeringValue:
+          type: number
+        raisedAt:
+          $ref: '#/components/schemas/Timestamp'
+        acknowledgedAt:
+          $ref: '#/components/schemas/Timestamp'
+        acknowledgedBy:
+          $ref: '#/components/schemas/UUID'
 
     UUID:
       type: string

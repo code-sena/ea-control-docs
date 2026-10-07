@@ -1,4 +1,4 @@
-# Data Model — ms-monitoreo
+# Data Model — ms-environment-monitoring
 
 > This service is the **authoritative owner** of the data described here.
 > No other service should read these tables directly.
@@ -13,12 +13,38 @@ boundary per microservice. The monitoring domain needs `TIMESTAMPTZ` precision f
 historical windows, numeric aggregates and `DISTINCT ON` / `date_trunc` bucketing over
 large measurement volumes — all native to PostgreSQL.
 
-**Schema:** `monitoring`. Cross-domain references (`educational_environment_id`,
+**Schema:** `environment_monitoring`. Cross-domain references (`educational_environment_id`,
 `variable_id`) are logical UUIDs without a foreign key, per ADR-003.
 
 ---
 
 ## Schema
+
+### Table: environment_measurement
+
+**Purpose:** Local atomic projection of accepted readings: one row per environment,
+variable and instant.
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| environment_measurement_id | UUID | No | Local projection identifier | PK, `gen_random_uuid()` |
+| environment_id | UUID | No | Environment measured | Logical ref to `ms-classroom-management` |
+| variable_id | UUID | No | Variable measured | Logical ref to `ms-sensor-management` |
+| measured_value | NUMERIC(12,4) | No | Recorded value | |
+| measured_at | TIMESTAMPTZ | No | Instant attributed to the reading | |
+| quality_flag | VARCHAR(20) | Yes | Quality classification | |
+| received_at | TIMESTAMPTZ | No | Projection receipt time | Default `now()` |
+
+**Relationships:**
+- `(environment_id, variable_id, measured_at)` → unique natural key used for
+  idempotent projection.
+
+### Read-only catalog replicas
+
+The service also maintains local replicas of `variable`,
+`educational_environment` and `variable_threshold`. They are lookup data only;
+canonical administration remains with `ms-sensor-management` and
+`ms-classroom-management`.
 
 ### Table: environmental_analysis
 
@@ -31,12 +57,12 @@ lifecycle state of the aggregation.
 | educational_environment_id | UUID | No | Environment analyzed | Logical ref to `classrooms.educational_environment` |
 | period_start | TIMESTAMPTZ | No | Inclusive start of the window | `CHECK period_start < period_end` |
 | period_end | TIMESTAMPTZ | No | Exclusive end of the window | `CHECK period_start < period_end` |
-| analysis_status_id | UUID | No | Lifecycle state | FK to `monitoring.analysis_statuses` |
-| requested_by | UUID | Yes | User that requested the analysis | Logical ref to IAM |
+| analysis_status_id | UUID | No | Lifecycle state | FK to `environment_monitoring.analysis_statuses` |
+| requested_by | UUID | Yes | User that requested the analysis | Logical ref to `ms-security` / `ms-user-management` |
 | computed_at | TIMESTAMPTZ | Yes | When the aggregation finished | NULL while PENDING/RUNNING |
 
 **Relationships:**
-- `educational_environment_id` → logical reference to `ms-aulas`
+- `educational_environment_id` → logical reference to `ms-classroom-management`
 - `analysis_status_id` → FK to `analysis_statuses` (same schema)
 - 1 ─── N `analysis_result`
 
@@ -57,7 +83,7 @@ lifecycle state of the aggregation.
 
 **Relationships:**
 - `environmental_analysis_id` → FK to `environmental_analysis` (same schema)
-- `variable_id` → logical reference to `ms-sensores`
+- `variable_id` → logical reference to `ms-sensor-management`
 
 ### Table: analysis_statuses
 
@@ -106,22 +132,24 @@ constraint already provides the index used to load results of an analysis.
 ## Schema migration
 
 **Tool:** Liquibase (ADR-008)
-**Script location:** `Web/backend/src/main/resources/db/changelog/`
+**Script location:** `ms-environment-monitoring/src/main/resources/db/changelog/`
 **Naming convention:** `db.changelog-master.yaml` with `changes/NNN-<verb>-<noun>.yaml`
 and canonical SQL under `canonical/`.
 
-**Existing changesets — no new migration required.** The tables above already exist:
+**Current changesets.** The service owns a separate Liquibase history for the
+`environment_monitoring` schema:
 
 | Change | File |
 |--------|------|
-| `canonical/03_tables/03_monitoring/004_environmental_analysis.sql` | Analysis table |
-| `canonical/03_tables/03_monitoring/005_analysis_result.sql` | Results table |
-| `changes/002-catalogs-device.yaml` | `analysis_statuses` catalog |
-| `changes/010-seed-reference.yaml` | Seeds `PENDING`, `RUNNING`, `COMPLETED`, `FAILED` |
-| `canonical/10_indexes/001_indexes.sql` | Indexes |
+| Schema | `canonical/01_schemas/001_schemas.sql` |
+| Read model and consumer inbox | `canonical/03_tables/02_read_model/001_environment_measurement.sql`, `002_inbox_message.sql` |
+| Local catalog replicas | `canonical/03_tables/01_catalogos/001_variable.sql`, `002_educational_environment.sql`, `003_variable_threshold.sql` |
+| Analysis core | `canonical/03_tables/03_analisis/001_analysis_statuses.sql`, `002_environmental_analysis.sql`, `003_analysis_result.sql` |
+| Indexes | `canonical/10_indexes/001_indexes.sql` |
+| Reference seeds | `changes/010-seed-reference.yaml` |
 
-This change set only adds the application layer over the existing model; it introduces
-no DDL.
+This history recreates the model in the service-owned namespace; it does not
+reuse the monolith DDL in place.
 
 **Rollback policy:**
 - Liquibase supports rollback for most change types.
