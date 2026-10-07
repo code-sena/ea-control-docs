@@ -95,6 +95,7 @@
 | `api-gateway` | [services/01-api-gateway](services/01-api-gateway/README.md) | [api-gateway.yaml](../07-api/contracts/openapi/api-gateway.yaml) |
 | `ms-security` | [services/02-auth-service](services/02-auth-service/README.md) | [auth-service.yaml](../07-api/contracts/openapi/auth-service.yaml) |
 | `ms-environment-monitoring` | [services/05-environment-monitoring](services/05-environment-monitoring/README.md) | [ms-environment-monitoring.yaml](../07-api/contracts/openapi/ms-environment-monitoring.yaml) |
+| `ms-user-experience` | [services/07-user-experience](services/07-user-experience/README.md) | [ms-user-experience.yaml](../07-api/contracts/openapi/ms-user-experience.yaml) |
 - API contracts → `07-api/contracts/openapi/`
 - Domain events → `02-domain/domain-events.md`
 - Data models → `06-data/domain/`
