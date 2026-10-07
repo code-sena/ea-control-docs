@@ -21,9 +21,24 @@ Redis supports O(1) lookups with automatic TTL, without cleanup jobs.
 
 ## PostgreSQL schema
 
+### Table: `institution`
+
+**Purpose:** Tenant (educational institution, e.g. `SEN-444`). Owns the `company_code`
+and the campuses it contains (ADR-016).
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| id | UUID | No | Unique identifier | PK, gen_random_uuid() |
+| code | VARCHAR(20) | No | Institution code (`company_code`) | UNIQUE, NOT NULL |
+| name | VARCHAR(150) | No | Institution name | NOT NULL |
+| type | VARCHAR(50) | Yes | Institution type | |
+| status | VARCHAR(20) | No | ACTIVE / INACTIVE | DEFAULT 'ACTIVE' |
+| created_at | TIMESTAMPTZ | No | Creation date | DEFAULT NOW() |
+| updated_at | TIMESTAMPTZ | No | Last modification | DEFAULT NOW() |
+
 ### Table: `users`
 
-**Purpose:** Authentication credentials. Only the data needed to authenticate — application profile data belongs to the corresponding business service.
+**Purpose:** Authentication credentials. Only the data needed to authenticate — application profile data belongs to the corresponding business service. Each user belongs to exactly one institution and one campus (ADR-016).
 
 | Field | Type | Nullable | Description | Constraints |
 |-------|------|----------|-------------|-------------|
@@ -33,6 +48,8 @@ Redis supports O(1) lookups with automatic TTL, without cleanup jobs.
 | email_verified | BOOLEAN | No | Whether the email was verified | DEFAULT false |
 | failed_attempts | INT | No | Failed login attempts | DEFAULT 0 |
 | locked_until | TIMESTAMPTZ | Yes | Locked until this date | NULL = not locked |
+| institution_id | UUID | No | Institution the user belongs to | ref institution.id (by value) |
+| campus_id | UUID | Yes | Campus (sede); NULL = institution-wide admin | ref campus by UUID |
 | created_at | TIMESTAMPTZ | No | Registration date | DEFAULT NOW() |
 | updated_at | TIMESTAMPTZ | No | Last modification | DEFAULT NOW() |
 | deleted_at | TIMESTAMPTZ | Yes | Soft delete | NULL = active |
@@ -80,6 +97,29 @@ Redis supports O(1) lookups with automatic TTL, without cleanup jobs.
 | revoked_at | TIMESTAMPTZ | Yes | NULL = active, date = revoked |
 | created_at | TIMESTAMPTZ | No | DEFAULT NOW() |
 | user_agent | TEXT | Yes | To show active sessions to the user |
+
+### Table: `password_reset_tokens`
+
+**Purpose:** One-time codes for the password recovery flow (forgot / verify / reset).
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| id | UUID | No | PK | gen_random_uuid() |
+| user_id | UUID | No | FK → users.id | NOT NULL |
+| code_hash | VARCHAR(255) | No | SHA-256 hash of the code | NOT NULL |
+| expires_at | TIMESTAMPTZ | No | Expiration | NOT NULL |
+| used_at | TIMESTAMPTZ | Yes | When it was consumed | NULL = unused |
+| created_at | TIMESTAMPTZ | No | Creation date | DEFAULT NOW() |
+
+### OAuth2 tables (Spring Authorization Server 7)
+
+Standard SAS JDBC tables (ADR-017), stored in the `seguridad` schema:
+
+| Table | Purpose |
+|-------|---------|
+| `oauth2_registered_client` | Registered OAuth2 clients (web SPA, mobile, service-to-service) |
+| `oauth2_authorization` | Issued authorizations and tokens |
+| `oauth2_authorization_consent` | Consent per client/principal (disabled for first-party) |
 
 ---
 

@@ -221,7 +221,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password, username]
+      required: [email, password, username, companyCode]
       properties:
         email:
           type: string
@@ -236,16 +236,28 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+        companyCode:
+          type: string
+          maxLength: 20
+          description: Institution code the user belongs to (ADR-016), e.g. SEN-444
+        campusId:
+          type: string
+          format: uuid
+          description: Campus (sede) the user belongs to; optional for institution-wide admins
 
     LoginRequest:
       type: object
-      required: [email, password]
+      required: [email, password, companyCode]
       properties:
         email:
           type: string
           format: email
         password:
           type: string
+        companyCode:
+          type: string
+          maxLength: 20
+          description: Institution code; must match the user's institution (ADR-016)
 
     AuthResponse:
       type: object
