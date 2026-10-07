@@ -2,8 +2,13 @@
 
 - **ID:** ADR-006
 - **Date:** 2026-09-09
-- **Status:** Accepted
+- **Status:** Accepted — token flow partially superseded by ADR-017
 - **Authors:** EduAirControl Development Team
+
+> **Note (2026-10-06):** The **token issuance/exchange flow** of this ADR (custom
+> `/auth/login` + manual refresh) is superseded by **ADR-017** (OAuth2/OIDC Authorization
+> Server + BFF). The remaining decisions here stay in force: **RS256 + JWKS**, rotating
+> refresh tokens, BCrypt password hashing, and **service-level RBAC** (defense in depth).
 
 ---
 

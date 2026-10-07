@@ -21,11 +21,21 @@ ADRs document important architectural decisions. Each file = one decision.
 | # | Title | Status | Date |
 |---|-------|--------|------|
 | ADR-001 | Documentation Language | Accepted | 2026-09-08 |
-| ADR-002 | Microservice Boundaries | Proposed | 2026-09-09 |
+| ADR-002 | Microservice Boundaries | Accepted | 2026-09-09 |
 | ADR-003 | Database Engine and Domain Data Ownership | Accepted | 2026-09-09 |
-| ADR-004 | Communication Patterns Between Components | Proposed | 2026-09-09 |
-| ADR-005 | API Gateway as the External Backend Entry Point | Proposed | 2026-09-09 |
-| ADR-006 | JWT Authentication and Service-Level RBAC | Proposed | 2026-09-09 |
-| ADR-007 | At-Least-Once Events with Transactional Outbox | Proposed | 2026-09-09 |
+| ADR-004 | Communication Patterns Between Components | Accepted | 2026-09-09 |
+| ADR-005 | API Gateway as the External Backend Entry Point | Accepted | 2026-09-09 |
+| ADR-006 | JWT Authentication and Service-Level RBAC | Accepted | 2026-09-09 |
+| ADR-007 | At-Least-Once Events with Transactional Outbox | Accepted | 2026-09-09 |
+| ADR-008 | Database Migration Tool | Proposed | 2026-09-17 |
+| ADR-009 | Hexagonal Architecture | Proposed | 2026-09-17 |
+| ADR-010 | Containerization Strategy | Proposed | 2026-09-17 |
+| ADR-011 | Production Deployment Strategy | Proposed | 2026-09-17 |
+| ADR-012 | Observability Stack | Proposed | 2026-09-17 |
+| ADR-013 | Circuit Breaker Adoption | Proposed | 2026-09-17 |
+| ADR-014 | Environmental Sensor Variables and Thresholds | Proposed | 2026-09-17 |
+| ADR-015 | Fold Alert Management into ms-environment-monitoring | Accepted | 2026-10-06 |
+| ADR-016 | Multi-Tenancy by Institution and Campus | Accepted | 2026-10-06 |
+| ADR-017 | OAuth2/OIDC Authorization Server and Backend-for-Frontend | Accepted | 2026-10-06 |
 
 > Add rows here as you create ADRs in `records/`
