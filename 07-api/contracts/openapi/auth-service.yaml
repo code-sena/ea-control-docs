@@ -17,7 +17,7 @@ info:
     - **refresh_token**: Opaque token (UUID), expires in 7 days. Valid only once (rotation).
 
 servers:
-  - url: http://localhost:8081
+  - url: http://localhost:8081/api/v1/auth
     description: Local development
   - url: https://api.dev.{domain}/api/v1/auth
     description: Development
@@ -221,7 +221,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password, username]
+      required: [email, password, username, companyCode]
       properties:
         email:
           type: string
@@ -236,6 +236,14 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+        companyCode:
+          type: string
+          maxLength: 20
+          description: Institution code the user belongs to (ADR-016), e.g. SEN-444
+        campusId:
+          type: string
+          format: uuid
+          description: Campus (sede) the user belongs to; optional for institution-wide admins
 
     LoginRequest:
       type: object

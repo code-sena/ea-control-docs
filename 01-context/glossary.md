@@ -28,8 +28,8 @@
 | `ms-user-management` | `ms-usuarios` | IAM |
 | `ms-classroom-management` | `ms-aulas` | Classrooms |
 | `ms-sensor-management` | `ms-sensores` | Sensors |
-| `ms-environment-monitoring` | `ms-monitoreo` | Monitoring, Data Analysis |
-| `ms-alert` | — | Monitoring |
+| `ms-environment-monitoring` | `ms-monitoreo` | Monitoring, Data Analysis, Alerts |
+| `ms-alert` ⏸ | — | Monitoring — deprecated, folded into `ms-environment-monitoring` (ADR-015) |
 | `ms-user-experience` | — | UX |
 
 > **Note on IAM data:** `06-data/domain/ms-iam.md` documents the data model shared by both

@@ -17,12 +17,12 @@
           ▼           ▼                        ▼                  ▼
  ┌────────────────┐ ┌────────────────────┐ ┌─────────────────────────┐ ┌────────────────────┐
  │  ms-security   │ │ms-user-management  │ │ ms-environment-monitoring│ │ms-sensor-management│
- │     :3001      │ │       :3007        │ │          :3003           │ │       :3004        │
+ │     :8081      │ │       :3007        │ │          :3003           │ │       :3004        │
  └────────────────┘ └────────────────────┘ └────────────┬────────────┘ └────────────────────┘
                                                         │
  ┌────────────────────┐ ┌────────────────────┐          │
- │ms-classroom-mgmt   │ │     ms-alert       │          │
- │       :3002        │ │       :3005        │          │
+ │ms-classroom-mgmt   │ │ ms-alert ⏸ (dep.)  │          │
+ │       :3002        │ │  folded into #05   │          │
  └────────────────────┘ └────────────────────┘          │
                                           ┌─────────────┴──────────────┐
                                           │       Message Broker       │
@@ -37,13 +37,13 @@
 | # | Service | Main responsibility | Port | DB | Status |
 |---|---------|-------------------|------|-----|--------|
 | 01 | `api-gateway` | Routing, authentication, rate limiting | 8080 | Redis | 🟢 Active |
-| 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 3001 | PostgreSQL | 🟢 Active |
-| 03 | `ms-classroom-management` | Educational environment management | 3002 | PostgreSQL | 🟢 Active |
-| 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟢 Active |
-| 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟡 In development |
-| 06 | `ms-alert` | Alert generation and management | 3005 | PostgreSQL | 🟢 Active |
+| 02 | `ms-security` | Registration, login, JWT tokens, RBAC | 8081 | PostgreSQL | 🟡 In development |
+| 03 | `ms-classroom-management` | Educational environment management | 3002 | PostgreSQL | 🟡 In development |
+| 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟡 In development |
+| 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
+| 06 | `ms-alert` ⏸ | Deprecated — alert generation folded into `ms-environment-monitoring` (ADR-015) | — (was 3005) | — | ⏸ Deprecated |
 | 07 | `ms-user-experience` | User preferences and experience | 3006 | PostgreSQL | 🟢 Active |
-| 08 | `ms-user-management` | User information management | 3007 | PostgreSQL | 🟢 Active |
+| 08 | `ms-user-management` | User information management | 3007 | PostgreSQL | 🟡 In development |
 
 **Statuses:** 🟢 Active | 🟡 In development | 🔴 Planned | ⏸ Deprecated
 
@@ -61,8 +61,9 @@
 | api-gateway | ms-environment-monitoring | HTTP/REST | Synchronous | Query environmental data |
 | api-gateway | ms-user-management | HTTP/REST | Synchronous | CRUD users |
 | ms-sensor-management | ms-environment-monitoring | Event | Asynchronous | Sensor data measurements |
-| ms-environment-monitoring | ms-alert | Event | Asynchronous | EnvironmentalDataRecorded |
 | ms-environment-monitoring | ms-user-experience | Event | Asynchronous | EnvironmentalDataAnalyzed |
+
+> The former `ms-environment-monitoring → ms-alert` event link (`EnvironmentalDataRecorded`) is now an **internal** concern of `ms-environment-monitoring` (ADR-015).
 
 ---
 
@@ -72,10 +73,10 @@
 |---------------|---------------|--------------------------|
 | User / Identity | ms-security | REST API (`GET /users/:id`) |
 | User information | ms-user-management | REST API (`GET /users/:id`) |
-| Educational Environment | ms-classroom-management | REST API (`GET /environments/:id`) |
+| Educational Environment | ms-classroom-management | REST API (`GET /api/v1/educational-environments/{id}`) |
 | Sensor | ms-sensor-management | REST API (`GET /sensors/:id`) |
 | Environmental Data | ms-environment-monitoring | Event `EnvironmentalDataRecorded` |
-| Alert | ms-alert | REST API (`GET /alerts/:id`) |
+| Alert | ms-environment-monitoring | REST API (published in the `ms-environment-monitoring` contract, ADR-015) |
 | User Preferences | ms-user-experience | REST API (`GET /preferences/:userId`) |
 
 ---

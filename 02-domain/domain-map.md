@@ -77,7 +77,7 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | **Name** | Monitoring |
 | **Responsibility** | Manages the environmental information collected from educational environments. |
 | **Owning team** | Development Team |
-| **Microservice(s)** | `ms-environment-monitoring`, `ms-alert` |
+| **Microservice(s)** | `ms-environment-monitoring` (owns alerts — `ms-alert` deprecated per ADR-015) |
 | **Database** | PostgreSQL 15 |
 | **Ubiquitous Language** | Educational Environment, Temperature, Humidity, CO₂, Noise Level, Environmental Data, Environmental Monitoring |
 
