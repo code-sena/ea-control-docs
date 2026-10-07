@@ -1,4 +1,4 @@
-# Decisions — ms-monitoreo
+# Decisions — ms-environment-monitoring
 
 > Internal technical decisions of the service that complement the global ADRs.
 > Format follows `09-microservices/_template/service/decisions.md`.
@@ -66,10 +66,10 @@ date; when provided it makes the computation reproducible.
 ## [DEC-003] Aggregation is read through a port owned by the analysis module
 
 **Date:** 2026-09-05
-**Status:** Active
+**Status:** Superseded by DEC-005
 
 **Context:** `environment_measurement` is owned by the monitoring side of
-`ms-monitoreo`. ADR-002 requires the monitoring and analysis modules to stay internally
+`ms-environment-monitoring`. ADR-002 requires the monitoring and analysis modules to stay internally
 separated, with separate ports, use cases and contracts. ADR-003 forbids one module from
 manipulating another module's tables directly.
 
@@ -77,19 +77,23 @@ manipulating another module's tables directly.
 and the module that owns the measurements provides the adapter. The analysis use case
 never touches `EnvironmentMeasurementRepository`.
 
-**Consequences:**
+**Consequences when written:**
 - ✅ The analysis module can be extracted into its own deployable by replacing the port.
 - ✅ The aggregation query stays close to the data it aggregates.
 - ⚠️ One more port to maintain in the shared contract package.
+
+**Update 2026-10-07:** the extraction happened. The standalone service keeps the same
+port, but the adapter now queries `environment_monitoring.environment_measurement`
+instead of another module’s tables.
 
 ---
 
 ## [DEC-004] Analysis and monitoring live in separate application modules
 
 **Date:** 2026-09-05
-**Status:** Active
+**Status:** Superseded by DEC-005
 
-**Context:** ADR-002 states that `ms-monitoreo` initially owns both Environmental
+**Context:** ADR-002 states that `ms-environment-monitoring` initially owns both Environmental
 Monitoring and Environmental Data Analysis, and that it "must keep monitoring and
 analysis modules internally separated", with the risk of becoming a second monolith
 mitigated by "separate ports, use cases, and contracts".
@@ -97,10 +101,74 @@ mitigated by "separate ports, use cases, and contracts".
 **Decision:** The analysis capability is implemented as its own application module with
 hexagonal layering, not as a subpackage of the existing monitoring module.
 
-**Consequences:**
+**Consequences when written:**
 - ✅ Complies with ADR-002 and ADR-009.
 - ⚠️ The codebase temporarily contains two internal styles: the older layered style and
   the new hexagonal style. The hexagonal one is the target for new work.
+
+**Update 2026-10-07:** the module separation became a standalone repository,
+`ms-environment-monitoring`; see DEC-005.
+
+---
+
+## [DEC-005] Standalone `ms-environment-monitoring` with canonical names and event contract
+
+**Date:** 2026-10-07
+**Status:** Active
+
+**Context:** The canonical glossary forbids the legacy alias `ms-monitoreo` and fixes
+the service name as `ms-environment-monitoring`. The domain contract also fixes
+`EnvironmentalDataRecorded`, envelope idempotency, retry behavior, atomic measurements,
+and ADR-003’s one-schema-per-service ownership.
+
+**Decision:** Implement the service as a standalone repository named
+`ms-environment-monitoring`, with:
+- local port `3003`;
+- PostgreSQL schema `environment_monitoring`;
+- canonical table name `environment_measurement`;
+- canonical event envelope `EnvironmentalDataRecorded`;
+- `eventId` idempotency with a broker-message fallback;
+- four broker retries with exponential backoff and a seven-day dead-letter queue.
+
+**Consequences:**
+- ✅ Code, database, messaging topology and documentation use the same canonical names.
+- ✅ The consumer honors the atomic-measurement rule and the domain event envelope.
+- ⚠️ The monolith ingestion path now owns the canonical publisher responsibility until
+  `ms-sensor-management` is extracted.
+
+---
+
+## [DEC-006] Resolución de decisiones abiertas §12 y aceptación de ADR-014
+
+**Date:** 2026-10-07
+**Status:** Active
+
+**Context:** La especificación de construcción deja seis decisiones abiertas en §12.
+Sin cerrarlas no se puede codificar umbrales, alertas ni la proyección. ADR-014 está
+en estado `Proposed` y bloquea la implementación de umbrales.
+
+**Decision:** Se acepta ADR-014 tal cual y se resuelven las seis decisiones:
+
+1. **Semántica de excedencia:** alerta cuando la medición supera los límites del
+   umbral activo en severidad `WARNING` o `CRITICAL`. `INFO` es solo informativo.
+   La banda bilateral se modela con `min_value`/`max_value` por severidad.
+2. **`quality_flag`:** catálogo local propio (`VALID`, `SUSPECT`, `BAD`). El servicio
+   no referencia el catálogo del monolito.
+3. **Estado de alerta:** columnas `acknowledged_at`/`acknowledged_by` (modelo canónico).
+   No se usa catálogo `alert_status`.
+4. **Ingesta:** los sensores hablan con `ms-sensor-management` (ADR-004). Este servicio
+   consume `EnvironmentalDataRecorded` por RabbitMQ. No hay ingesta directa MQTT/HTTP
+   en la v1 del servicio.
+5. **`environment_type_id`:** proyección local (`sensor_installation → educational_environment
+   → environment_type`) alimentada por eventos + refresh periódico.
+6. **Umbrales:** solo por `environment_type_id`, sin `educational_environment_id`
+   (ADR-014 tal cual). Se rechaza explícitamente la columna del monolito.
+
+**Consequences:**
+- ✅ ADR-014 pasa a `Accepted` y desbloquea la codificación de umbrales.
+- ✅ Las seis decisiones quedan trazables en esta DEC.
+- ⚠️ Si el negocio cambia la semántica de excedencia, hay que versionar el evento
+  o la regla (no es un cambio compatible silencioso).
 
 ---
 
@@ -111,4 +179,4 @@ hexagonal layering, not as a subpackage of the existing monitoring module.
   ADR-014 thresholds)
 - Technical security rules → `00-governance/security-rules.md`
 - Data model → [data-model.md](data-model.md)
-- API contract → `07-api/contracts/openapi/ms-monitoreo.yaml`
+- API contract → `07-api/contracts/openapi/ms-environment-monitoring.yaml`
