@@ -247,17 +247,13 @@ components:
 
     LoginRequest:
       type: object
-      required: [email, password, companyCode]
+      required: [email, password]
       properties:
         email:
           type: string
           format: email
         password:
           type: string
-        companyCode:
-          type: string
-          maxLength: 20
-          description: Institution code; must match the user's institution (ADR-016)
 
     AuthResponse:
       type: object

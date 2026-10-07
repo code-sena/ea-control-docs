@@ -48,6 +48,11 @@ token, so the institution model belongs there. Referencing the institution by UU
 the campus preserves ADR-003 without cross-schema foreign keys. Enforcing isolation in
 each service follows the existing defense-in-depth principle (ADR-006).
 
+> **Note (2026-10-07):** `company_code` is required at **registration** (to join an
+> institution) but **not at login**: `users.email` is globally unique, so the email already
+> identifies the user and the institution is resolved from the account. This avoids the
+> friction and the misleading "invalid credentials" errors caused by re-typing the code.
+
 ---
 
 ## Evaluated alternatives
