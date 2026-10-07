@@ -79,14 +79,15 @@ searched_at
 
 # 4. Tables
 
-The User Experience Service contains four main tables:
+The User Experience Service contains five main tables:
 
-| Table               | Responsibility                                         |
-| ------------------- | ------------------------------------------------------ |
-| `user_preferences`  | Stores personal interface and notification preferences |
-| `favorites`         | Stores classrooms and variables marked as favorites    |
-| `classroom_ratings` | Stores user ratings and comments for classrooms        |
-| `searches`          | Stores user search history and applied filters         |
+| Table                | Responsibility                                         |
+| -------------------- | ------------------------------------------------------ |
+| `user_preferences`   | Stores personal interface and notification preferences |
+| `favorites`          | Stores classrooms and variables marked as favorites    |
+| `classroom_ratings`  | Stores user ratings and comments for classrooms        |
+| `searches`           | Stores user search history and applied filters         |
+| `notification_state` | Tracks read/acknowledged state of notifications        |
 
 ---
 

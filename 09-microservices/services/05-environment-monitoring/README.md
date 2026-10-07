@@ -12,7 +12,7 @@
 | Repository | `ms-environment-monitoring` (standalone service repository) |
 | Owner team | Development Team |
 | DB engine | PostgreSQL 15 (`environment_monitoring` schema) |
-| Status | In development |
+| Status | Active |
 
 ## Responsibility
 
@@ -43,7 +43,6 @@ analysis per period for an educational environment.**
 
 - Educational environments, environment types and campuses — owned by `ms-classroom-management`.
 - Sensors, installations and the variable catalog — owned by `ms-sensor-management`.
-- Alert generation and lifecycle — owned by `ms-alert`.
 - User preferences and experience — owned by `ms-user-experience`.
 
 ## Main endpoints
@@ -52,9 +51,15 @@ Base path `/api/v1`. Full contract: [ms-environment-monitoring.yaml](../../../07
 
 | Method | Path | Purpose |
 |--------|------|---------|
+| POST | `/measurements` | Ingest a measurement via HTTP (alternative to MQTT) |
+| GET | `/environments/{id}/current` | Last values per variable of an environment |
+| GET | `/environments/{id}/measurements` | Paginated measurement history by variable and window |
 | POST | `/analyses` | Request and compute the analysis of an environment for a period |
 | GET | `/analyses` | List analyses, filterable by environment, period and status |
 | GET | `/analyses/{id}` | Get one analysis with its per-variable results |
+| GET | `/analyses/latest` | Latest completed analysis for an environment and period |
+| GET | `/alerts` | List alerts with filters |
+| POST | `/alerts/{id}/acknowledge` | Acknowledge an active alert |
 | GET | `/dashboard/summary` | Counts and averages for the dashboard |
 | GET | `/dashboard/series` | Aggregated historical series |
 

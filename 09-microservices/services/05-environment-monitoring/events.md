@@ -3,7 +3,7 @@
 > Events published and consumed by this service. Names are always in past tense and use
 > the ubiquitous language of the domain (`02-domain/domain-events.md`).
 
-`ms-environment-monitoring` consume hechos ambientales por RabbitMQ y conserva un
+`ms-environment-monitoring` consumes environmental facts via RabbitMQ and keeps a
 evento interno para los analisis que completa. Los nombres siguen el lenguaje
 ubicuo del dominio (`02-domain/domain-events.md`).
 

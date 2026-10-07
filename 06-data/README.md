@@ -27,9 +27,10 @@ Physical organization of the business model (one schema per domain, per ADR-003)
 |--------|-----------------|------------------|--------|
 | `classrooms` | Classrooms | `ms-classroom-management` | `campuses`, `environment_types`, `educational_environment` |
 | `sensors` | Sensors | `ms-sensor-management` | `sensor`, `sensor_installation`, `variable`, `sensor_variable` |
-| `monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (owns alerts — `ms-alert` deprecated, ADR-015) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
-| `ux` | UX | `ms-user-experience` | `user_preferences`, `favorites`, `classroom_ratings`, `searches` |
-| `seguridad` | IAM | `ms-security`, `ms-user-management` | 13 tables from `domain/ms-iam.md` (see `database/identidad-seguridad/`) |
+| `environment_monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (owns alerts — `ms-alert` deprecated, ADR-015) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
+| `user_experience` | UX | `ms-user-experience` | `user_preferences`, `favorites`, `classroom_ratings`, `searches`, `notification_state` |
+| `seguridad` | IAM | `ms-security` | 13 tables from `domain/ms-iam.md` (see `database/identidad-seguridad/`) |
+| `user_management` | User Management | `ms-user-management` | `user_profile` |
 
 Rules that hold across the split:
 

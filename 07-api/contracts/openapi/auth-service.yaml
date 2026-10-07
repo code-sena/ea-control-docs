@@ -217,6 +217,152 @@ paths:
                       type: object
                       description: JWK (RFC 7517)
 
+  /forgot-password:
+    post:
+      summary: Request a password reset code
+      operationId: forgotPassword
+      tags: [Password]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '202':
+          description: Reset code sent (or silently accepted)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /resend-code:
+    post:
+      summary: Resend the password reset code
+      operationId: resendCode
+      tags: [Password]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '202':
+          description: Code resent
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /verify-code:
+    post:
+      summary: Verify the password reset code
+      operationId: verifyCode
+      tags: [Password]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+      responses:
+        '200':
+          description: Code verified
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /reset-password:
+    post:
+      summary: Reset the password with a verified code
+      operationId: resetPassword
+      tags: [Password]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code, newPassword]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Password reset successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /change-password:
+    post:
+      summary: Change the authenticated user's password
+      operationId: changePassword
+      tags: [Password]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Password changed
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /account:
+    delete:
+      summary: Delete the authenticated user's account
+      operationId: deleteAccount
+      tags: [Account]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+      responses:
+        '204':
+          description: Account deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
 components:
   schemas:
     RegisterRequest:
