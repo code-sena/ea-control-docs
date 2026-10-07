@@ -2,7 +2,7 @@
 
 - **ID:** ADR-009
 - **Date:** 2026-09-17
-- **Status:** Proposed
+- **Status:** Accepted
 - **Authors:** EduAirControl Development Team
 
 ---

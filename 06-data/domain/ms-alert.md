@@ -2,7 +2,7 @@
 
 > **Service ownership:** Alert generation and management is served by **`ms-environment-monitoring`**.
 > `ms-alert` is **deprecated** as a separate deployable (ADR-015); its tables remain in the
-> `monitoring` schema, owned by `ms-environment-monitoring`.
+> `environment_monitoring` schema, owned by `ms-environment-monitoring`.
 >
 > **Purpose:** Define the data model used to manage alerts generated when an environmental measurement exceeds a configured threshold in an educational environment.
 >

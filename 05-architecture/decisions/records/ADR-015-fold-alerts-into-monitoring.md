@@ -9,7 +9,7 @@
 
 ## Context
 
-ADR-002 originally listed `ms-alert` as a separate domain service responsible for alert generation and management, and the service catalog kept it as service #06 (`:3005`). However, the database implementation approved in the data mapping work placed all alert-related tables (`severity`, `variable_threshold`, `environment_alert`) inside the `monitoring` schema, which is owned by `ms-environment-monitoring` (ADR-003: one schema or namespace ownership boundary per service).
+ADR-002 originally listed `ms-alert` as a separate domain service responsible for alert generation and management, and the service catalog kept it as service #06 (`:3005`). However, the database implementation approved in the data mapping work placed all alert-related tables (`severity`, `variable_threshold`, `environment_alert`) inside the `environment_monitoring` schema, which is owned by `ms-environment-monitoring` (ADR-003: one schema or namespace ownership boundary per service).
 
 This creates an inconsistency:
 - Two deployable services (`ms-environment-monitoring`, `ms-alert`) would claim ownership of the same schema `monitoring`.
@@ -19,7 +19,7 @@ This creates an inconsistency:
 A decision is required before `ms-environment-monitoring` is implemented, because it determines service boundaries, API ownership, schema ownership, and catalog documentation.
 
 **Known constraints:**
-- Alert tables are already defined in the `monitoring` schema of `database/negocio` and will not be moved.
+- Alert tables are already defined in the `environment_monitoring` schema of `database/negocio` and will not be moved.
 - Alert evaluation consumes measurements and thresholds that live in the same schema.
 - Event-driven communication between monitoring and alerting would be internal once both capabilities live in one deployable.
 - The MVP team size does not justify an extra deployment, contract, and operational surface for alerts alone.
@@ -43,7 +43,7 @@ A decision is required before `ms-environment-monitoring` is implemented, becaus
 | Alternative | Pros | Cons | Reason for discarding |
 |------------|------|------|-----------------------|
 | Fold alerts into `ms-environment-monitoring` — chosen | Single schema ownership; no table moves; fewer deployments; keeps ADR-003 intact | `ms-environment-monitoring` keeps a broad responsibility (already flagged in ADR-002) | Chosen for the MVP |
-| Keep `ms-alert` as a separate service sharing the `monitoring` schema | Clear separation of alerting logic; matches original catalog | Two services over one schema violates ADR-003; requires cross-service access to measurements/thresholds or duplicated data | Violates the database ownership rule |
+| Keep `ms-alert` as a separate service sharing the `environment_monitoring` schema | Clear separation of alerting logic; matches original catalog | Two services over one schema violates ADR-003; requires cross-service access to measurements/thresholds or duplicated data | Violates the database ownership rule |
 | Give `ms-alert` its own `alerts` schema (move tables) | Restores 1 service : 1 schema | Refactors `database/negocio`, all data docs, and DDL references for no product gain; alerts stay logically coupled to monitoring data | Cost without justifying benefit for MVP |
 
 ---

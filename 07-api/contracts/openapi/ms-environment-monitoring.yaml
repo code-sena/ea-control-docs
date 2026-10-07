@@ -124,6 +124,43 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /analyses/latest:
+    get:
+      summary: Ultimo analisis completado de un ambiente para un periodo
+      operationId: getLatestAnalysis
+      tags: [Analysis]
+      parameters:
+        - name: environmentId
+          in: query
+          required: true
+          description: Ambiente educativo
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: period
+          in: query
+          description: Granularidad del periodo
+          schema:
+            $ref: '#/components/schemas/AnalysisPeriod'
+        - name: referenceDate
+          in: query
+          description: Ancla del periodo en formato YYYY-MM-DD (UTC)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Ultimo analisis completado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '204':
+          description: No hay analisis completado para el periodo
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /analyses/{id}:
     get:
       summary: Obtener un an├ílisis con sus resultados por variable

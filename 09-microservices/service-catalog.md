@@ -42,7 +42,7 @@
 | 04 | `ms-sensor-management` | Sensor registration and management | 3004 | PostgreSQL | 🟡 In development |
 | 05 | `ms-environment-monitoring` | Environmental data collection and analysis | 3003 | PostgreSQL | 🟢 Active |
 | 06 | `ms-alert` ⏸ | Deprecated — alert generation folded into `ms-environment-monitoring` (ADR-015) | — (was 3005) | — | ⏸ Deprecated |
-| 07 | `ms-user-experience` | User preferences and experience | 3006 | PostgreSQL | 🟢 Active |
+| 07 | `ms-user-experience` | User preferences and experience | 3006 | PostgreSQL | 🟡 In development |
 | 08 | `ms-user-management` | User information management | 3007 | PostgreSQL | 🟡 In development |
 
 **Statuses:** 🟢 Active | 🟡 In development | 🔴 Planned | ⏸ Deprecated
@@ -94,8 +94,8 @@
 |---------|----------------------|--------------|
 | `api-gateway` | [services/01-api-gateway](services/01-api-gateway/README.md) | [api-gateway.yaml](../07-api/contracts/openapi/api-gateway.yaml) |
 | `ms-security` | [services/02-auth-service](services/02-auth-service/README.md) | [auth-service.yaml](../07-api/contracts/openapi/auth-service.yaml) |
+| `ms-classroom-management` | [services/03-ms-classroom-management](services/03-ms-classroom-management/README.md) | [ms-classroom-management.yaml](../07-api/contracts/openapi/ms-classroom-management.yaml) |
+| `ms-sensor-management` | [services/04-ms-sensor-management](services/04-ms-sensor-management/README.md) | [ms-sensor-management.yaml](../07-api/contracts/openapi/ms-sensor-management.yaml) |
 | `ms-environment-monitoring` | [services/05-environment-monitoring](services/05-environment-monitoring/README.md) | [ms-environment-monitoring.yaml](../07-api/contracts/openapi/ms-environment-monitoring.yaml) |
-- API contracts → `07-api/contracts/openapi/`
-- Domain events → `02-domain/domain-events.md`
-- Data models → `06-data/domain/`
-- Canonical names → `01-context/glossary.md`
+| `ms-user-management` | [services/06-ms-user-management](services/06-ms-user-management/README.md) | [ms-user-management.yaml](../07-api/contracts/openapi/ms-user-management.yaml) |
+| `ms-user-experience` | [services/07-ms-user-experience](services/07-ms-user-experience/README.md) | [ms-user-experience.yaml](../07-api/contracts/openapi/ms-user-experience.yaml) |

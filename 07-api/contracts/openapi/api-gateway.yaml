@@ -81,6 +81,31 @@ paths:
               schema:
                 $ref: './auth-service.yaml#/components/schemas/ErrorResponse'
 
+  /api/v1/me:
+    get:
+      summary: Get the current user's session information
+      description: Returns the authenticated user's identity and OAuth2 token (BFF pattern, ADR-017).
+      operationId: getMe
+      tags: [Session]
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sub:
+                    type: string
+                  email:
+                    type: string
+                  name:
+                    type: string
+                  accessToken:
+                    type: string
+        '401':
+          description: Not authenticated
+
 components:
   securitySchemes:
     bearerAuth:
