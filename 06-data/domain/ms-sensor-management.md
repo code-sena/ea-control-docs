@@ -465,17 +465,17 @@ The Sensor Service may publish sensor-related events, such as `SensorStatusChang
 
 ## 11. Domain Events
 
-The Sensor Service can publish events such as:
+The Sensor Service publishes events such as:
 
 ```text
-SensorRegistered
-SensorUpdated
-SensorStatusChanged
-SensorInstalled
-SensorRemoved
-VariableRegistered
-SensorVariableAssociated
-SensorVariableRemoved
+SensorRegistered        (contract only)
+SensorUpdated           (contract only)
+SensorStatusChanged     (contract only)
+SensorInstalled         IMPLEMENTED - sensor.installation.created
+SensorRemoved           IMPLEMENTED - sensor.installation.closed
+VariableRegistered      (contract only)
+SensorVariableAssociated(contract only)
+SensorVariableRemoved   (contract only)
 ```
 
 It may consume events from the Environment Service, such as:
@@ -487,6 +487,26 @@ EducationalEnvironmentStatusChanged
 ```
 
 These events allow services to remain decoupled.
+
+### 11.1 Outbox table
+
+`sensors.outbox_event` (migration `009-create-outbox-event.yaml`) is
+infrastructure, not domain: it is the transactional outbox of ADR-007. It lives in
+this schema because only this service publishes events, and ADR-003 gives one
+schema per service.
+
+| Column | Purpose |
+|--------|---------|
+| `event_id` | PK, also the idempotency key the consumer deduplicates on |
+| `event_type`, `aggregate_type`, `aggregate_id`, `routing_key` | Event envelope |
+| `payload` | JSON body as TEXT; the relay forwards it verbatim and never queries it |
+| `occurred_at` | When the business change happened |
+| `published_at` | NULL while pending. `idx_outbox_event_pending` is partial on this |
+| `attempts`, `last_error` | Failure accounting for retry and alerting |
+
+The row is written in the same transaction as the business change, so an
+installation that rolls back leaves no event. See
+`09-microservices/services/04-ms-sensor-management/events.md`.
 
 ---
 
