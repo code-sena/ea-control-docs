@@ -61,6 +61,14 @@ Base path `/api/v1`. Full contract: [ms-user-experience.yaml](../../../07-api/co
 | POST | `/searches` | Record a search |
 | DELETE | `/searches/{id}` | Delete a search record |
 
+## Frontend behavior (ea-control-frontend)
+
+- **Alert notifications are generated only for environments marked as favorite**
+  (`/favorites` + `favorites/{environmentId}/toggle`). Non-favorite environments do
+  not emit CO₂/temperature/warning notifications in the UI.
+- **SUPER_ADMIN without `institutionId`** cannot access environment data: the UI
+  skips loading environments and shows an "no access" state in the environments list.
+
 ## Documents
 
 | Document | Content |
