@@ -9,6 +9,55 @@ ubicuo del dominio (`02-domain/domain-events.md`).
 
 ---
 
+## Consumed events
+
+Two exchanges, because the producers are different services and the grain of the
+messages is different. Exchange, queues and bindings are declared by this service,
+not by the producers: whoever receives the message is the one who knows it needs it.
+
+### Installation projection
+
+| Field | Value |
+|-------|-------|
+| **Producer** | `ms-sensor-management` |
+| **Exchange** | `eduaircontrol.sensor` (topic, durable) |
+| **Queue** | `eduaircontrol.sensor.ms-environment-monitoring` |
+| **Binding** | `sensor.installation.*` |
+| **Events** | `SensorInstalled`, `SensorRemoved` |
+| **Consumer** | `installation-projection` |
+| **Schema version** | `v1` |
+| **Delivery guarantee** | At-least-once |
+
+Feeds `environment_monitoring.installation_projection`, the local replica declared in
+DEC-006 §4.3. This service does not own `sensor_installation`, so without that
+replica the measurements reported by the devices are stored but **invisible**:
+`latestByEnvironment`, `history` and `MeasurementAggregationDao` all JOIN the
+projection.
+
+Idempotency uses the same `inbox_message` table as the measurement projection,
+deduplicating on `eventId`. Both `SensorInstalled` and `SensorRemoved` are applied
+with one upsert: a close sets `removed_at`, and the read queries already filter on
+`p.removed_at is null`, so no row is ever deleted (it remains valid history).
+
+> `environment_type_id` is written as NULL until this service's
+> `educational_environment` replica knows the environment. The producer does not
+> carry the value (DEC-007: it only validates the UUID). Failing here instead would
+> push a perfectly valid installation to the dead-letter queue just because its
+> environment has not arrived yet.
+
+### Measurement projection
+
+| Field | Value |
+|-------|-------|
+| **Producer** | `ms-sensor-management` (planned) / `EduAirControl` monolith (current) |
+| **Exchange** | `eduaircontrol.environmental-data` (topic, durable) |
+| **Queue** | `eduaircontrol.environmental-data.ms-environment-monitoring` |
+| **Binding** | `environmental.data.*` |
+| **Event** | `EnvironmentalDataRecorded` |
+| **Consumer** | `environmental-measurement-projection` |
+
+---
+
 ## Published events
 
 | Field | Value |
