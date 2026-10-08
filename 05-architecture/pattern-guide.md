@@ -538,20 +538,123 @@ Kubernetes Pod:
 
 ## Patterns adopted in this project
 
-> **Fill in with your specific project's decisions.**
-> For each pattern: decide whether it is adopted, document the ADR that justifies the decision,
-> and link to the section in this document where you learned when to use it.
+> Current state as of October 2026. Where an ADR justifies the decision it is cited;
+> a status of "not used" means the pattern is not implemented in the codebase.
 
-| Pattern | Adopted? | Justification / ADR |
+| Pattern | Status | Justification / where |
 |---------|---------|---------------------|
-| API Gateway | Yes — see ADR-005 | Single entry point for routing and auth |
-| Database per Service | No — see ADR-003 | Shared PostgreSQL with domain schemas |
-| Circuit Breaker | Planned — see ADR-013 | Resilience for inter-service calls |
-| Saga (choreographed) | No — see pattern-guide.md | Transactions fit in single service |
-| Outbox Pattern | Planned — see ADR-007 | At-least-once event delivery |
-| CQRS | No — see pattern-guide.md | Read/write models are similar |
-| Event Sourcing | No — see pattern-guide.md | Full history not required |
-| BFF | No — see pattern-guide.md | Clients have similar needs |
+| API Gateway | **Adopted** — ADR-005 | `api-gateway`: path predicates, JWKS verify, Redis rate limit, correlation IDs, OAuth2 client (BFF) |
+| BFF (OAuth2 login) | **Adopted** — ADR-017 | Gateway holds the OAuth2 client + Redis sessions for the web app |
+| Database per service | **Adopted in `infra`** (mixed) — ADR-003 | 6 PostgreSQL containers, one per service; 2 services still use shared `eduaircontrol` DB by schema |
+| Transactional Outbox | **Adopted** — ADR-007 | `ms-sensor-management` / monolith: `OutboxWriter` → `OutboxRelay` → `OutboxPublisher` → RabbitMQ |
+| Inbox (consumer idempotency) | **Adopted** — ADR-007 | `ms-environment-monitoring`: `InboxRepository.claim` (`ON CONFLICT DO NOTHING`) |
+| Event-Driven Communication | **Adopted** — ADR-004, ADR-007 | RabbitMQ topic exchange `eduaircontrol.environmental-data`, durable queue, DLQ (7-day retention) |
+| CQRS | **Adopted (monitoring only)** | `ms-environment-monitoring`: read model (`environment_measurement`, `installation_projection`, dashboard) vs command side |
+| Hexagonal Architecture | **Adopted** — ADR-009 | All `ms-*` services; see `hexagonal-architecture.md` |
+| Retry with Exponential Backoff | **Adopted** | Consumer retries 1s → 2s → 4s → 8s (4 attempts) then DLQ (`RejectAndDontRequeueRecoverer`) |
+| Circuit Breaker | **Not implemented** — ADR-013 documented | No resilience4j dependency in any service |
+| Saga (choreographed) | Not used | No distributed transactions across services |
+| Event Sourcing | Not used | Full event history not required |
+| Repository | **Adopted** | Domain port + Spring Data JPA adapter per service |
+| Aggregate Root + State Machine | **Adopted** | `EnvironmentalAnalysis` (PENDING → RUNNING → COMPLETED | FAILED) |
+| Factory Method | **Adopted** | `EnvironmentalAnalysis.request(...)`, event statics (`EnvironmentalDataRecorded.at(...)`) |
+| Builder | **Adopted** | Lombok `@Builder` (`OutboxEvent`), Spring `QueueBuilder`/`RegisteredClient.builder()` |
+| Adapter / Mapper | **Adopted** | `EnvironmentalReadingMapper`, `AnalysisResultLoader`, `MeasurementAggregationAdapter`, `UserIdentityAdapter` |
+| Value Objects / Records | **Adopted** | `PageResult<T>`, `AnalysisPeriod.Window`, event `Payload`/`Metadata` |
+| Anti-Corruption Layer / ports | **Adopted (monitoring)** | `shared/contract/` ports (`EnvironmentLookupPort`, `ThresholdPort`, `MeasurementAggregationPort`, `UserIdentityPort`, `VariableCatalogPort`) |
+| Token deny-list / refresh rotation | **Adopted** | `RedisTokenBlacklist` (TTL = remaining token lifetime); `AuthService.refresh` rotates |
+
+---
+
+## Patterns in use in the codebase (concrete references)
+
+The catalog above is generic; this is where each pattern is actually applied today.
+
+### Decomposition & communication
+
+- **API Gateway + BFF** — `api-gateway` (`com.eduaircontrol.apigateway`):
+  - `JwtAuthenticationFilter` validates RS256 tokens against `ms-security` JWKS and forwards
+    `X-User-Id`, `X-User-Role`, `X-Institution-Id` headers.
+  - `RateLimitFilter` enforces 100 req/60s using Redis (`app.rate-limit`).
+  - `CorrelationIdFilter` propagates a correlation ID for tracing.
+  - Routes are declared by path predicate in `application.yml`; OAuth2 authorization-code
+    client + Redis session for the web BFF (ADR-017).
+
+- **Sync (REST, via gateway only)** — versioned `/api/v1/*` contracts; service-to-service
+  calls are prevented (services never call each other over HTTP).
+
+- **Async (RabbitMQ)** — producers:
+  - `ms-sensor-management` publishes `SensorInstalled` / `SensorRemoved` via a transactional
+    outbox to the topic exchange `eduaircontrol.sensor`.
+  - The legacy monolith publishes `EnvironmentalDataRecorded` (measurements) to the topic
+    exchange `eduaircontrol.environmental-data`.
+  - `ms-environment-monitoring` consumes both (`MeasurementEventListener`,
+    `SensorInstallationListener`):
+  - Topology declared from the consumer: topic exchanges `eduaircontrol.environmental-data`
+    and `eduaircontrol.sensor`, bindings `environmental.data.*` and
+    `sensor.installation.*`, durable work queues, DLX/DLQ with 7-day TTL.
+  - At-least-once delivery + idempotency: inbox claim in the same transaction plus natural
+    key `ON CONFLICT (sensor_installation_id, variable_id, measured_at) DO NOTHING`.
+  - Retries: statutory 4 attempts, exponential backoff from 1s (max 10s), then DLQ
+    (`RejectAndDontRequeueRecoverer`).
+  - `SensorInstalled` / `SensorRemoved` maintain the local `installation_projection`.
+
+### Data & consistency
+
+- **Transactional Outbox** — `OutboxWriter` appends an `outbox_event` row inside the
+  business transaction; `OutboxRelay` (`@Scheduled`, 1s) polls the pending rows and
+  `OutboxPublisher` sends each in `REQUIRES_NEW` with the `eventId` as message id.
+- **Inbox / idempotent consumer** — `InboxRepository.claim` inserts with
+  `ON CONFLICT (message_id) DO NOTHING` in the same transaction that applies the effect
+  (measurements or projections).
+- **CQRS read model** — `ms-environment-monitoring` writes atomic
+  `environment_measurement` rows and reads aggregated summary/series through the dashboard;
+  `environmental_analysis` holds completed analysis results.
+
+### Domain modeling
+
+- **Aggregate Root + state machine** — `EnvironmentalAnalysis` with factory
+  `request(...)` and guarded transitions.
+- **Domain services** — `PeriodResolver` resolves `DAY/WEEK/MONTH/YEAR` into `[start, end)`
+  windows using an injected `Clock` (pure, deterministic, testable).
+- **Value objects** — `PageResult<T>`, `AnalysisPeriod.Window`, `Severity`, composite key
+  `SensorVariableId`, event `Payload`/`Metadata` records.
+
+### Security
+
+- **OAuth2 / OIDC authorization server** — `ms-security` (`OAuth2ServerConfig`,
+  Spring Authorization Server): clients `ea-control-web` (authorization_code + PKCE),
+  `ea-control-mobile`, `ea-control-device` (client_credentials, scope `sensors.write`).
+  `OAuth2TokenCustomizer` adds `roles`, `userId`, `permissions` claims.
+- **RS256 JWT + JWKS** — `JwtService` signs with an RSA private key,
+  `JwksController` exposes `/api/v1/auth/jwks`; `kid` derived from key material.
+- **Refresh rotation + revocation** — `AuthService.refresh` rotates (revokes + issues);
+  logout blacklists the access-token `jti` in Redis with TTL = remaining lifetime.
+- **IoT API key** — monolith `DeviceApiKeyFilter` authenticates ESP32 ingest via `X-API-Key`
+  (`DeviceAuthService` resolves the device per API key).
+- **Lockout** — `login` locks the account after `lockoutMaxAttempts` (default 5) for
+  `lockoutDurationMinutes` (default 15).
+
+### Cross-cutting
+
+- **Repository pattern** — port interface + Spring Data JPA + adapter (`*RepositoryAdapter`).
+- **Global exception handler** — every service returns
+  `{ status, message }` via `@RestControllerAdvice`; 400/401/403/404/409/500 mapping.
+- **Pagination** — `page`/`limit` clamped; `PageResult<T>` keeps ports framework-free.
+- **Factory / Builder** — domain factories and Lombok builders across all services.
+
+---
+
+## When NOT to use each pattern
+
+| Pattern | Do not use it when... |
+|---------|----------------------|
+| CQRS | The read and write models are similar. It only adds complexity. |
+| Event Sourcing | You do not need complete history. It is hard to implement and maintain. |
+| Saga | The transaction fits in a single service. Use a simple ACID transaction. |
+| Circuit Breaker | The call is internal to the same service. The overhead is not worth it. |
+| BFF | Clients have similar needs. A standard API Gateway is sufficient. |
+| Outbox | You publish within the same request and can tolerate loss. Not for fire-and-forget UX. |
 
 ---
 
@@ -559,6 +662,7 @@ Kubernetes Pod:
 
 - Hexagonal Architecture → `05-architecture/hexagonal-architecture.md`
 - ADR for pattern decisions → `05-architecture/decisions/`
+- Event delivery and consistency → ADR-007 + `02-domain/domain-events.md`
 - Saga implementation → `09-microservices/services/XX/events.md`
 - Circuit Breaker runbook → `09-microservices/services/XX/runbook.md`
-- Outbox in the data model → `06-data/models.md`
+- Outbox in the data model → `06-data/normalization-assessment.md`

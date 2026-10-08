@@ -2,3 +2,6 @@
 AGENTS.md
 opencode.json
 .opencode/
+
+# Explorador de arquitectura interactivo (uso local, no se versiona)
+05-architecture/interactive-architecture.html
