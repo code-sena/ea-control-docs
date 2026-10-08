@@ -1,20 +1,20 @@
-# Hexagonal Architecture (Ports & Adapters)
+# Hexagonal Architecture (Ports & Adapters) — as implemented in EduAirControl
 
 > Hexagonal architecture, proposed by Alistair Cockburn, organizes a service so that the
 > **business domain is completely independent** of the surrounding technology.
 > The database, the web framework, the message broker — all are interchangeable details.
 > What matters is the business logic, which lives at the center.
+>
+> This document describes how the `ms-*` Spring Boot services implement the pattern.
+> For the generic concept guide, see the stack notes below.
 
-> **Stack note:** The concepts in this document are valid for any language.
-> The code examples and folder structure specific to your technology are in:
-> - Node.js + TypeScript → [`_stacks/node-typescript.md`](../_stacks/node-typescript.md)
+> **Stack note:** The generic concepts are valid for any language.
 > - Java + Spring Boot → [`_stacks/java-spring.md`](../_stacks/java-spring.md)
-> - Python + FastAPI → [`_stacks/python-fastapi.md`](../_stacks/python-fastapi.md)
-> - Go → [`_stacks/go.md`](../_stacks/go.md)
+> - Node.js + TypeScript → [`_stacks/node-typescript.md`](../_stacks/node-typescript.md)
 
 ---
 
-## The problem it solves
+## 1. The problem it solves
 
 ```
 ❌ Traditional layered architecture:
@@ -33,325 +33,237 @@ you need to simulate the database.
 ```
 
 ```
-```text
-✓ Hexagonal Architecture:
+✓ Hexagonal Architecture in EduAirControl:
 
-[REST Controller]  [MQTT/Message]  [Tests]
-        │                │             │
-        └────────────────┼─────────────┘
-                         │
-                  [Input Port]
-                         │
-                  ┌───────────────┐
-                  │    DOMAIN     │
-                  │               │
-                  │ Business      │
-                  │ Rules         │
-                  └───────────────┘
-                         │
-                  [Output Port]
-                         │
-             ┌───────────┴───────────┐
-             │                       │
-      [PostgreSQL Adapter]       [RabbitMQ Adapter]
+[REST Controller]  [@RabbitListener]  [Tests]
+        │                 │             │
+        └─────────────────┼─────────────┘
+                          │
+                  [Inbound port / use case]
+                          │
+                   ┌───────────────┐
+                   │    DOMAIN     │
+                   │  (model, VOs, │
+                   │   services)   │
+                   └───────────────┘
+                          │
+                  [Outbound port (repository interface)]
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+       [JPA Adapter]            [Messaging Adapter]
 ```
 
 ---
 
-## Folder structure
+## 2. Standard package structure (all services)
+
+All six `ms-*` services use the same base layout, with the base package
+`com.eduaircontrol.<service>` and packages `domain` / `application` / `infrastructure`:
 
 ```
-src/
-├── domain/                          # The hexagon — no frameworks, no external dependencies
-│   ├── [aggregate]/
-│   │   ├── [Aggregate].ts           # Aggregate Root with invariants
-│   │   ├── [Aggregate]Id.ts         # Value Object for the ID
-│   │   ├── events/
-│   │   │   └── [EventOccurred].ts   # Domain events
-│   │   ├── services/
-│   │   │   └── [DomainService].ts   # Logic that does not belong to any entity
-│   │   └── ports/                   # Interfaces (ports) — abstract contracts
-│   │       ├── in/
-│   │       │   └── [UseCasePort].ts # Driving port: use case contract
-│   │       └── out/
-│   │           └── [RepoPort].ts    # Driven port: repository contract
-│   └── shared/
-│       └── value-objects/           # VOs shared between aggregates
-│           ├── Email.ts
-│           └── Money.ts
-│
-├── application/                     # Use cases — orchestrate the domain
-│   └── [aggregate]/
-│       ├── [CreateXxxUseCase].ts    # Implements the driving port
-│       └── dtos/
-│           ├── [CreateXxxRequest].ts
-│           └── [CreateXxxResponse].ts
-│
+src/main/java/com/eduaircontrol/<service>/
+├── domain/                          # The hexagon — business rules
+│   ├── model/                       # Aggregate roots, entities, value objects, enums
+│   ├── port/
+│   │   ├── in/                      # Driving ports: use case contracts (monitoring)
+│   │   └── out/                     # Driven ports: repository interfaces
+│   ├── service/                     # Pure domain services (e.g. PeriodResolver)
+│   ├── event/                       # Domain events
+│   └── exception/                   # Domain exceptions (NotFoundException, Conflict…)
+├── application/                     # Use cases / application services (orchestrators)
 ├── infrastructure/                  # Everything external to the hexagon
-│   ├── adapters/
-│   │   ├── in/                      # Primary adapters — receive external calls
-│   │   │   ├── http/
-│   │   │   │   ├── [XxxController].ts
-│   │   │   │   └── [XxxRouter].ts
-│   │   │   └── messaging/
-│   │   │       └── [XxxEventConsumer].ts
-│   │   └── out/                     # Secondary adapters — call the outside
-│   │       ├── persistence/
-│   │       │   └── [XxxRepositoryImpl].ts   # Implements the driven port
-│   │       ├── messaging/
-│   │       │   └── [XxxEventPublisher].ts
-│   │       └── external/
-│   │           └── [ExternalApiAdapter].ts
-│   └── config/
-│       ├── database.ts
-│       └── container.ts             # Dependency injection (IoC)
-│
-└── main.ts                          # Bootstrap — connects adapters with ports
+│   ├── inbound/web/                 # Primary adapters: REST controllers + DTOs
+│   ├── outbound/persistence/        # Secondary adapters: JPA repos + adapters
+│   ├── messaging/                   # RabbitMQ listener/config or outbox (sensor)
+│   ├── security/                    # JWT filters, SecurityConfig
+│   └── (shared/…)                   # Cross-cutting per service
+└── <Service>Application.java        # Bootstrap
 ```
+
+> **Note on layout naming:** actual service code varies. For example,
+> `ms-environment-monitoring` models the domain inside a deeper structure
+> (`analysis/…`), and `ms-security` places repository ports under
+> `application/port/` instead of `domain/port/out/`. The `domain → application →
+> infrastructure` dependency rule is the invariant that matters.
 
 ---
 
-## The Ports
+## 3. The Ports (interfaces defined by the domain)
 
-Ports are **interfaces** (abstract contracts). The domain defines them;
-adapters implement them.
+The domain defines interfaces (ports); infrastructure provides the implementations.
 
-### Driving Port (Input Port)
+### Driven port — repository interface
 
-Defines what the domain can do — its public API from the outside's perspective.
-
-```typescript
-// src/domain/order/ports/in/CreateOrderPort.ts
-export interface CreateOrderPort {
-  execute(request: CreateOrderRequest): Promise<CreateOrderResponse>;
+```java
+// domain/port/out/ — no Spring Data in the interface
+public interface EducationalEnvironmentRepository {
+    Optional<EducationalEnvironment> findById(UUID id);
+    PageResult<EducationalEnvironment> search(...);
 }
 ```
 
-### Driven Port (Output Port)
+### Driving port — use case interface (ms-environment-monitoring)
 
-Defines what the domain needs from the outside world — without knowing how it is implemented.
-
-```typescript
-// src/domain/order/ports/out/OrderRepositoryPort.ts
-export interface OrderRepositoryPort {
-  save(order: Order): Promise<void>;
-  findById(id: OrderId): Promise<Order | null>;
-  findByCustomer(customerId: CustomerId): Promise<Order[]>;
-}
-
-// src/domain/order/ports/out/EventPublisherPort.ts
-export interface EventPublisherPort {
-  publish(event: DomainEvent): Promise<void>;
+```java
+// domain/port/in/
+public interface RequestAnalysisUseCase {
+    CommandResult execute(Command command);   // record Command { ... }
 }
 ```
 
 ---
 
-## The Adapters
+## 4. The Adapters (infrastructure implementations)
 
-### Primary Adapter — HTTP Controller
+### Primary adapter — REST controller
 
-The HTTP controller translates the HTTP request to the domain use case.
+The controller translates the HTTP request to the domain/application call and never
+contains business rules.
 
-```typescript
-// src/infrastructure/adapters/in/http/OrderController.ts
-import { CreateOrderPort } from '@domain/order/ports/in/CreateOrderPort';
-
-@Controller('/orders')
-export class OrderController {
-  constructor(
-    // Inject the port, NOT the concrete implementation
-    private readonly createOrder: CreateOrderPort,
-  ) {}
-
-  @Post('/')
-  async create(@Body() body: CreateOrderHttpRequest): Promise<void> {
-    // Translate HTTP request → domain DTO
-    const request = new CreateOrderRequest(body.customerId, body.items);
-    // Call the use case through the port
-    const response = await this.createOrder.execute(request);
-    return response;
-  }
+```java
+// infrastructure/inbound/web/
+@RestController
+@RequestMapping("/api/v1/classrooms")
+public class EducationalEnvironmentController {
+    private final EducationalEnvironmentService service;   // use case
+    // maps DTO <-> request and delegates
 }
 ```
 
-### Secondary Adapter — Repository
+### Secondary adapter — JPA repository
 
-The repository implements the driven port. The domain does not know PostgreSQL exists.
+The domain port is implemented by a JPA repository + an adapter class.
 
-```typescript
-// src/infrastructure/adapters/out/persistence/OrderRepositoryImpl.ts
-import { OrderRepositoryPort } from '@domain/order/ports/out/OrderRepositoryPort';
-
-export class OrderRepositoryImpl implements OrderRepositoryPort {
-  constructor(private readonly db: DatabaseConnection) {}
-
-  async save(order: Order): Promise<void> {
-    // Translate Aggregate → database row
-    await this.db.query(
-      'INSERT INTO orders (id, customer_id, status, total) VALUES ($1, $2, $3, $4)',
-      [order.id.value, order.customerId.value, order.status, order.total.amount],
-    );
-  }
-
-  async findById(id: OrderId): Promise<Order | null> {
-    const row = await this.db.queryOne('SELECT * FROM orders WHERE id = $1', [id.value]);
-    if (!row) return null;
-    // Translate database row → Aggregate
-    return OrderMapper.toDomain(row);
-  }
+```java
+// infrastructure/outbound/persistence/
+@Repository
+public class EducationalEnvironmentRepositoryAdapter
+        implements EducationalEnvironmentRepository {   // the domain contract
+    private final EducationalEnvironmentJpaRepository jpa;   // Spring Data
+    // translates entity <-> domain and enforces pagination bounds
 }
 ```
 
 ---
 
-## The Use Case (Application Service)
+## 5. The Use Case (application layer)
 
-The use case orchestrates the domain. It uses driving and driven ports. It contains no business logic — that lives in the Aggregate.
+The application service orchestrates the domain through ports and contains no framework
+logic.
 
-```typescript
-// src/application/order/CreateOrderUseCase.ts
-import { CreateOrderPort } from '@domain/order/ports/in/CreateOrderPort';
-import { OrderRepositoryPort } from '@domain/order/ports/out/OrderRepositoryPort';
-import { EventPublisherPort } from '@domain/order/ports/out/EventPublisherPort';
-
-export class CreateOrderUseCase implements CreateOrderPort {
-  constructor(
-    private readonly orderRepo: OrderRepositoryPort,
-    private readonly eventPublisher: EventPublisherPort,
-  ) {}
-
-  async execute(request: CreateOrderRequest): Promise<CreateOrderResponse> {
-    // 1. Create the aggregate (business logic lives HERE, in the domain)
-    const order = Order.create(request.customerId, request.items);
-
-    // 2. Persist (through the port — the use case does not know which DB is used)
-    await this.orderRepo.save(order);
-
-    // 3. Publish domain events (through the port)
-    for (const event of order.domainEvents) {
-      await this.eventPublisher.publish(event);
-    }
-
-    return new CreateOrderResponse(order.id.value);
-  }
+```java
+// application/
+@RequiredArgsConstructor
+@Service
+public class EducationalEnvironmentService {
+    private final EducationalEnvironmentRepository repo;
+    // business flow: validate -> mutate domain -> persist through the port
 }
 ```
 
 ---
 
-## The Dependency Rule
+## 6. The Dependency Rule
 
-> **Dependencies always point inward.**
-> The domain does not import anything from application or infrastructure.
-> Infrastructure imports from the domain (but never the other way around).
+> Dependencies always point inward.
+> `domain/` imports nothing from `application/` or `infrastructure/`.
+> `infrastructure/` imports from `domain/`.
 
 ```
 infrastructure/ → application/ → domain/
                                     ↑
-                         CANNOT import anything from application/ or infrastructure/
-```
-
-### Dependency inversion (DI) in practice
-
-```typescript
-// ✓ Correct — domain defines the interface, infrastructure implements it
-// In domain/:
-export interface OrderRepositoryPort { ... }
-
-// In infrastructure/:
-export class OrderRepositoryImpl implements OrderRepositoryPort { ... }
-
-// In the bootstrap (main.ts), the concrete implementation is injected:
-const orderRepo = new OrderRepositoryImpl(dbConnection);
-const createOrderUseCase = new CreateOrderUseCase(orderRepo, eventPublisher);
-const orderController = new OrderController(createOrderUseCase);
+                         CANNOT import from application/ or infrastructure/
 ```
 
 ---
 
-## Advantages for TDD
+## 7. How each service adheres (consistency matrix)
 
-Hexagonal architecture is ideal for TDD because:
+| Concern | ms-security | ms-classroom | ms-sensor | ms-env-monitoring | ms-user-mgmt | ms-user-exp |
+|---------|-------------|--------------|-----------|-------------------|--------------|-------------|
+| `domain` / `application` / `infrastructure` split | Yes | Yes | Yes | Yes | Yes | Partial |
+| Repository port in `domain/port/out/` | No (in `application/port/`) | Yes | Yes | Yes | Yes | No |
+| Use-case ports (`domain/port/in/`) | No | No | No | Yes | No | No |
+| JPA adapter implements domain port | Yes | Yes | Yes | Yes | Yes | No |
+| Domain events | No | No | Outbox events | Yes (`EnvironmentalDataAnalyzed`) | No | No |
+| CQRS read model | No | No | No | Yes | No | No |
+| RabbitMQ (pub/sub) | No (Redis only) | No | Producer (outbox) | Consumer (inbox) | No | No |
+| Global exception handler | Yes | Yes | Yes | Yes | Yes | Yes |
+| JWT auth filter | Yes (RS256) | Yes (HS256/headers) | Yes | Yes | Yes | Yes |
+| Tenant isolation | Yes | Yes | Yes | Yes | Yes | No |
 
-1. **The domain is testable without framework mocks.** You do not need to start a server
-   or a database to test business logic.
-
-2. **Driven ports can be faked easily.** In tests, you use an
-   in-memory repository (Fake) instead of the real one.
-
-3. **Invariants are explicit** and tested in isolation.
-
-```typescript
-// Domain unit test — zero external dependencies
-describe('Order', () => {
-  it('cannot be created without items', () => {
-    expect(() => Order.create(customerId, [])).toThrow('INV-001');
-  });
-
-  it('on confirm changes status to CONFIRMED', () => {
-    const order = Order.create(customerId, [validItem]);
-    order.confirm();
-    expect(order.status).toBe(OrderStatus.CONFIRMED);
-  });
-
-  it('on confirm emits OrderConfirmed event', () => {
-    const order = Order.create(customerId, [validItem]);
-    order.confirm();
-    expect(order.domainEvents).toContainEqual(expect.any(OrderConfirmedEvent));
-  });
-});
-
-// Use case test with FAKE repository (not a real DB mock)
-describe('CreateOrderUseCase', () => {
-  it('saves the order and publishes the event', async () => {
-    const fakeOrderRepo = new InMemoryOrderRepository();
-    const fakeEventPublisher = new InMemoryEventPublisher();
-    const useCase = new CreateOrderUseCase(fakeOrderRepo, fakeEventPublisher);
-
-    await useCase.execute(new CreateOrderRequest(customerId, [validItem]));
-
-    expect(fakeOrderRepo.orders).toHaveLength(1);
-    expect(fakeEventPublisher.events).toContainEqual(expect.any(OrderCreated));
-  });
-});
-```
-
-> See full TDD guide in `11-quality/tdd-guide.md`
+Summary:
+- **`ms-environment-monitoring`** is the most mature: full ports & adapters, explicit
+  inbound use-case ports, CQRS read models, domain events, idempotent messaging.
+- **`ms-security`** relocates repository ports under `application/port/` and adds
+  OAuth2/Redis outbound adapters.
+- **`ms-user-experience`** only partially follows the layout (simple entities used directly
+  by application services), while still providing controllers and global exceptions.
+- All services keep Service/Repository layers and unified error handling; none leak
+  framework types into the domain contracts through pagination (`PageResult<T>`).
 
 ---
 
-## Hexagonal Architecture Checklist
+## 8. Concrete examples per service
 
-When reviewing a PR or new service, verify:
+| Service | Domain aggregates | Ports (out) | Adapters |
+|---------|-------------------|-------------|----------|
+| ms-security | `User`, `Institution`, `Role`, `RefreshToken` | `UserRepository`, `RoleRepository`, `InstitutionRepository`, `RefreshTokenRepository`, `PasswordResetTokenRepository` | JPA adapters, `RedisTokenBlacklist`, `DeviceProvisioner` |
+| ms-classroom-management | `EducationalEnvironment`, `Campus`, `EnvironmentType` | `EducationalEnvironmentRepository`, `CampusRepository`, `EnvironmentTypeRepository` | `*JpaRepository` + `*RepositoryAdapter` |
+| ms-sensor-management | `Sensor`, `SensorInstallation`, `SensorVariable`, `Device`, `Variable` | `SensorRepository`, `SensorInstallationRepository`, `SensorVariableRepository`, `DeviceRepository`, `VariableRepository` | JPA adapters + outbox (`OutboxWriter`, `OutboxRelay`, `OutboxPublisher`) |
+| ms-environment-monitoring | `EnvironmentalAnalysis` (state machine), `AnalysisResult`, `EnvironmentAlert` | `AnalysisRepository`, `AnalysisStatusRepository`, `MeasurementRepository`, `AlertRepository` (+ `MeasurementAggregationPort`, `ThresholdPort`, `EnvironmentLookupPort`, `UserIdentityPort`) | JPA adapters, `AnalysisResultLoader`, `MeasurementAggregationDao` (JdbcTemplate), RabbitMQ listeners |
+| ms-user-management | `UserProfile` | `UserProfileRepository` | JPA adapter |
+| ms-user-experience | `Favorite`, `UserPreference`, `ClassroomRating`, `Search`, `NotificationState` | — | Controllers + services (partial) |
+
+---
+
+## 9. Advantages for TDD (how the codebase uses them)
+
+1. **Domain is testable without framework mocks.** `PeriodResolver` (monitoring) is pure
+   logic with an injected `Clock`.
+2. **Driven ports can be faked.** Services are tested with fake/in-memory repositories or
+   H2 and Testcontainers.
+3. **Invariants are explicit.** `EnvironmentalAnalysis` guards state transitions
+   (`PENDING → RUNNING → COMPLETED | FAILED`) with `requireStatus(...)`.
+
+> See full TDD guide in `11-quality/tdd-guide.md` and the test strategy in
+> `11-quality/testing-strategy.md`.
+
+---
+
+## 10. Hexagonal Architecture checklist
+
+When reviewing a PR or a new service, verify:
 
 - [ ] `domain/` has no imports from `infrastructure/` or `application/`
-- [ ] `domain/` has no imports from frameworks (Express, NestJS, TypeORM, etc.)
-- [ ] Every repository interface lives in `domain/ports/out/`
-- [ ] Every use case interface lives in `domain/ports/in/`
+- [ ] `domain/` has no imports from Spring/Jakarta frameworks
+- [ ] Every repository interface lives in `domain/port/out/` (or `application/port/` in ms-security)
+- [ ] Every use case interface lives in `domain/port/in/`
 - [ ] Mappers (`toDomain` / `toPersistence`) live in `infrastructure/`, not in `domain/`
-- [ ] HTTP API DTOs live in `infrastructure/adapters/in/http/`, not in `domain/`
+- [ ] HTTP API DTOs live in `infrastructure/inbound/web/`, not in `domain/`
 - [ ] There is a unit test for each Aggregate invariant
 
 ---
 
-## Common mistakes (anti-patterns)
+## 11. Common mistakes (anti-patterns)
 
 | Anti-pattern | Why it is bad | Solution |
 |-------------|--------------|---------|
-| `import { Repository } from 'typeorm'` in the domain | Couples the domain to TypeORM | Define your own port interface |
-| Business logic in the Controller | If you change the endpoint, you change the business | Move to the Aggregate |
-| Repository returning DTOs instead of Aggregates | The domain cannot validate invariants | Use Mapper to reconstruct the Aggregate |
-| Use case with 15 dependencies | It probably does too much | Split into smaller use cases |
-| `any` in port interfaces | You lose the typed contract | Always use explicit typing |
+| `import javax.persistence.*` in the domain | Couples the domain to JPA | Define your own port interface |
+| Business logic in the Controller | If you change the endpoint, you change the business | Move to the service/aggregate |
+| Repository returning DTOs instead of domain objects | The domain cannot validate invariants | Use a mapper to reconstruct the aggregate |
+| Use case with many dependencies | It probably does too much | Split into smaller use cases |
+| Leaking Spring Data types (Page/Pageable) into ports | Couples the contract to the framework | Use `PageResult<T>` |
 
 ---
 
 ## References and correlations
 
+- Generic concept (any language) → `_stacks/*` guides
 - Bounded Contexts → `02-domain/domain-map.md`
 - Entities and invariants → `02-domain/entities-and-rules.md`
 - Domain events → `02-domain/domain-events.md`
 - Complementary patterns (CQRS, Event Sourcing, Saga) → `05-architecture/pattern-guide.md`
 - TDD applied to hexagonal architecture → `11-quality/tdd-guide.md`
-- Service template with hexagonal structure → `09-microservices/_template/service/`
+- Service template → `09-microservices/_template/service/`

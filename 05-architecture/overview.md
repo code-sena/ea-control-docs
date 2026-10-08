@@ -1,50 +1,57 @@
 # System Architecture Overview
 
-> **What to fill in here:** The architectural view is the technical snapshot of the system.
-> It includes the C4 system and container diagram, service list, and architectural principles.
-> This document is created after the main ADRs and guides the implementation.
+> The architectural view is the technical snapshot of the system as it is implemented today:
+> the C4 system and container diagram, service catalog, architectural principles, adopted
+> patterns and cross-cutting concerns. Where the code and an ADR disagree, this document
+> describes what the code does and notes the drift.
 
 ---
 
 ## 1. Adopted architectural style
 
-**Style:** Microservices + API Gateway + Event-Driven Communication
+**Style:** Microservices + API Gateway + Event-Driven Communication (RabbitMQ)
 
-**Justification:** EduAirControl adopts a **microservices architecture** because the system is divided into independent business domains such as user and access management, educational classrooms, environmental sensors, and environmental monitoring and analysis.
+EduAirControl is a **strangler-fig** migration: a legacy monolith (`EduAirControl/`) is being
+extracted into independent microservices, one per bounded context. Each microservice has a
+clearly defined responsibility and business boundary while keeping controlled communication
+between services.
 
-The architecture allows each microservice to have a clearly defined responsibility and business boundary while maintaining controlled communication between services.
+Main characteristics of the architecture as implemented:
 
-The main characteristics of the adopted architecture are:
-
-- **Frontend React** as the web client.
-- **Spring Cloud Gateway** as the API Gateway and single entry point for backend requests.
-- **Spring Security + JWT** for authentication and authorization.
+- **Frontend**: React web application + React Native mobile app (`ea-control-frontend/`).
+- **Spring Cloud Gateway** as the API Gateway and single entry point for backend requests,
+  with JWT validation, Redis rate limiting and correlation IDs.
+- **Spring Security + JWT** for authentication and authorization:
+  - `ms-security` issues **RS256** JWTs and acts as an **OAuth2 / OIDC authorization server**.
+  - Business services validate **HS256** JWTs (`jwt.secret`) or trust gateway headers
+    (`X-User-Id`, `X-User-Role`, `X-Institution-Id`) — interim scheme, see ADR-006.
 - Independent microservices for the main business domains:
   - `ms-security`
   - `ms-user-management`
   - `ms-classroom-management`
   - `ms-sensor-management`
-  - `ms-environment-monitoring`
-  - `ms-alert` (⏸ deprecated — folded into `ms-environment-monitoring`, ADR-015)
+  - `ms-environment-monitoring` (absorbs the deprecated `ms-alert`, ADR-015)
   - `ms-user-experience`
-- **PostgreSQL 15** as the persistence technology.
--The MVP uses one PostgreSQL instance with **logical ownership boundaries per service.** Services do not access another service's tables directly. 
+- **PostgreSQL** as the persistence technology. The `infra/` stack runs **one PostgreSQL
+  instance per service** (6 instances); two services (`ms-environment-monitoring`,
+  `ms-user-experience`) still point to a shared DB `eduaircontrol` with their own schema
+  (ADR-003). No service reads another service's tables.
 - **REST/HTTP** for synchronous communication between the frontend, API Gateway and services.
-- **MQTT/HTTP** for receiving environmental information from sensors.
-- **RabbitMQ** can be used for asynchronous communication and events where decoupling is beneficial.
-- **Docker** is used to standardize the execution environment of the project.
+- **RabbitMQ** for asynchronous event communication (transactional outbox → topic exchange →
+  idempotent consumers). See `02-domain/domain-events.md` and ADR-007.
+- **Redis** for the gateway rate limiter, session storage, token revocation deny-list and
+  lockout counters.
+- **Docker** standardizes the execution environment (`infra/docker-compose.yml`).
+- Sensor / IoT ingest is **HTTP with `X-API-Key`** (ESP32 devices authenticate per device),
+  not MQTT.
 
-This architecture was selected because EduAirControl needs to receive environmental information, store it, expose it through APIs and perform historical analysis over daily, weekly, monthly and yearly periods.
-
-The architecture also facilitates the independent evolution of each domain without requiring the entire system to be implemented as a single application.
-
-**Reference ADR:** [`ADR-002, ADR-003, ADR-004, ADR-005, ADR-006, ADR-007`]
+**Reference ADRs:** ADR-002, ADR-003, ADR-004, ADR-005, ADR-006, ADR-007, ADR-016, ADR-017.
 
 ---
 
 ## 2. C4 Diagram — System Level (Context)
 
-> Shows how the system fits in the world. External actors and external systems.
+Shows how the system fits in the world: external actors and systems.
 
 ```
                          ┌──────────────────────────┐
@@ -60,210 +67,192 @@ The architecture also facilitates the independent evolution of each domain witho
 │                              EDUAIRCONTROL                                  │
 │                                                                            │
 │   ┌────────────────────────────────────────────────────────────────────┐   │
-│   │                         WEB APPLICATION                             │   │
-│   │                              React                                 │   │
+│   │                         WEB + MOBILE CLIENTS                        │   │
+│   │                      React (web) / React Native                     │   │
 │   └───────────────────────────────┬────────────────────────────────────┘   │
 │                                   │ HTTPS / REST                           │
 │                                   ▼                                        │
 │   ┌────────────────────────────────────────────────────────────────────┐   │
 │   │                         API GATEWAY                                 │   │
 │   │                     Spring Cloud Gateway                            │   │
-│   └──────────────┬───────────────┬───────────────┬─────────────────────┘   │
-│                  │               │               │                         │
-│                  ▼               ▼               ▼                         │
-│          ┌────────────┐  ┌────────────┐  ┌──────────────┐                 │
-│          │ Security   │  │   Users    │  │ Classrooms   │                 │
-│          │  Service   │  │  Service   │  │   Service    │                 │
-│          └──────┬─────┘  └──────┬─────┘  └──────┬───────┘                 │
-│                 │                │               │                         │
-│                 └────────────────┼───────────────┘                         │
-│                                  │                                         │
-│                                  ▼                                         │
-│                         ┌────────────────┐                                 │
-│                         │   SENSORES     │                                 │
-│                         │    SERVICE     │                                 │
-│                         └───────┬────────┘                                 │
-│                                 │                                          │
-│                                 ▼                                          │
-│                         ┌────────────────┐                                 │
-│                         │   MONITOREO    │                                 │
-│                         │    SERVICE     │                                 │
-│                         └───────┬────────┘                                 │
-│                                 │                                          │
-│                                 ▼                                          │
-│                         ┌────────────────┐                                 │
-│                         │ PostgreSQL 15 │                                 │
-│                         │  Domain-based  │                                 │
-│                         └────────────────┘                                 │
-│                                                                            │
+│   │        JWT verify (JWKS) · rate limit (Redis) · correlation ID      │   │
+│   └──────────┬──────────────┬──────────────┬──────────────┬─────────────┘   │
+│              │              │              │              │                 │
+│              ▼              ▼              ▼              ▼                 │
+│        ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐            │
+│        │ ms-      │   │ ms-user- │   │ ms-      │   │ ms-      │            │
+│        │ security │   │ mgmt +   │   │ classroom│   │ sensor   │            │
+│        │ :8081    │   │ ux :3007 │   │ :3002    │   │ :3004    │            │
+│        └────┬─────┘   │ :3006    │   └─────┬────┘   └────┬─────┘            │
+│             │         └────┬─────┘        │             │                  │
+│             │              │              │             │  events (outbox)│
+│             │              │              │             ▼                  │
+│             │              │              │     ┌──────────────┐           │
+│             │              │              │     │  RabbitMQ    │           │
+│             │              │              │     └──────┬───────┘           │
+│             │              │              │            │ consume          │
+│             │              │              │            ▼                  │
+│             │              │              │     ┌──────────────────┐       │
+│             │              │              │     │ ms-environment-  │       │
+│             │              │              │     │ monitoring :3003 │       │
+│             │              │              │     └────────┬─────────┘       │
+│             │              │              │              │                 │
+│             └──────────────┼──────────────┼──────────────┼────────────────┘
+│                            │              │              │
+│                            └───────┬──────┘              │
+│                                   ▼                       │
+│                    6 × PostgreSQL  (one per service)      │
+│                                     Redis  ·  RabbitMQ    │
 └────────────────────────────────────────────────────────────────────────────┘
-             ▲                                      ▲
-             │                                      │
-        HTTPS / REST                           MQTT / HTTP
-             │                                      │
-             │                                      │
-     ┌───────┴────────┐                    ┌────────┴─────────┐
-     │ Web Browser    │                    │ Environmental    │
-     │                │                    │ Sensors / IoT    │
-     └────────────────┘                    └──────────────────┘
+             ▲                                        ▲
+             │                                        │
+        HTTPS / REST                            HTTP + X-API-Key
+             │                                        │
+             │                                        │
+     ┌───────┴────────┐                       ┌───────┴────────┐
+     │ Web / Mobile   │                       │ ESP32 sensors /│
+     │ users          │                       │ IoT devices    │
+     └────────────────┘                       └────────────────┘
 ```
 
 ### External actors and systems
 
 | Actor/System | Interaction with EduAirControl |
 |---|---|
-| Registered user | Logs in and consults environmental information |
+| Registered user | Logs in (OAuth2 authorization code flow) and consults environmental information |
 | Administrator | Manages users, classrooms and sensors |
-| Environmental sensors | Send temperature, humidity, CO₂ and noise measurements |
-| Web browser | Accesses the React frontend |
-| MQTT/HTTP communication | Transports environmental measurements from sensors to the platform |
-
----
+| ESP32 / IoT devices | Send temperature, humidity, CO₂ and noise measurements via HTTP with `X-API-Key` |
+| Web browser / mobile app | Access the React / React Native frontend |
+| RabbitMQ / Redis / PostgreSQL | Infrastructure droplets: async events, rate-limit/revocation, persistence |
 
 ---
 
 ## 3. C4 Diagram — Container Level
 
-> Shows the processes, databases, and main communication channels.
-
-```
-Replace this block with the project-specific diagram.
-
-Recommended tools:
-- PlantUML (see 08-uml/diagrams/source/)
-- Mermaid (natively supported on GitHub)
-- draw.io / Lucidchart
-```
-
-**Mermaid example:**
+Shows the processes, databases, and main communication channels as deployed by
+`infra/docker-compose.yml`.
 
 ```mermaid
 graph TB
-
     USER[Registered User]
     ADMIN[Administrator]
-    SENSOR[Environmental Sensors]
+    DEVICE[ESP32 IoT device]
 
-    subgraph EDU["EduAirControl"]
+    subgraph EDU["EduAirControl (docker compose: project eduaircontrol)"]
 
-        WEB["Frontend<br/>React<br/>Port 80"]
+        WEB["Frontend<br/>React (web) · React Native (mobile)"]
 
-        GW["API Gateway<br/>Spring Cloud Gateway<br/>Port 8080"]
+        GW["api-gateway<br/>Spring Cloud Gateway (WebFlux)<br/>:8080 · JWKS verify · rate limit · X-User-Id/X-User-Role headers"]
 
-        SEC["ms-security<br/>Spring Boot<br/>Authentication + JWT"]
+        SEC["ms-security<br/>:8081 · OAuth2 auth server + RS256 JWT<br/>schema: seguridad"]
+        CLS["ms-classroom-management<br/>:3002 · schema: classrooms"]
+        SEN["ms-sensor-management<br/>:3004 · schema: sensors<br/>OUTBOX publisher (installations)"]
+        MON["ms-environment-monitoring<br/>:3003 · schema: environment_monitoring<br/>RabbitMQ consumer · CQRS read model"]
+        UM["ms-user-management<br/>:3007 · schema: user_management"]
+        UX["ms-user-experience<br/>:3006 · schema: user_experience"]
+        LEGACY["EduAirControl (legacy monolith)<br/>ESP32 ingest · measurement events"]
 
-        USR["ms-user-management<br/>Spring Boot<br/>User Management"]
-
-        AUL["ms-classroom-management<br/>Spring Boot<br/>Classroom Management"]
-
-        SEN["ms-sensor-management<br/>Spring Boot<br/>Sensor Management"]
-
-        MON["ms-environment-monitoring<br/>Spring Boot<br/>Monitoring + Analysis + Alerts"]
-
-        UX["ms-user-experience<br/>Spring Boot<br/>User Preferences + Favorites"]
-
-        MQ["RabbitMQ<br/>Asynchronous Events"]
-
-        DB[("PostgreSQL 15<br/>Logical ownership per service")]
+        MQ["RabbitMQ<br/>topic exchange + work queue + DLQ"]
+        REDIS["Redis<br/>rate limit · session · token deny-list"]
+        PG("PostgreSQL 15<br/>6 instances, one per service")
 
     end
 
     USER -->|HTTPS| WEB
     ADMIN -->|HTTPS| WEB
 
-    WEB -->|REST / HTTPS| GW
+    WEB -->|OAuth2 code flow / REST| GW
+    DEVICE -->|HTTP + X-API-Key| LEGACY
 
-    GW -->|REST| SEC
-    GW -->|REST| USR
-    GW -->|REST| AUL
-    GW -->|REST| SEN
-    GW -->|REST| MON
-    GW -->|REST| UX
+    GW -->|/api/v1/auth/** · institutions/** · admin/**| SEC
+    GW -->|classrooms · campuses · environments| CLS
+    GW -->|sensors · variables · installations| SEN
+    GW -->|environmental-data · dashboard · alerts| MON
+    GW -->|users · user-profiles| UM
+    GW -->|preferences · favorites · ratings| UX
 
-    SEC -->|Authentication / JWT| GW
+    SEC -->|publishes RS256 JWKS| GW
+    GW -->|rate limit + session| REDIS
+    SEC -->|token revoke / lockout| REDIS
 
-    SENSOR -->|MQTT / HTTP| SEN
+    LEGACY -->|outbox → eduaircontrol.environmental-data| MQ
+    SEN -->|outbox → eduaircontrol.sensor| MQ
+    MQ -->|environmental.data.* · sensor.installation.*| MON
 
-    SEN -->|Environmental data| MON
-
-    SEN -->|Events when required| MQ
-    MQ -->|Asynchronous messages| MON
-
-    MON -->|EnvironmentalDataAnalyzed| UX
-
-    SEC -->|Persistence| DB
-    USR -->|Persistence| DB
-    AUL -->|Persistence| DB
-    SEN -->|Persistence| DB
-    MON -->|Persistence| DB
-    UX -->|Persistence| DB
-
-    MON -->|Historical analysis| DB
+    SEC -.->|persistence| PG
+    CLS -.->|persistence| PG
+    SEN -.->|persistence| PG
+    MON -.->|persistence| PG
+    UM -.->|persistence| PG
+    UX -.->|persistence| PG
 ```
 
 ### Container responsibilities
 
 | Container | Responsibility |
 |---|---|
-| React Frontend | Provides the web interface for authentication, management, monitoring and environmental analysis |
-| API Gateway | Central entry point, routing and access control for backend services |
-| `ms-security` | User registration, authentication, password management and JWT generation/validation |
-| `ms-user-management` | Management and consultation of registered users |
-| `ms-classroom-management` | Management of educational classrooms/environments |
-| `ms-sensor-management` | Registration, configuration and management of environmental sensors |
-| `ms-environment-monitoring` | Reception, storage, consultation and analysis of environmental measurements, plus generation and management of environmental threshold alerts |
-| `ms-alert` | ⏸ Deprecated — folded into `ms-environment-monitoring` (ADR-015) |
+| React / React Native frontends | Provide the web and mobile interfaces for authentication, management, monitoring and environmental analysis |
+| `api-gateway` | Central entry point: path-based routing, JWT validation against ms-security's JWKS, Redis rate limiting, correlation IDs, gateway forwarding of identity headers |
+| `ms-security` | Registration, authentication, password management, OAuth2/OIDC authorization server, RS256 JWT issuing, refresh-token rotation, token revocation (Redis), tenants (institutions), SUPER_ADMIN bootstrap seed |
+| `ms-user-management` | Management and consultation of user profile data |
+| `ms-classroom-management` | Management of educational classrooms/campuses/environment types |
+| `ms-sensor-management` | Registration, configuration and management of environmental sensors; publishes `SensorInstalled`/`SensorRemoved` events through a transactional outbox (measurement events are produced by the legacy monolith) |
+| `ms-environment-monitoring` | Reception, storage, consultation and analysis of environmental measurements, dashboard read models, and threshold alerts; consumes RabbitMQ events idempotently; maintains a local projection of installations |
 | `ms-user-experience` | User preferences, favorites, ratings and search experience features |
-| RabbitMQ | Optional asynchronous communication between services when events need to be decoupled |
-| PostgreSQL 15 | Persistent storage organized logically according to project domains |
+| RabbitMQ | Asynchronous, at-least-once event communication between services: topic exchanges `eduaircontrol.environmental-data` (measurements, produced by the monolith) and `eduaircontrol.sensor` (installations, produced by ms-sensor-management), durable work queue and DLQ on the consumer side |
+| Redis | Gateway rate limiting, session storage, token revocation deny-list, lockout counters |
+| PostgreSQL | Persistent storage; one instance per service in the `infra` stack |
 
 ### Environmental data flow
 
 ```text
-Environmental Sensor
+ESP32 IoT device (X-API-Key)
         │
-        │ MQTT / HTTP
+        │ HTTP ingest → legacy monolith outbox (eduaircontrol.environmental-data)
+        │ ms-sensor-management outbox (eduaircontrol.sensor → installations)
         ▼
-   ms-sensor-management
-        │
-        │ Environmental measurement
+ RabbitMQ topic exchanges
+        │ bindings: environmental.data.*  /  sensor.installation.*
         ▼
-   ms-environment-monitoring
+ ms-environment-monitoring
+   MeasurementEventListener · SensorInstallationListener
         │
-        ├──────────────► PostgreSQL 15
-        │
+        │ inbox claim (idempotency, ON CONFLICT DO NOTHING)
         ▼
-Historical Environmental Data
+ projection → environment_measurement / installation_projection (ON CONFLICT natural key)
         │
+        ├─ threshold evaluation ──► alerts (raiseIfAbsent)
         ▼
-Daily / Weekly / Monthly / Yearly Analysis
-        │
-        ▼
-     API Gateway
+ Dashboard read model (summary / series)
         │
         ▼
-    React Frontend
-        │
-        ▼
-      User
+ API Gateway ──► React Frontend ──► User
 ```
 
 ---
 
 ## 4. Service catalog
 
-| # | Service | Responsibility | Port | DB | Communication type |
-|---|---------|---------------|------|-----|-------------------|
-| 1 | `api-gateway` | Central entry point, routing and request control | 8080 | No direct DB | HTTP/REST Proxy |
-| 2 | `ms-security` | Registration, authentication, JWT and access control | 8081 | PostgreSQL - Security ownership boundary | REST |
-| 3 | `ms-user-management` | User management and user information | 3007 | PostgreSQL - Users ownership boundary | REST |
-| 4 | `ms-classroom-management` | Educational classroom/environment management | 3002 | PostgreSQL - Classrooms ownership boundary | REST |
-| 5 | `ms-sensor-management` | Environmental sensor registration and communication | 3004 | PostgreSQL - Sensors ownership boundary | REST + MQTT/HTTP |
-| 6 | `ms-environment-monitoring` | Environmental data reception, storage, monitoring, analysis and alerting | 3003 | PostgreSQL - Monitoring ownership boundary | REST + MQTT/Events |
-| 7 | `ms-alert` ⏸ | Deprecated — folded into `ms-environment-monitoring` (ADR-015) | — (was 3005) | — | — |
-| 8 | `ms-user-experience` | User preferences, favorites, ratings and search | 3006 | PostgreSQL - UX ownership boundary | REST |
-| 9 | `RabbitMQ` | Asynchronous messaging between services when required | 5672 | No | AMQP |
-| 10 | `Frontend React` | User interface and visualization of environmental information | 80 | No | HTTP/HTTPS |
+| # | Service | Responsibility | Port | DB | Communication |
+|---|---------|---------------|------|-----|----------------|
+| 1 | `api-gateway` | Central entry point, routing, JWT verify, rate limit | 8080 | Redis (rate/session) | HTTP proxy |
+| 2 | `ms-security` | Registration, authentication, OAuth2, JWT (RS256), tenants | 8081 | PostgreSQL `seguridad` | REST |
+| 3 | `ms-user-management` | User profile management | 3007 | PostgreSQL `user_management` | REST |
+| 4 | `ms-classroom-management` | Classroom / campus / environment type management | 3002 | PostgreSQL `classrooms` | REST |
+| 5 | `ms-sensor-management` | Sensor / variable / installation management | 3004 | PostgreSQL `sensors` | REST + RabbitMQ (outbox publish) |
+| 6 | `ms-environment-monitoring` | Measurement reception, dashboard, analysis, alerts | 3003 | PostgreSQL `environment_monitoring` | REST + RabbitMQ (consume) |
+| 7 | `ms-user-experience` | Preferences, favorites, ratings, searches | 3006 | PostgreSQL `user_experience` | REST |
+| 8 | PostgreSQL | One instance per service (see note below) | 5433–5439 | — | JDBC |
+| 9 | RabbitMQ | Asynchronous messaging (topic exchange + DLQ) | 5672 / 15672 | — | AMQP |
+| 10 | Redis | Rate limit, sessions, token revocation | 6379 | — | RESP |
+
+> **Database note:** ADR-003 describes a shared PostgreSQL instance with one schema per
+> service. The `infra/docker-compose.yml` stack currently runs **six separate PostgreSQL 15
+> containers** (`postgres-security` :5437, `postgres-classroom` :5433, `postgres-sensor`
+> :5434, `postgres-monitoring` :5435, `postgres-user-management` :5438,
+> `postgres-user-experience` :5439). `ms-environment-monitoring` and `ms-user-experience`
+> still configure the shared `eduaircontrol` DB in their own properties. This is a documented
+> drift between ADR-003 and the current deployment.
 
 > Full detail per service in `09-microservices/service-catalog.md`
 
@@ -271,202 +260,172 @@ Daily / Weekly / Monthly / Yearly Analysis
 
 ## 5. Architectural principles
 
-These principles guide the project's technical decisions. Before making an important decision,
-verify it is consistent with these principles.
+These principles guide the project's technical decisions.
 
 ### P1: API-First
 
 Design the API contract (OpenAPI) before implementing the service.
 
-Contracts are the source of truth for consumers and allow the frontend and backend teams to work with a common definition of requests, responses, errors and resources.
+Contracts are the source of truth for consumers and allow the frontend and backend teams to
+work with a common definition of requests, responses, errors and resources.
 
-API contracts are maintained under:
-
-`07-api/contracts/openapi/`
+API contracts are maintained under `07-api/contracts/openapi/`.
 
 ---
 
 ### P2: Domain-Oriented Data Separation
 
-EduAirControl uses a PostgreSQL 15 instance organized by service ownership boundaries during the MVP.
+Each microservice owns the data corresponding to its business responsibility and must not
+directly manipulate another domain's tables.
 
-Each microservice owns the data corresponding to its business responsibility and must not directly manipulate another domain's tables.
 Communication between domains must occur through APIs or asynchronous events when applicable.
 
-This principle was selected instead of requiring a separate physical database per service because the current project scope requires logical domain separation while keeping MVP operations manageable. Physical separation remains a future option
+The `infra` stack provisions one physical PostgreSQL instance per service, while two services
+still point to the shared `eduaircontrol` database with their own schema (ADR-003). In all
+cases ownership is logical and services do not read each other's tables.
 
 ---
 
 ### P3: Fail Fast, Recover Gracefully
 
-Requests must be validated as early as possible.
+Requests are validated as early as possible:
 
-The system should:
+- Required fields are validated at the API boundary (Bean Validation + domain validation).
+- Invalid authentication credentials are rejected immediately.
+- Environmental measurements are validated before persistence.
+- Errors are returned in a unified `{ status, message }` shape by a global exception handler
+  in each service.
+- Transient failures on the consumer side self-heal via retries (1s → 2s → 4s → 8s); failed
+  events go to a dead-letter queue instead of being lost.
 
-- Validate required fields at the API boundary.
-- Reject invalid authentication credentials immediately.
-- Validate environmental measurements before persistence.
-- Return standardized error responses.
-- Prevent invalid data from propagating between services.
-- Use timeout and resilience mechanisms for inter-service communication when they are implemented.
-
-Circuit Breaker is considered a resilience mechanism for services with critical dependencies, but it is not considered fully implemented until validated in the project.
+Circuit breaker middleware (ADR-013) is **documented but not yet implemented** in the codebase.
 
 ---
 
 ### P4: Observability by Design
 
-The system should provide enough information to identify failures and understand the behavior of the services.
+As implemented today:
 
-The architecture considers:
+- Health checks (`/health`, public) on every service.
+- Correlation IDs propagated by the gateway (`CorrelationIdFilter`).
+- Structured application logs (SLF4J).
 
-- Structured application logs.
-- Correlation IDs for requests.
-- Health checks.
-- Service metrics.
-- Monitoring of API response times.
-- Monitoring of errors and service availability.
-
-Advanced observability tools such as Prometheus, Grafana and OpenTelemetry are part of the planned architecture and should only be marked as implemented once they have been configured and validated.
+Prometheus, Grafana and OpenTelemetry exist as an **observability overlay compose file**
+(`infra/docker-compose.observability.yml`) but are **not yet wired** to the running services.
 
 ---
 
 ### P5: Separation of Responsibilities
 
-Each microservice must have a clearly defined business responsibility.
+Each microservice has a clearly defined business responsibility:
 
-For example:
-
-- `ms-security` handles authentication and access control.
-- `ms-user-management` handles user management.
-- `ms-classroom-management` handles educational classrooms.
-- `ms-sensor-management` handles environmental sensors.
-- `ms-environment-monitoring` handles environmental measurements, monitoring, analysis and alerting.
-- `ms-alert` is deprecated; alert generation belongs to `ms-environment-monitoring` (ADR-015).
-- `ms-user-experience` handles user preferences and experience.
-
-A service should not absorb responsibilities belonging to another bounded context without an architectural justification.
+- `ms-security` → authentication and access control (OAuth2, JWT, tenants).
+- `ms-user-management` → user information.
+- `ms-user-experience` → user preferences and experience.
+- `ms-classroom-management` → educational classrooms/campuses.
+- `ms-sensor-management` → environmental sensors, variables and installations.
+- `ms-environment-monitoring` → measurements, dashboard, analysis and alerts (the deprecated
+  `ms-alert` was folded in, ADR-015).
 
 ---
 
 ### P6: Security by Design
 
-Security is considered from the beginning of the architecture.
-
-The system uses:
-
-- Spring Security.
-- JWT authentication.
-- Role-based authorization.
-- Password hashing.
-- Validation of authenticated requests.
+- Spring Security + JWT.
+- OAuth2 / OIDC authorization server (`ms-security`, ADR-017).
+- Role-based authorization (`ADMIN` for write operations).
+- Password hashing, refresh-token rotation, account lockout, token revocation via Redis.
 - Controlled access through the API Gateway.
-- Protection of sensitive configuration through environment variables.
-- HTTPS in environments where TLS is configured.
+- Sensitive configuration via environment variables.
+- Do not log secrets.
 
 ---
 
 ### P7: Contract and Traceability
 
-Every important functional requirement should be traceable to:
+Every important functional requirement is traceable to:
 
 ```text
-Requirement
-    ↓
-User Story
-    ↓
-API Contract
-    ↓
-Implementation
-    ↓
-Test
-    ↓
-Definition of Done
+Requirement → User Story → API Contract → Implementation → Test → Definition of Done
 ```
 
-This principle helps maintain consistency between requirements, architecture, development and quality assurance.
+This principle helps maintain consistency between requirements, architecture, development
+and quality assurance.
 
 ---
-
 
 ## 6. Adopted architectural patterns
 
 | Pattern | Adopted | Reference |
 |---------|---------|-----------|
-| Microservices | Yes | `05-architecture/decisions/` |
+| Microservices | Yes | `05-architecture/pattern-guide.md` |
 | API Gateway | Yes | `05-architecture/pattern-guide.md` |
+| Strangler Fig (monolith → microservices) | In progress | Legacy `EduAirControl/` alongside the `ms-*` services |
 | Domain-Oriented Data Separation | Yes | `02-domain/domain-map.md` |
-| REST API | Yes | `07-api/contracts/openapi/` |
-| JWT Authentication | Yes | `00-governance/security-policy.md` |
-| Event-Driven Communication | Partial / Planned | RabbitMQ integration |
-| CQRS | No | Not required for current scope |
-| Event Sourcing | No | Not required for current scope |
-| Circuit Breaker | Planned — see ADR-013 | `05-architecture/pattern-guide.md` |
-| Saga | No | Not required for current business flows |
-| Outbox Pattern | Planned — see ADR-007 | To be evaluated if asynchronous events become critical |
-| Hexagonal Architecture | Yes — see ADR-009 | `05-architecture/hexagonal-architecture.md` |
-| Database per physical service | No | Single PostgreSQL infrastructure with domain separation |
+| REST API (versioned, `/api/v1`) | Yes | `07-api/contracts/openapi/` |
+| OAuth2 / OIDC Authorization Server + BFF | Yes (`ms-security`, gateway) | ADR-017 |
+| Transactional Outbox | Yes (`ms-sensor-management`, monolith) | ADR-007 |
+| Event-Driven Communication (RabbitMQ) | Yes | ADR-004, ADR-007 |
+| CQRS (read model / projections) | Yes (in `ms-environment-monitoring`) | `05-architecture/pattern-guide.md` |
+| Hexagonal Architecture (ports & adapters) | Yes (all `ms-*`) | ADR-009, `05-architecture/hexagonal-architecture.md` |
+| Saga / Event Sourcing | No | Not used in the current business flows |
+| Circuit Breaker | No (documented, ADR-013) | `05-architecture/pattern-guide.md` |
+| Database per physical service | Yes (in `infra` stack) / mixed w/ ADR-003 | `infra/docker-compose.yml` |
 | Containerization | Yes | Docker / Docker Compose |
 
 ---
 
 ## 7. Cross-cutting concerns
 
-Transversal concerns that apply to ALL services:
+Concerns that apply to ALL services:
 
 | Concern | Adopted solution | Where it is configured |
 |---|----------------|------------------------|
-| Authentication / Authorization | Spring Security + JWT | `ms-security` and API Gateway |
-| API Routing | Spring Cloud Gateway | `api-gateway` |
-| Password Security | BCrypt/secure password hashing | `ms-security` |
-| Logging | Application logs + Correlation ID | Each Spring Boot service |
-| Tracing | Planned OpenTelemetry integration | Service middleware / infrastructure |
-| Health Checks | Spring Boot Actuator health endpoints | Each backend service |
-| Error format | Standardized API error response | `07-api/contracts/openapi/_shared.yaml` |
-| Rate Limiting | Planned at API Gateway | Gateway configuration |
-| CORS | API Gateway / backend configuration | Gateway configuration |
-| Circuit Breaker | Planned — see ADR-013 | Resilience4j for inter-service resilience |
-| Database Migrations | Liquibase | Database migration configuration |
-| Configuration | Environment variables / application configuration | Docker and Spring Boot configuration |
-| Containerization | Docker | Dockerfiles / Docker Compose |
-| Messaging | RabbitMQ when asynchronous communication is required | Messaging configuration |
-| Sensor Communication | MQTT / HTTP | `ms-sensor-management` |
-| Environmental Variables | CO₂, Humidity, Noise, Temperature — see ADR-014 | `06-data/domain/ms-environment-monitoring.md` |
-| API Documentation | OpenAPI | `07-api/contracts/openapi/` |
+| Authentication / Authorization | Spring Security + JWT (RS256 issued, HS256 interim) | `ms-security`, API Gateway, per service |
+| API Routing | Spring Cloud Gateway (path predicates) | `api-gateway/src/main/resources/application.yml` |
+| OAuth2 login (BFF) | Spring Security OAuth2 client + Redis sessions | `api-gateway` |
+| Password Security | BCrypt, account lockout | `ms-security` |
+| Token revocation | Redis deny-list (`blacklist:{jti}`, TTL = remaining lifetime) | `ms-security` → Redis |
+| Rate Limiting | Gateway filter, Redis-backed, 100 req/60s | `api-gateway` `RateLimitFilter` |
+| Correlation IDs | Gateway `CorrelationIdFilter` | `api-gateway` |
+| Logging | SLF4J (`@Slf4j`) | Each Spring Boot service |
+| Health Checks | Spring Boot actuator `/health` (public) | Each backend service |
+| Error format | Unified `{ status, message }` via `@RestControllerAdvice` | Each service `GlobalExceptionHandler` |
+| CORS | Gateway default filter | `api-gateway` |
+| Database Migrations | Liquibase (`ddl-auto=none` or `validate`) | Per service |
+| Configuration | Environment variables over Spring properties | Docker / docker-compose |
+| Containerization | Docker | `infra/docker-compose.yml` |
+| Messaging | RabbitMQ (outbox publish / inbox consume) | `ms-sensor-management`, `ms-environment-monitoring` |
+| Sensor Communication | HTTP ingest with `X-API-Key` (ESP32) | Monolith `DeviceApiKeyFilter` |
+| Environmental Variables | CO₂, Humidity, Noise, Temperature (ADR-014) | `06-data/domain/ms-environment-monitoring.md` |
+| API Documentation | springdoc OpenAPI + Swagger UI | Per service (`/swagger-ui.html`) |
+| Tracing | OpenTelemetry **planned** (compose overlay exists) | `infra/docker-compose.observability.yml` |
 
 ---
 
-## 8. Registered architectural technical debt
+## 8. Observed deviations between code and documented decisions
 
-| ID | Description | Impact | Priority | Target sprint |
-|----|-------------|--------|---------|--------------|
-| AT-001 | Complete and validate centralized API Gateway routing for all microservices | High | P1 | Sprint 2 |
-| AT-002 | Complete JWT validation and role-based authorization across protected endpoints | High | P1 | Sprint 2 |
-| AT-003 | Define and validate the final domain-to-table organization in PostgreSQL | Medium | P1 | Sprint 2 |
-| AT-004 | Complete sensor communication integration using MQTT/HTTP | High | P1 | Sprint 3 |
-| AT-005 | Define and validate asynchronous communication through RabbitMQ where necessary | Medium | P2 | Sprint 3 |
-| AT-006 | Implement centralized correlation IDs and structured logging | Medium | P2 | Sprint 3 |
-| AT-007 | Configure automated health checks and service monitoring | Medium | P2 | Sprint 4 |
-| AT-008 | Evaluate and implement Circuit Breaker for critical inter-service communication | Medium | P2 | Sprint 4 |
-| AT-009 | Validate performance requirements for critical API endpoints | Medium | P2 | Sprint 4 |
-| AT-010 | Complete automated architecture and integration tests | Medium | P2 | Sprint 4 |
-
-> See also: `15-project-control/technical-backlog.md`
+| # | Deviation | Current state in the code |
+|---|-----------|---------------------------|
+| D-001 | `ms-environment-monitoring` vs `ms-sensor-management` | Per AGENTS.md it was a byte-for-byte copy; the two Maven projects have since diverged (artifactId, port 3003 vs 3004, schema, RabbitMQ consumer, Testcontainers tests). |
+| D-002 | Database strategy | ADR-003 specifies a shared PostgreSQL with one schema per service; the `infra` stack runs 6 separate PostgreSQL containers. `ms-environment-monitoring` and `ms-user-experience` still point at a shared `eduaircontrol` DB. |
+| D-003 | JWT scheme | `ms-security` issues RS256 (JWKS at `/api/v1/auth/jwks`); business services validate interim HS256 `jwt.secret` or trust gateway headers. |
+| D-004 | JVM version | `docs-ea-control/_stacks/java-spring.md` states JDK 21; all services compile with **Java 17**. |
+| D-005 | Documentation accuracy | `ms-security/README.md` is titled "ms-sensor-management" and describes the sensors domain. |
+| D-006 | Tests | 4 services run tests on H2 (Liquibase disabled); `ms-environment-monitoring`, `ms-user-experience` and the monolith use Testcontainers (PostgreSQL/RabbitMQ, require Docker). |
 
 ---
 
-## 9. Planned evolution
+## 9. Deployment (current state)
 
-| Version | Architectural change | Motivation | Estimated date |
-|---|---|---|---|
-| v1.1 | Complete API Gateway integration | Centralize routing and backend access | Sprint 2 |
-| v1.2 | Complete JWT/RBAC integration | Strengthen authentication and authorization | Sprint 2 |
-| v1.3 | Integrate sensor communication | Receive real environmental measurements | Sprint 3 |
-| v1.4 | Integrate RabbitMQ where required | Reduce coupling for asynchronous processes | Sprint 3-4 |
-| v1.5 | Improve observability | Facilitate diagnosis and monitoring | Sprint 4 |
-| v1.6 | Performance and resilience validation | Validate NFRs before final delivery | Sprint 4 |
-| v2.0 | Evaluate independent database infrastructure per service | Increase service autonomy if project scale requires it | Future |
-| v2.1 | Evaluate Kubernetes/container orchestration | Improve deployment scalability if required | Future |
+- **Local development stack**: `infra/docker-compose.yml` (project `eduaircontrol`): the 7
+  application containers + 6 PostgreSQL 15, RabbitMQ 3.13 (management), Redis 7, plus named
+  volumes. Smoke coverage: `infra/scripts/smoke.sh`.
+- **Observability overlay**: `infra/docker-compose.observability.yml` — Prometheus, Grafana,
+  OpenTelemetry collector (ADR-012). Present but not wired to services.
+- **Canonical ports** (shared with the frontend):
+  gateway `8080`, ms-security `8081`, classroom `3002`, environment-monitoring `3003`,
+  sensor `3004`, user-experience `3006`, user-management `3007`.
 
 ---
 
@@ -484,5 +443,4 @@ Transversal concerns that apply to ALL services:
 - Docker and deployment → `10-devops/`
 - Quality requirements → `11-quality/`
 - Operations → `13-operations/`
-- Technical debt → `15-project-control/technical-backlog.md`
 - Security policy → `00-governance/security-policy.md`
