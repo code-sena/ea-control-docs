@@ -61,6 +61,29 @@ on successful login. The lock is stored in Redis (TTL = M minutes, self-cleaning
 
 ---
 
+## Decision: Only bootstrap seed is the SUPER_ADMIN account
+
+**Date:** [date]
+**Context:** Registration requires a `companyCode` belonging to an existing institution
+(ADR-016), but a fresh deployment had no way to create institutions: the
+`seguridad.institution` table starts empty and roles are seeded via `RoleBootstrap`.
+
+**Decision:** `SuperAdminBootstrap` (ApplicationRunner, `@Order(2)` after
+`RoleBootstrap`) creates a single `SUPER_ADMIN` account at startup if it does not
+exist (idempotent), with `institution_id = NULL`. Credentials come from
+`app.superadmin.{email,username,password}` (`SUPERADMIN_*` in the environment). **No
+institution is seeded**: the SUPER_ADMIN creates them from
+`POST /api/v1/institutions`.
+
+**Consequences:**
+- A fresh deployment is immediately usable: log in as SUPER_ADMIN and create the SENA institution.
+- The SUPER_ADMIN password is the only seed secret: it must be overridden
+  (`SUPERADMIN_PASSWORD`) and rotated outside local environments.
+- `users.institution_id` is nullable in the DB (changeset `013-make-institution-nullable`);
+  the JPA entity was aligned to that schema.
+
+---
+
 ## Correlations
 
 - Global architecture ADRs → `05-architecture/decisions/records/`
