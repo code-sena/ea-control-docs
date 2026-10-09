@@ -46,9 +46,13 @@ Verify these ports are free before starting:
 | Port | Service | Description |
 |------|---------|-------------|
 | 8080 | api-gateway | Main entry point |
-| 3001 | auth-service | Authentication service |
-| 300X | [service-name] | [description] |
-| 5432 | PostgreSQL | Relational database |
+| 8081 | ms-security | Authentication service |
+| 3002 | ms-classroom-management | Classrooms and educational environments |
+| 3003 | ms-environment-monitoring | Measurements, thresholds, analyses, alerts |
+| 3004 | ms-sensor-management | Sensors and installations |
+| 3006 | ms-user-experience | Preferences, favourites, ratings, searches |
+| 3007 | ms-user-management | User profiles |
+| 5432 | PostgreSQL | Relational database (one server per service under `infra/`) |
 | 6379 | Redis | Cache and message queue |
 | 5672 | RabbitMQ | Message broker (AMQP) |
 | 15672 | RabbitMQ Management | RabbitMQ web interface |
@@ -269,7 +273,7 @@ npm run build:docker        # Build local Docker image
 | API Gateway | http://localhost:8080 | |
 | RabbitMQ UI | http://localhost:15672 | guest / guest |
 | [Tool] | http://localhost:[port] | [user / pass] |
-| Swagger UI | http://localhost:3001/api-docs | |
+| Swagger UI | http://localhost:8081/swagger-ui.html | one per service on its own port |
 
 ---
 
