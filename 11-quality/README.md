@@ -61,6 +61,12 @@ which go in the CI/CD pipeline, which are manual.
 | [rest] | 80% | Required | Recommended |
 ```
 
+### `unit-tests-report.md`
+Snapshot of the backend unit-tests status (numbers per service, findings).
+**Filled in:** 2026-10-11 run; 294 tests / 100 pure unit; links to Deliverable 07
+(`ea-control-documentation/07_unit-tests-report/`). Update it whenever a full
+suite run changes the picture materially.
+
 ### `code-review.md`
 Team code review guide.
 **Fill in:** what to verify in a PR (beyond "it works"), list of required checks,
