@@ -12,6 +12,13 @@ info:
     4. When the access_token expires (1h): `POST /auth/refresh` with the refresh_token
     5. To log out: `POST /auth/logout`
 
+    ## Social login flow (Google, Facebook)
+    1. `GET /oauth2/{provider}` — redirect to the provider
+    2. `GET /oauth2/{provider}/callback` — provider redirects back; the service issues a
+       one-time `social_code` and redirects to the frontend (tokens never travel in the URL)
+    3. `POST /oauth2/social/exchange` — exchange the code (single-use) for tokens
+    4. `POST /oauth2/onboarding` — if `needsOnboarding`, assign the institution (Bearer required)
+
     ## Tokens
     - **access_token**: JWT RS256, expires in 1 hour. Includes userId, email, roles, permissions.
     - **refresh_token**: Opaque token (UUID), expires in 7 days. Valid only once (rotation).
@@ -193,6 +200,138 @@ paths:
       responses:
         '204':
           description: Session closed successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /oauth2/{provider}:
+    get:
+      summary: Start social login (Google, Facebook)
+      description: |
+        Redirects the browser to the social provider's OAuth2 authorization page.
+        The provider redirects back to `/oauth2/{provider}/callback`, which creates or
+        links the user and redirects to the frontend with a one-time `social_code`.
+        Tokens are never sent in the URL: the frontend exchanges the code in
+        `POST /oauth2/social/exchange`.
+      operationId: startSocialLogin
+      tags: [Auth]
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: Social provider
+          schema:
+            type: string
+            enum: [google, facebook]
+      responses:
+        '302':
+          description: Redirect to the social provider's authorization endpoint
+
+  /oauth2/{provider}/callback:
+    get:
+      summary: Social provider callback
+      description: |
+        Handles the provider's authorization-code redirect (server-to-server exchange
+        + ID token verification). On success it redirects to the frontend with
+        `?social_code={one-time code}`; on failure, `?error=auth_failed`.
+      operationId: socialCallback
+      tags: [Auth]
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, facebook]
+        - name: code
+          in: query
+          required: true
+          description: Authorization code issued by the provider
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the frontend with `social_code` (or `error=auth_failed`)
+
+  /oauth2/social/exchange:
+    post:
+      summary: Exchange a one-time social code for session tokens
+      description: |
+        The code is single-use (burned on exchange) and short-lived. The response has
+        the same shape as `POST /login` plus `needsOnboarding`, which is true when the
+        social user still has no institution assigned.
+      operationId: exchangeSocialCode
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  description: One-time code from the social callback redirect
+      responses:
+        '200':
+          description: Session tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+                    format: int64
+                  user:
+                    $ref: '#/components/schemas/UserSummary'
+                  needsOnboarding:
+                    type: boolean
+                    description: True when the user must still assign an institution
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid, expired, or already-used social code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth2/onboarding:
+    post:
+      summary: Assign an institution to a new social user
+      description: |
+        Requires a Bearer token: the user is taken from the token, not from the body.
+        The institution is resolved from `companyCode` (same format as registration).
+      operationId: socialOnboarding
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [companyCode]
+              properties:
+                companyCode:
+                  type: string
+                  pattern: '(?i)^[A-Z]{3}-\d{4}$'
+                  description: Institution code (format ABC-0000)
+                  example: SEN-4444
+      responses:
+        '204':
+          description: Institution assigned
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
