@@ -59,6 +59,19 @@ The four variables (CO₂, humidity, noise level, temperature) are the most crit
 
 Thresholds are defined per variable and environment type, with validity dates and severity levels.
 
+> [!NOTE] AMENDMENT (2026-10-16) — Per-environment overrides
+> A threshold row may additionally carry a nullable `educational_environment_id`
+> (originally rejected in this ADR; amended after product requirements for
+> per-environment configuration in the web UI). The effective threshold of an
+> environment is: its own override for the variable/severity if one exists,
+> otherwise the threshold of its environment type. Only the WARNING severity
+> of temperature is exposed for per-environment editing (web environment
+> management modal); overrides are created by ADMIN/SUPER_ADMIN via
+> `PUT /api/v1/environments/{id}/thresholds/{variableCode}` and are never
+> deleted — replaced rows are closed with `valid_to`. A partial unique index
+> `ux_variable_threshold_env_var_sev` keeps one open override per
+> (environment, variable, severity).
+
 ### Default Thresholds for Educational Environments
 
 #### Classroom (环境类型: `CLASSROOM`)
@@ -98,6 +111,7 @@ Each threshold is defined with:
 |-------|-------------|---------|
 | `variable_id` | Environmental variable | Temperature |
 | `environment_type_id` | Type of environment | Classroom |
+| `educational_environment_id` | Optional per-environment override (nullable) | Ambiente A-101 |
 | `min_value` | Minimum acceptable value | 20 |
 | `max_value` | Maximum acceptable value | 26 |
 | `severity_id` | Alert severity level | Warning |
@@ -116,7 +130,9 @@ Each threshold is defined with:
 
 ## Business Rules
 
-1. **Threshold Uniqueness:** One threshold per variable, environment type, and severity combination during a given time period.
+1. **Threshold Uniqueness:** One threshold per variable, environment type, and severity combination during a given time period. Per-environment overrides are unique per variable and severity (one open row per environment, variable and severity).
+
+2. **Override Precedence:** If a threshold with `educational_environment_id` set exists for a variable/severity, it wins over the threshold of the environment type; the type threshold remains the fallback for environments without an override.
 
 2. **Validity Dates:** Thresholds must have a `valid_from` date. The `valid_to` date is optional (null means ongoing).
 

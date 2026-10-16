@@ -88,6 +88,7 @@ Table variable_threshold {
   variable_threshold_id uuid [pk, default: `gen_random_uuid()`]
   variable_id uuid [not null]
   environment_type_id uuid [not null]
+  educational_environment_id uuid [null]
   min_value numeric(12,4)
   max_value numeric(12,4)
   severity_id uuid [not null]
@@ -189,11 +190,12 @@ in the same table row, because those would violate the 1NF principle and make sc
 
 ### 4.2 Thresholds are time-valid and referenced by foreign key
 
-`variable_threshold` stores the threshold rule by variable and environment type, with validity dates.
+`variable_threshold` stores the threshold rule by variable and environment type, with validity dates. A nullable `educational_environment_id` allows a per-environment override (ADR-014 amendment): when present, that row wins over the type threshold for that environment; otherwise the type threshold is the fallback. Overrides are unique per (environment, variable, severity) while open (`valid_to IS NULL`, partial index `ux_variable_threshold_env_var_sev`).
 
 ```text
 variable_id
 environment_type_id
+educational_environment_id  [nullable, override]
 min_value
 max_value
 valid_from

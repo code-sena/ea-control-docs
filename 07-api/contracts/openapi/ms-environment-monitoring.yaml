@@ -46,6 +46,8 @@ tags:
     description: An├ílisis hist├│rico de datos ambientales por periodo
   - name: Dashboard
     description: Indicadores y series para el dashboard ambiental
+  - name: Thresholds
+    description: Umbrales WARNING efectivos por ambiente (override propio o del tipo)
 
 paths:
   /analyses:
@@ -262,6 +264,76 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /environments/{id}/thresholds:
+    get:
+      summary: Umbrales WARNING efectivos del ambiente (override propio o del tipo)
+      operationId: getEnvironmentThresholds
+      tags: [Thresholds]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Umbrales efectivos por variable
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ThresholdView'
+              example:
+                - variableCode: temperature
+                  minValue: 21
+                  maxValue: 25
+                  source: ENVIRONMENT
+                - variableCode: humidity
+                  minValue: 40
+                  maxValue: 60
+                  source: TYPE
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /environments/{id}/thresholds/{variableCode}:
+    put:
+      summary: Crea o reemplaza el override WARNING de una variable para el ambiente
+      operationId: updateEnvironmentThreshold
+      tags: [Thresholds]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: variableCode
+          in: path
+          required: true
+          schema:
+            type: string
+          example: temperature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThresholdUpdate'
+            example:
+              minValue: 21
+              maxValue: 25
+      responses:
+        '200':
+          description: Umbral efectivo resultante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThresholdView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /alerts:
     get:
       summary: Listar alertas con filtros
@@ -396,6 +468,42 @@ paths:
 
 components:
   schemas:
+    ThresholdView:
+      type: object
+      description: |
+        Umbral WARNING efectivo de una variable para un ambiente. `source`
+        indica de dónde viene: `ENVIRONMENT` (override propio del ambiente)
+        o `TYPE` (umbral del tipo de ambiente, fallback).
+      required: [variableCode, source]
+      properties:
+        variableCode:
+          type: string
+          example: temperature
+        minValue:
+          type: number
+          nullable: true
+          example: 21
+        maxValue:
+          type: number
+          nullable: true
+          example: 25
+        source:
+          type: string
+          enum: [ENVIRONMENT, TYPE]
+
+    ThresholdUpdate:
+      type: object
+      description: Rango WARNING que se guarda como override del ambiente para una variable.
+      properties:
+        minValue:
+          type: number
+          nullable: true
+          example: 21
+        maxValue:
+          type: number
+          nullable: true
+          example: 25
+
     AnalysisRequest:
       type: object
       required: [environmentId, period]
