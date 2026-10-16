@@ -1,17 +1,7 @@
-# User Settings
-> Preferences and security options.
-## Files
-- `index.html` — Screen layout
-## Components
-- Notification preferences toggles
-- Language selector
-- Theme (light/dark)
-- Privacy options
-- Delete account with confirmation
-## Navigation
-- Back → `../environmental-dashboard/`
-- To profile → `../user-profile/`
-## Bounded Context
-User Management
-## Correlations
-- NFR-004 → `04-requirements/non-functional.md`
+# Configuración
+
+Mockup de interfaz — mobile · pantalla `user-settings`.
+
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.

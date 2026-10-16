@@ -1,31 +1,7 @@
 # Landing Page
 
-> Public entry point for EduAirControl.
+Mockup de interfaz — desktop · pantalla `landing-page`.
 
-## Files
-
-- `index.html` — Screen layout (HTML)
-
-## Components
-
-- Hero  
-- Why choose
-- How it works 
-- CTA
-- Footer with links
-
-## Navigation
-
-- CTA → `../authentication/` (Register)
-- Login link → `../authentication/` (Login)
-- view demo → `../guide/` (guide)
-- terms and conditions → `../terms/` (terms)
-
-## Bounded Context
-
-None (public page)
-
-## Correlations
-
-- Product vision → `03-product/vision.md`
-- Problem framing → `03-product/problem-framing.md`
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.

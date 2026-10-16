@@ -1,25 +1,7 @@
-# User Profile
-> Personal information and account management.
- 
-## Files
-- `index.html` — Screen layout
+# Perfil de usuario
 
-## Components
+Mockup de interfaz — desktop · pantalla `user-profile`.
 
-- Avatar (upload/change)
-- User information (username, email, job title, phone, location)
-- Profile editing form
-- Password change form
-- Log out (with confirmation)
-## Navigation
-- To dashboard → `../dashboard/` 
-- To environments → `../all-environments/`
-- To favorites → `../favorites/`
-- To alerts → `../management/`
-- To settings → `../settings/`
-
-## Bounded Context
-User Experience
-
-## Correlations
-- User entity → `02-domain/entities-and-rules.md`
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.

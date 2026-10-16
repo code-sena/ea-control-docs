@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduAirControl · Notificaciones</title>
+<link rel="stylesheet" href="../../../shared/mockup.css">
+</head>
+<body>
+<div class="page">
+<header class="nav"><div class="container nav-inner">
+  <div class="brand"><div class="brand-badge">EA</div> EduAirControl</div>
+  <nav class="nav-links"><a class="nav-link" href="/dashboard">Dashboard</a><a class="nav-link" href="/all-environments">Ambientes</a><a class="nav-link" href="/management">Gestión</a></nav>
+  <div class="nav-actions">
+    <button class="btn btn-ghost btn-sm">🔔</button>
+    <button class="btn btn-outline btn-sm">Mi perfil</button>
+    <button class="btn btn-primary btn-sm">Salir</button>
+  </div>
+</div></header>
+<main class="main"><div class="container">
+
+<div class="row-between" style="margin-bottom:16px">
+  <div><h1 class="h1">Panel ambiental</h1><p class="muted small">El centro de notificaciones se abre como panel lateral sobre la pantalla actual.</p></div>
+</div>
+<div class="grid grid-2" style="opacity:.45">
+  <div class="card"><p class="stat-label">Calidad del aire</p><p class="stat-num accent">87</p></div>
+  <div class="card"><p class="stat-label">CO₂ promedio</p><p class="stat-num">612 ppm</p></div>
+</div>
+<div style="position:relative;margin-top:-200px;display:flex;justify-content:flex-end">
+  <section class="panel" style="width:380px;box-shadow:var(--shadow-lg)">
+    <div class="panel-head row-between"><span>🔔 Notificaciones</span><button class="btn btn-ghost btn-sm">✕</button></div>
+    <div class="panel-body">
+      <div class="tabs"><span class="tab active">Todas</span><span class="tab">No leídas</span></div>
+      <div class="list-item"><span class="dot dot-alert"></span><div class="grow"><b>CO₂ alto — Aula 204</b><p class="small muted">1120 ppm · hace 10 min</p></div></div>
+      <div class="list-item"><span class="dot dot-warning"></span><div class="grow"><b>Humedad alta — Lab 2</b><p class="small muted">62 % · hace 1 h</p></div></div>
+      <div class="list-item"><span class="dot dot-normal"></span><div class="grow"><b>Calidad mejora — Biblioteca</b><p class="small muted">Vuelve a rango óptimo · 09:15</p></div></div>
+      <button class="btn btn-outline btn-sm">Ver todas</button>
+    </div>
+  </section>
+</div>
+
+</div></main>
+<footer class="footer"><div class="container">© EduAirControl · Mockup de interfaz · tokens v1</div></footer>
+</div>
+</body>
+</html>

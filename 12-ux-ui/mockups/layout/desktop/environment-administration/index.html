@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduAirControl · Administración de ambientes</title>
+<link rel="stylesheet" href="../../../shared/mockup.css">
+</head>
+<body>
+<div class="page">
+<header class="nav"><div class="container nav-inner">
+  <div class="brand"><div class="brand-badge">EA</div> EduAirControl</div>
+  <nav class="nav-links"><a class="nav-link" href="/dashboard">Dashboard</a><a class="nav-link" href="/all-environments">Ambientes</a><a class="nav-link" href="/management">Gestión</a></nav>
+  <div class="nav-actions">
+    <button class="btn btn-ghost btn-sm">🔔</button>
+    <button class="btn btn-outline btn-sm">Mi perfil</button>
+    <button class="btn btn-primary btn-sm">Salir</button>
+  </div>
+</div></header>
+<main class="main"><div class="container">
+
+<div class="row-between" style="margin-bottom:16px">
+  <div><h1 class="h1">Administración de ambientes</h1><p class="muted small">Rol ADMIN · CRUD de ambientes, sedes y sensores</p></div>
+  <button class="btn btn-primary">+ Nuevo ambiente</button>
+</div>
+<div class="tabs"><span class="tab active">Ambientes</span><span class="tab">Sedes</span><span class="tab">Sensores y variables</span></div>
+<div class="grid" style="grid-template-columns:1.4fr 1fr">
+  <section class="card">
+    <table class="table">
+      <tr><th>Ambiente</th><th>Sede</th><th>Sensores</th><th>Estado</th><th></th></tr>
+      <tr><td>Aula 204</td><td>Norte</td><td>2</td><td><span class="badge badge-normal">Buena</span></td><td><button class="btn btn-ghost btn-sm">✎</button><button class="btn btn-ghost btn-sm">🗑</button></td></tr>
+      <tr><td>Lab 2</td><td>Norte</td><td>3</td><td><span class="badge badge-warning">Regular</span></td><td><button class="btn btn-ghost btn-sm">✎</button><button class="btn btn-ghost btn-sm">🗑</button></td></tr>
+      <tr><td>Biblioteca</td><td>Central</td><td>1</td><td><span class="badge badge-normal">Buena</span></td><td><button class="btn btn-ghost btn-sm">✎</button><button class="btn btn-ghost btn-sm">🗑</button></td></tr>
+      <tr><td>Aula 101</td><td>Central</td><td>2</td><td><span class="badge badge-alert">Mala</span></td><td><button class="btn btn-ghost btn-sm">✎</button><button class="btn btn-ghost btn-sm">🗑</button></td></tr>
+    </table>
+  </section>
+  <section class="panel">
+    <div class="panel-head">Panel contextual — Sedes</div>
+    <div class="panel-body">
+      <div class="list-item"><div class="icon-circ">🏫</div><div class="grow"><b>Sede Norte</b><p class="small muted">4 ambientes · 9 sensores</p></div><button class="btn btn-ghost btn-sm">✎</button></div>
+      <div class="list-item"><div class="icon-circ">🏫</div><div class="grow"><b>Sede Central</b><p class="small muted">6 ambientes · 11 sensores</p></div><button class="btn btn-ghost btn-sm">✎</button></div>
+      <button class="btn btn-outline btn-sm">+ Añadir sede</button>
+      <p class="small muted">Otras pestañas: variables por sensor · desvincular dispositivo del ambiente.</p>
+    </div>
+  </section>
+</div>
+
+</div></main>
+<footer class="footer"><div class="container">© EduAirControl · Mockup de interfaz · tokens v1</div></footer>
+</div>
+</body>
+</html>

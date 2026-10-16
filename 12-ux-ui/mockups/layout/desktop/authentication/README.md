@@ -1,24 +1,7 @@
-# Authentication
-> Login, registration, and password recovery.
+# Autenticación
 
-## Files
-- `index.html` — Screen layout
+Mockup de interfaz — desktop · pantalla `authentication`.
 
-## Components
-- Login form (company code, email, password)
-- Registration form (company code, username, email, password)
-- Password recovery
-- Tab/toggle to switch between login and registration
-- Terms and security policies
-- Login and registration via OAuth2
-
-## Navigation
-- On success → `../dashboard/`
-- Back → `../landing/`
-
-## Bounded Context
-User Management
-
-## Correlations
-- HU-IAM-001 → `04-requirements/user-stories.md`
-- HU-IAM-002 → `04-requirements/user-stories.md`
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.
