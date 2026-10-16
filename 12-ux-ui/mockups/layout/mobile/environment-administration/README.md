@@ -1,16 +1,7 @@
-# Environment Administration
-> CRUD for environments and sensor configuration.
-## Files
-- `index.html` — Screen layout
-## Components
-- Environment form (create/edit)
-- Sensor list
-- Sensor form
-- Variable thresholds configuration
-- Delete confirmation modal
-## Navigation
-- Back → `../educational-environments/`
-## Bounded Context
-Environmental Monitoring
-## Correlations
-- FR-004, FR-005 → `04-requirements/functional.md`
+# Administración de ambientes
+
+Mockup de interfaz — mobile · pantalla `environment-administration`.
+
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.

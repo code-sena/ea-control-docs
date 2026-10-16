@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduAirControl · Provisionamiento BLE</title>
+<link rel="stylesheet" href="../../../shared/mockup.css">
+</head>
+<body>
+<div class="mobile-stage">
+<div class="mobile-frame">
+  <div class="m-topbar">☰ EduAirControl</div>
+  <div class="m-content">
+
+  <div class="row-between">
+    <h1 class="m-h1">Vincular sensor (ESP32)</h1>
+    <span class="badge badge-accent">ADMIN</span>
+  </div>
+  <div class="m-card">
+    <h2 class="h3">1. Escaneo BLE</h2>
+    <div class="list-item"><div class="grow"><b>EA-Sensor-01</b><p class="m-muted">Señal fuerte</p></div><button class="btn btn-primary btn-sm">Conectar</button></div>
+    <div class="list-item"><div class="grow"><b>EA-Sensor-02</b><p class="m-muted">Señal media</p></div><button class="btn btn-outline btn-sm">Conectar</button></div>
+  </div>
+  <div class="m-card">
+    <h2 class="h3">2. Configuración</h2>
+    <div class="field"><label class="label">Wi-Fi</label><input class="input" placeholder="Red"></div>
+    <div class="field" style="margin-top:8px"><label class="label">Clave</label><input class="input" type="password" placeholder="••••••••"></div>
+  </div>
+  <div class="m-card">
+    <h2 class="h3">3. Asociar</h2>
+    <div class="field"><label class="label">Ambiente</label><select class="select"><option>Aula 204</option><option>Lab 2</option></select></div>
+    <button class="btn btn-primary" style="margin-top:10px;width:100%">Enviar configuración</button>
+  </div>
+  <p class="m-muted" style="text-align:center">Estado: escaneando · enviando · vinculado · error</p>
+
+  </div>
+  <div class="m-tabs"><div class="m-tab"><span class="t-ico">⌂</span>Inicio</div><div class="m-tab"><span class="t-ico">♥</span>Favoritos</div><div class="m-tab active"><span class="t-ico">⚙</span>Gestión</div><div class="m-tab"><span class="t-ico">🏢</span>Ambientes</div><div class="m-tab"><span class="t-ico">👤</span>Perfil</div></div>
+</div>
+</div>
+</body>
+</html>

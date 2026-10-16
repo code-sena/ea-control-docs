@@ -1,28 +1,7 @@
-# Environmental Dashboard
-> Main screen with current conditions and charts.
+# Dashboard ambiental
 
-## Files
-- `index.html` — Screen layout
+Mockup de interfaz — desktop · pantalla `environmental-dashboard`.
 
-## Components
-
-- Environment analysis panel
-- Time period selector (day/week/month/year)
-- Charts for each variable
-- Charts for each environment
-- Alert indicator (quick reading)
-- Variable filter (temperature, humidity, CO₂, noise level)
-
-## Navigation
-- To dashboard → `../dashboard/` 
-- To environments → `../all-environments/`
-- To favorites → `../favorites/`
-- To alerts → `../management/`
-- To profile → `../profile/`
-- To settings → `../settings/`
-
-## Bounded Context
-Environmental Data Analysis
-
-## Correlations
-- FR-008, FR-009-FR-013 → `04-requirements/functional.md`
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.

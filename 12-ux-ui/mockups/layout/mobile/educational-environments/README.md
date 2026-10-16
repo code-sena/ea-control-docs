@@ -1,17 +1,7 @@
-# Educational Environments
-> List and detail of monitored spaces.
-## Files
-- `index.html` — Screen layout
-## Components
-- Environment cards list
-- Search/filter bar
-- Environment detail view
-- Save/favorite button
-## Navigation
-- Back → `../environmental-dashboard/`
-- Save → `../saved-environments/`
-## Bounded Context
-Environmental Monitoring
-## Correlations
-- FR-004 → `04-requirements/functional.md`
-- Educational Environment entity → `02-domain/entities-and-rules.md`
+# Ambientes educativos
+
+Mockup de interfaz — mobile · pantalla `educational-environments`.
+
+- **Ver:** abrir `index.html` en el navegador.
+- **Estilos:** `../../../shared/mockup.css` (tokens reales del producto).
+- **Detalle de pantallas y navegación:** `../../../navigation-map.md` · `../../../wireframes.md`.

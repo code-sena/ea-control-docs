@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduAirControl · Panel super administrador</title>
+<link rel="stylesheet" href="../../../shared/mockup.css">
+</head>
+<body>
+<div class="page">
+<header class="nav"><div class="container nav-inner">
+  <div class="brand"><div class="brand-badge">EA</div> EduAirControl</div>
+  <nav class="nav-links"><a class="nav-link" href="/dashboard">Dashboard</a><a class="nav-link" href="/all-environments">Ambientes</a><a class="nav-link" href="/management">Gestión</a></nav>
+  <div class="nav-actions">
+    <button class="btn btn-ghost btn-sm">🔔</button>
+    <button class="btn btn-outline btn-sm">Mi perfil</button>
+    <button class="btn btn-primary btn-sm">Salir</button>
+  </div>
+</div></header>
+<main class="main"><div class="container">
+
+<div class="row-between" style="margin-bottom:16px">
+  <div><h1 class="h1">Panel super administrador</h1><p class="muted small">Rol SUPER_ADMIN · instituciones, usuarios y roles</p></div>
+  <div class="row"><button class="btn btn-outline">+ Usuario</button><button class="btn btn-primary">+ Institución</button></div>
+</div>
+<div class="tabs"><span class="tab active">Instituciones</span><span class="tab">Usuarios y roles</span></div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2 class="section-title">Instituciones</h2>
+    <table class="table">
+      <tr><th>Institución</th><th>Sedes</th><th>Usuarios</th><th></th></tr>
+      <tr><td>SENA — Centro Industrial</td><td>3</td><td>42</td><td><button class="btn btn-ghost btn-sm">✎</button><button class="btn btn-ghost btn-sm">🗑</button></td></tr>
+      <tr><td>I.E. San José</td><td>2</td><td>18</td><td><button class="btn btn-ghost btn-sm">✎</button><button class="btn btn-ghost btn-sm">🗑</button></td></tr>
+    </table>
+  </section>
+  <section class="card">
+    <h2 class="section-title">Usuarios y roles</h2>
+    <table class="table">
+      <tr><th>Correo</th><th>Rol</th><th>Institución</th></tr>
+      <tr><td>docente@sena.edu</td><td><select class="select"><option>USER</option><option>ADMIN</option></select></td><td>SENA</td></tr>
+      <tr><td>coord@sanjose.edu</td><td><select class="select"><option>ADMIN</option><option>USER</option></select></td><td>San José</td></tr>
+      <tr><td>root@eduaircontrol.app</td><td><select class="select"><option>SUPER_ADMIN</option></select></td><td>Todas</td></tr>
+    </table>
+    <p class="small muted" style="margin-top:10px">Los cambios de rol se aplican en el próximo inicio de sesión.</p>
+  </section>
+</div>
+
+</div></main>
+<footer class="footer"><div class="container">© EduAirControl · Mockup de interfaz · tokens v1</div></footer>
+</div>
+</body>
+</html>
