@@ -23,8 +23,9 @@ Main characteristics of the architecture as implemented:
   with JWT validation, Redis rate limiting and correlation IDs.
 - **Spring Security + JWT** for authentication and authorization:
   - `ms-security` issues **RS256** JWTs and acts as an **OAuth2 / OIDC authorization server**.
-  - Business services validate **HS256** JWTs (`jwt.secret`) or trust gateway headers
-    (`X-User-Id`, `X-User-Role`, `X-Institution-Id`) — interim scheme, see ADR-006.
+  - Business services validate **RS256** JWTs against the ms-security JWKS and **ignore
+    identity headers** — JWT-only mesh (ADR-018; ADR-006 always assumed services verify
+    tokens themselves).
 - Independent microservices for the main business domains:
   - `ms-security`
   - `ms-user-management`
@@ -142,7 +143,7 @@ graph TB
 
         WEB["Frontend<br/>React (web) · React Native (mobile)"]
 
-        GW["api-gateway<br/>Spring Cloud Gateway (WebFlux)<br/>:8080 · JWKS verify · rate limit · X-User-Id/X-User-Role headers"]
+        GW["api-gateway<br/>Spring Cloud Gateway (WebFlux)<br/>:8080 · JWKS verify · rate limit · propaga X-User-* (informativo)"]
 
         SEC["ms-security<br/>:8081 · OAuth2 auth server + RS256 JWT<br/>schema: seguridad"]
         CLS["ms-classroom-management<br/>:3002 · schema: classrooms"]
@@ -409,9 +410,9 @@ Concerns that apply to ALL services:
 |---|-----------|---------------------------|
 | D-001 | `ms-environment-monitoring` vs `ms-sensor-management` | Per AGENTS.md it was a byte-for-byte copy; the two Maven projects have since diverged (artifactId, port 3003 vs 3004, schema, RabbitMQ consumer, Testcontainers tests). |
 | D-002 | Database strategy | ADR-003 specifies a shared PostgreSQL with one schema per service; the `infra` stack runs 6 separate PostgreSQL containers. `ms-environment-monitoring` and `ms-user-experience` still point at a shared `eduaircontrol` DB. |
-| D-003 | JWT scheme | `ms-security` issues RS256 (JWKS at `/api/v1/auth/jwks`); business services validate interim HS256 `jwt.secret` or trust gateway headers. |
+| D-003 | JWT scheme | `ms-security` issues RS256 (JWKS at `/api/v1/auth/jwks`); business services are **JWT-only** since ADR-018 (2026-10-17) — no shared secret, no trust in `X-User-*` headers. |
 | D-004 | JVM version | `docs-ea-control/_stacks/java-spring.md` states JDK 21; all services compile with **Java 17**. |
-| D-005 | Documentation accuracy | `ms-security/README.md` is titled "ms-sensor-management" and describes the sensors domain. |
+| D-005 | Documentation accuracy | ~~`ms-security/README.md` is titled "ms-sensor-management"~~ — fixed: the README now describes ms-security correctly. |
 | D-006 | Tests | 4 services run tests on H2 (Liquibase disabled); `ms-environment-monitoring`, `ms-user-experience` and the monolith use Testcontainers (PostgreSQL/RabbitMQ, require Docker). |
 
 ---

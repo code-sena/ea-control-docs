@@ -7,19 +7,25 @@
 
 ## Decision: Authentication at the gateway vs. in each service
 
-**Date:** [decision date]
+**Date:** 2026-10-17 (supersedes the interim strategy A)
 **Context:** There are two strategies to verify JWT tokens: (A) the gateway verifies the
 token and passes the user context as headers; (B) each microservice verifies its own token.
 
-**Decision:** Strategy A — the gateway verifies the JWT (signature + expiration + blacklist)
-and attaches `X-User-Id` and `X-User-Role` as internal headers. Microservices trust
-these headers without re-verifying the token.
+**Decision:** Strategy **B** — JWT-only (ADR-018). The gateway still validates the token
+(signature + expiration + blacklist) and still attaches `X-User-Id`/`X-User-Role` headers
+for logs and traces, but **no microservice trusts them**: every service re-validates the
+RS256 Bearer token against the ms-security JWKS. The interim Strategy A ("microservices
+trust headers without re-verifying") was **rejected** on 2026-10-17 because it allowed
+identity spoofing from any caller reaching a service port (R-001).
 
 **Consequences:**
-- Microservices are simpler (no JWT library needed)
-- The gateway is the only component that needs access to the JWT public key
-- If the gateway is compromised, all services are vulnerable — mitigated with internal TLS
-- Internal headers must NOT be available from outside the gateway (nginx/proxy strips incoming X-User-* headers)
+- One auth path to reason about; no shared secrets between gateway and services
+- If the gateway is compromised it can no longer impersonate users inside the mesh
+  (it can still act with any token it sees)
+- The gateway must always forward the resolved `Authorization` header — including the
+  BFF cookie flow (`JwtAuthenticationFilter.forward`)
+- Internal headers must NOT be available from outside the gateway (nginx/proxy strips
+  incoming X-User-* headers) — kept as defense in depth for logs/traces
 
 ---
 

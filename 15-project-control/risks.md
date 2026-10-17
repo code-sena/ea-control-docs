@@ -53,8 +53,15 @@ IMPACT
 | **Contingency plan** | If abuse is detected, close internal mesh access and force all traffic through the gateway. |
 | **Trigger** | Access logs hitting internal ports directly, or tokens whose roles do not match the real user. |
 | **Owner** | Backend team |
-| **Review date** | 2026-10-31 |
-| **Status** | Active |
+| **Review date** | 2026-10-17 |
+| **Status** | Mitigated (2026-10-17) |
+
+> **Resolution (2026-10-17):** the five services are now **JWT-only**: `JwtAuthFilter`
+> accepts only Bearer RS256 tokens validated against the ms-security JWKS and ignores
+> `X-User-*` headers entirely. Tenant identity (`X-Institution-Id`/`X-Campus-Id`) is read
+> from the JWT claims, not from headers. The gateway still *propagates* the headers for
+> logs/traces, but no service trusts them (ADR-018). Regression tests in each service
+> assert that forged headers get 401 and cannot elevate a USER token.
 
 ---
 
@@ -73,8 +80,17 @@ IMPACT
 | **Contingency plan** | Immediate key and superadmin password rotation; audit tokens issued with the compromised key. |
 | **Trigger** | The repository becomes reachable outside the team or appears in a public fork. |
 | **Owner** | Backend team |
-| **Review date** | 2026-10-15 |
-| **Status** | Active |
+| **Review date** | 2026-10-17 |
+| **Status** | Mitigated (2026-10-17) |
+
+> **Resolution (2026-10-17):** `dev-{private,public}.pem` removed from `ms-security`
+> (and gitignored). `SECURITY_RSA_*_KEY_PATH` and `SUPERADMIN_PASSWORD` have **no
+> defaults** — the service refuses to start without them; compose/k8s/smoke require
+> `SUPERADMIN_PASSWORD` too. Tests mint an ephemeral pair in `target/test-keys/`
+> (`TestKeys`). Local dev keys come from `scripts/generate-dev-keys.sh`; runtime keys
+> come from gitignored `infra/secrets/`. Rotation procedure documented in
+> `infra/RUNBOOK-DESPLIEGUE.md` §3.3.2.1 — once rotated, the key in the git history
+> cannot sign tokens accepted by the new JWKS.
 
 ---
 
@@ -204,7 +220,7 @@ IMPACT
 |-------|-------|
 | **ID** | R-009 |
 | **Category** | Technical / External |
-| **Description** | Two unconsolidated firmwares exist: `esp32_sensor_sender.ino` posts over plain HTTP to :3003 while forging ADMIN headers (it depends on R-001), and `infra/iot/esp32-node` does not compile, targets the wrong service and port, and uses the wrong JSON body and auth header. |
+| **Description** | Two unconsolidated firmwares exist: `esp32_sensor_sender.ino` posts over plain HTTP to :3003 while forging ADMIN headers (that spoofing was closed by R-001/ADR-018 — the firmware now simply gets 401 and must use a device token), and `infra/iot/esp32-node` does not compile, targets the wrong service and port, and uses the wrong JSON body and auth header. |
 | **Probability** | High |
 | **Impact** | Medium |
 | **Risk level** | Medium |
@@ -286,6 +302,8 @@ These risks apply to almost all microservices projects. Evaluate which ones appl
 | R-013 | The `ms-classroom-management` outbox never published (missing table, missing `@EnableScheduling`, and events carrying random UUIDs) | Occurred | Closed 2026-10-08. Lesson: a feature with no integration test against a real broker can look finished and never deliver a single message. |
 | R-014 | The event pipeline had no producers: `ms-environment-monitoring` consumed `sensor.installation.*` and `EnvironmentalDataRecorded` that nobody published | Occurred | Closed 2026-10-08: installation outbox in ms-sensor-management and HTTP ingest as the single measurement path. Lesson: consuming something untested keeps the debt invisible. |
 | R-015 | Live metrics never reached the frontend (score always 100, temperature `undefined`) | Occurred | Closed 2026-10-08 with `GET /api/v1/environments/current`. Lesson: the UI must not assume fields no endpoint returns; the contract is the source of truth. |
+| R-001 | Identity spoofing via `X-User-*` headers: any caller reaching a service port could impersonate ADMIN and pick the tenant | Occurred | Mitigated 2026-10-17: JWT-only mesh authentication (ADR-018). The header trust path had outlived its consumers (gateway re-injects Authorization; firmware uses device tokens). Lesson: a "temporary" trust shortcut becomes permanent the moment nobody schedules its removal. |
+| R-002 | RSA private key committed in `ms-security` + superadmin seeded with a documented default password | Occurred | Mitigated 2026-10-17: keys removed from the repo, `SECURITY_RSA_*` and `SUPERADMIN_PASSWORD` required with no defaults, rotation procedure documented. The key remains in git history but is useless once rotated against the JWKS. Lesson: dev credentials with production defaults are production credentials. |
 ## Template for adding a new risk
 
 ```markdown

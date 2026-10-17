@@ -37,5 +37,6 @@ ADRs document important architectural decisions. Each file = one decision.
 | ADR-015 | Fold Alert Management into ms-environment-monitoring | Accepted | 2026-10-06 |
 | ADR-016 | Multi-Tenancy by Institution and Campus | Accepted | 2026-10-06 |
 | ADR-017 | OAuth2/OIDC Authorization Server and Backend-for-Frontend | Accepted | 2026-10-06 |
+| ADR-018 | JWT-Only Mesh Authentication | Accepted | 2026-10-17 |
 
 > Add rows here as you create ADRs in `records/`

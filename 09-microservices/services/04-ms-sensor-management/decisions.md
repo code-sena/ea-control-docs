@@ -35,30 +35,30 @@ and the Spring Data interfaces live behind port interfaces
 
 ---
 
-## DEC-002 Interim JWT validation with shared secret (HS256)
+## DEC-002 JWT validation (superseded interim: shared secret HS256)
 
 **Date:** 2026-10-06
-**Status:** Active (to be superseded)
+**Status:** Superseded (2026-10-17)
 
 **Context:**
 ADR-006 defines RS256 access tokens validated by the api-gateway with JWKS from
 `ms-security`. Neither service exists yet, but tokens issued today by the
 monolith (HS256, shared `JWT_SECRET`, claim `role`) must keep working.
 
-**Decision:**
-Validate `Authorization: Bearer` JWTs with `jjwt` 0.11.5 and the shared
-`JWT_SECRET` (HS256-compatible HMAC key), extracting `sub` and `role`. Reads
-require any valid token; writes (`POST`/`PATCH`/`DELETE`) require `ROLE_ADMIN`.
+**Decision (superseded 2026-10-17):**
+Validated `Authorization: Bearer` JWTs with the shared `JWT_SECRET` (HS256),
+extracting `sub` and `role`.
 
-**Alternatives considered:**
-- Skip authentication until the gateway exists: rejected (contract documents 401/403).
-- RS256 now without a key issuer: rejected (no JWKS source).
+**Current state:** **RS256 only.** Since 2026-10-08 the service validates RS256
+tokens against the ms-security JWKS (`security.jwks-uri`, ADR-006/TD-019); the
+shared secret is gone. Since 2026-10-17 (ADR-018, R-001) the service is
+**JWT-only**: `X-User-*` headers are never trusted. Reads require any valid
+token; writes (`POST`/`PATCH`/`DELETE`) require `ROLE_ADMIN`.
 
 **Consequences:**
-- ✅ Compatible with today's monolith tokens; drop-in tests generate tokens locally.
-- ⚠️ Shared secret across services; supersede with RS256 + JWKS
-  (ADR-006) when `ms-security` and api-gateway land — replace
-  `infrastructure/security/JwtService` only.
+- ✅ No shared secrets across services; each verifies the token locally via JWKS.
+- Tests mint RS256 tokens from an in-memory key pair (`TestTokenMint`).
+
 
 ---
 

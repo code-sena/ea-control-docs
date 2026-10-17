@@ -36,7 +36,8 @@ clients (plus client credentials for service-to-service). The **`api-gateway` ac
 Backend-for-Frontend (BFF)**: it is an OAuth2 client that completes the code exchange,
 stores tokens **server-side in a Redis-backed session**, and exposes only an **httpOnly,
 Secure, SameSite cookie** to the browser. The gateway relays the access token to services
-and propagates `X-User-Id`, `X-User-Role`, `X-Institution-Id` and `X-Campus-Id`. JWKS is
+and propagates `X-User-Id`, `X-User-Role`, `X-Institution-Id` and `X-Campus-Id` — purely
+informational since ADR-018 (services authenticate the JWT only). JWKS is
 published at `/oauth2/jwks` (replacing `/api/v1/auth/jwks`).
 
 **Justification:**
