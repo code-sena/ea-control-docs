@@ -260,7 +260,7 @@ IMPACT
 |-------|-------|
 | **ID** | R-011 |
 | **Category** | Team |
-| **Description** | The docs declare Jenkins as CI (the real one is GitHub Actions), list 6 UML diagrams with no source file, `local-setup.md` has the wrong auth-service port (3001 instead of 8081), and about 18 referenced files do not exist. The workspace `AGENTS.md` files claimed `ms-environment-monitoring` was a copy of `ms-sensor-management`, which was already false. |
+| **Description** | The docs list 6 UML diagrams with no source file, `local-setup.md` has the wrong auth-service port (3001 instead of 8081), and about 18 referenced files do not exist. The workspace `AGENTS.md` files claimed `ms-environment-monitoring` was a copy of `ms-sensor-management`, which was already false. (The Jenkins-vs-GitHub-Actions part of this drift was resolved on 2026-10-17: Jenkins is now really the CI, ADR-019.) |
 | **Probability** | High |
 | **Impact** | Low |
 | **Risk level** | Medium |

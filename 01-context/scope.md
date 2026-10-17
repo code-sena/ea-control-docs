@@ -88,7 +88,7 @@ Environmental measurements are available through the defined ingestion mechanism
 | Dependency | Team / Provider | Required date | Status |
 |-----------|----------------|--------------|--------|
 | GitHub repository | Development team | Not defined | 🟢 Available |
-| Jenkins | Development team | Not defined | 🟡 In progress |
+| Jenkins | Development team | 2026-10-17 | 🟢 Available (ADR-019: on the VPS, auto-deploy on `main`) |
 | Docker environment | Development team | Not defined | 🟡 In progress |
 | Environmental data source and sensor connectivity | Not defined | Not defined | 🟡 In progress |
 
