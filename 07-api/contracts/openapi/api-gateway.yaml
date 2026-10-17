@@ -19,6 +19,10 @@ info:
     - `X-User-Role`: Role of the user (ADMIN, USER, VIEWER)
     - `X-Correlation-Id`: Trace ID used to correlate logs
 
+    > Since ADR-018 these headers are **informational** (logs/traces). Services
+    > authenticate the `Authorization` header only and ignore `X-User-*` — they must
+    > not be used as an authorization mechanism.
+
 servers:
   - url: http://localhost:8080
     description: Local development

@@ -24,11 +24,14 @@ The service does not own users. The `userId` claim from the JWT is the single so
 
 ADR-003 requires one schema per service. The schema is `user_experience` (not `ux`). Cross-domain references (`user_id`, `classroom_id`, `variable_id`) are logical UUIDs without foreign keys.
 
-## DEC-004: HS256 JWT (interim)
+## DEC-004: JWT validation (superseded interim: HS256 shared secret)
 
-**Status:** Accepted
+**Status:** Superseded (2026-10-17)
 
-Like `ms-classroom-management` and `ms-sensor-management`, this service uses HS256 JWT with a shared `jwt.secret`. RSA keys (ADR-006) will be adopted when `ms-security` becomes the sole token issuer.
+The interim HS256/`jwt.secret` scheme was replaced by RS256 validation against the
+ms-security JWKS (ADR-006), and the service is **JWT-only** since ADR-018: identity
+headers (`X-User-*`, `X-User-Id`) are ignored, so no request can impersonate another
+user without a valid token.
 
 ## DEC-005: Notification state table
 

@@ -51,12 +51,13 @@ docker compose down -v                 # stop and wipe data
 
 # Dev mode against any PostgreSQL
 POSTGRES_URL=jdbc:postgresql://localhost:5432/eduaircontrol_classrooms \
-POSTGRES_USER=… POSTGRES_PASSWORD=… JWT_SECRET=… \
+POSTGRES_USER=… POSTGRES_PASSWORD=… JWKS_URI=http://localhost:8081/api/v1/auth/jwks \
 ./mvnw spring-boot:run
 ```
 
 Environment variables: `SERVER_PORT`, `POSTGRES_URL`, `POSTGRES_USER`,
-`POSTGRES_PASSWORD`, `JWT_SECRET` (required), `JWT_EXPIRATION`, `CORS_ALLOWED_ORIGINS`.
+`POSTGRES_PASSWORD`, `JWKS_URI` (RS256 JWKS of ms-security; defaults to the local
+`http://localhost:8081/api/v1/auth/jwks`), `JWT_EXPIRATION`, `CORS_ALLOWED_ORIGINS`.
 
 ---
 
@@ -91,8 +92,9 @@ always declare `rollback`, and mirror the change in `EduAirControl/database/nego
 
 ### Symptom: `401` for a token that works elsewhere
 
-- The token must be HMAC-signed with the same `JWT_SECRET` as the issuer
-  (interim scheme, DEC-002). Check the env var matches the issuing app.
+- The token must be **RS256-signed** and validate against the ms-security JWKS
+  (`JWKS_URI`, DEC-002 superseded / ADR-018 JWT-only). Identity headers (`X-User-*`)
+  are ignored — check the `Authorization: Bearer` header instead.
 
 ### Symptom: `409 CONFLICT` on create
 

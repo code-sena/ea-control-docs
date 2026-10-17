@@ -23,4 +23,7 @@ User profiles use soft-delete (`deleted_at`) instead of hard delete to preserve 
 
 **Status:** Accepted
 
-Institution filtering uses `TenantContext` populated by `TenantFilter` from the `X-Institution-Id` header added by the API gateway (ADR-016).
+Institution filtering uses `TenantContext` populated by `TenantFilter` from the
+`institutionId` **JWT claim** (published as a request attribute by `JwtAuthFilter`).
+Since ADR-018 (2026-10-17) the `X-Institution-Id` header is ignored — tenant identity
+cannot come from an unauthenticated header (ADR-016).

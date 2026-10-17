@@ -574,7 +574,9 @@ The catalog above is generic; this is where each pattern is actually applied tod
 
 - **API Gateway + BFF** — `api-gateway` (`com.eduaircontrol.apigateway`):
   - `JwtAuthenticationFilter` validates RS256 tokens against `ms-security` JWKS and forwards
-    `X-User-Id`, `X-User-Role`, `X-Institution-Id` headers.
+    the resolved `Authorization` header plus `X-User-Id`, `X-User-Role`, `X-Institution-Id`
+    headers — the headers are informational since ADR-018; services authenticate the JWT
+    itself and ignores them.
   - `RateLimitFilter` enforces 100 req/60s using Redis (`app.rate-limit`).
   - `CorrelationIdFilter` propagates a correlation ID for tracing.
   - Routes are declared by path predicate in `application.yml`; OAuth2 authorization-code

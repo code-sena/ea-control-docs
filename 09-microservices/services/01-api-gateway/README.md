@@ -22,7 +22,9 @@
 
 - Route HTTP requests to the correct microservice based on the path (`/api/v1/auth/*`, `/api/v1/[resource]/*`)
 - Verify that the JWT token is valid before forwarding the request (delegating to auth-service)
-- Attach user context (`X-User-Id`, `X-User-Role`) as internal headers
+- Propagate user context headers (`X-User-Id`, `X-User-Role`) plus the resolved
+  `Authorization` header — since ADR-018 the headers are **informational only**, every
+  service authenticates the JWT itself and ignores them
 - Global rate limiting: maximum [100] requests per IP per minute
 - Unified access logs with correlationId
 

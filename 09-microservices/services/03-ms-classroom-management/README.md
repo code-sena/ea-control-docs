@@ -54,7 +54,8 @@ open http://localhost:3002/swagger-ui.html
 ```
 
 Without Docker (point `POSTGRES_URL`/`POSTGRES_USER`/`POSTGRES_PASSWORD` at any
-PostgreSQL, plus `JWT_SECRET`):
+PostgreSQL; JWT validation reads `security.jwks-uri` (defaults to the local
+ms-security, `http://localhost:8081/api/v1/auth/jwks`)):
 
 ```bash
 ./mvnw spring-boot:run
