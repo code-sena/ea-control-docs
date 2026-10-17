@@ -38,5 +38,6 @@ ADRs document important architectural decisions. Each file = one decision.
 | ADR-016 | Multi-Tenancy by Institution and Campus | Accepted | 2026-10-06 |
 | ADR-017 | OAuth2/OIDC Authorization Server and Backend-for-Frontend | Accepted | 2026-10-06 |
 | ADR-018 | JWT-Only Mesh Authentication | Accepted | 2026-10-17 |
+| ADR-019 | Jenkins as the Official CI/CD (GHCR, auto-deploy on main) | Accepted | 2026-10-17 |
 
 > Add rows here as you create ADRs in `records/`

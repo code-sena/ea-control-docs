@@ -62,32 +62,12 @@ how it is deployed, what data it has.
 ```
 
 ### `ci-cd.md` ⭐
-Description of the continuous integration and deployment pipeline.
-**Fill in:** what tool (GitHub Actions, GitLab CI, Jenkins), what steps it executes,
-when each pipeline is triggered, what it verifies before allowing a merge.
 
-**Format:**
-```markdown
-## PR Pipeline (runs on every Pull Request)
-1. Lint and code format
-2. Unit tests
-3. Integration tests
-4. Coverage analysis (minimum [X]%)
-5. Security analysis (SAST)
-
-## Pipeline on merge to `dev`
-1. All of the above
-2. Docker image build
-3. Deploy to dev environment
-4. Smoke tests in dev
-
-## Release pipeline to production
-1. Manual approval by [role]
-2. Deploy to staging
-3. Acceptance test suite
-4. Manual approval by [role]
-5. Deploy to production with blue-green / canary
-```
+Filled (2026-10-17): **Jenkins is the official CI/CD** (ADR-019, closes Q-006).
+The document covers where each piece lives (`infra/jenkins/`), the `test-<service>`
+and `deploy-<service>` pipelines, triggers (push to `develop` = tests; push to
+`main` = tests + **auto-deploy** to GHCR + VPS + smoke), webhook tokens,
+credentials, required plugins, first boot, rollback and environments.
 
 ---
 
