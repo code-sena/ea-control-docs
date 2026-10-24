@@ -127,7 +127,7 @@ The repository does not yet provide production baselines or dated targets. The f
 | Historical analysis completion | Proportion of analysis requests for supported periods that return usable results | API and monitoring logs | Historical analysis is operationally useful |
 | Environment coverage  | Number and proportion of active educational environments with valid sensor associations and data | Environment, sensor and measurement data | The monitored institution is represented consistently |
 | Authentication success | Proportion of valid authentication attempts that create a usable session | IAM sessions and audit records | Protected access works without unnecessary friction |
-| User interaction | Use of favorites, filters, ratings or comments when those features are enabled | User Experience data | The product supports repeated, relevant consultation |
+| User interaction | Use of favorites and filters | User Experience data | The product supports repeated, relevant consultation |
 
 **North Star metric:** For the initial product stage, the North Star is successful authorized environmental consultations with a usable current or historical result. It connects the product's central promise with real use without assuming a baseline that has not yet been collected.
 

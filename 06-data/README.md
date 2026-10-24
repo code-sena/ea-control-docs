@@ -16,6 +16,7 @@
 | [domain/ms-classroom-management.md](./domain/ms-classroom-management.md) | Classroom management data model |
 | [domain/ms-user-experience.md](./domain/ms-user-experience.md) | User experience data model |
 | [normalization-assessment.md](./normalization-assessment.md) | Cross-domain normalization verdicts, entity→table crosswalk, and open items |
+| [guia-base-de-datos.md](./guia-base-de-datos.md) | Guía detallada en español de los esquemas, tablas, relaciones, migraciones y diferencias conocidas |
 
 ---
 
@@ -28,7 +29,7 @@ Physical organization of the business model (one schema per domain, per ADR-003)
 | `classrooms` | Classrooms | `ms-classroom-management` | `campuses`, `environment_types`, `educational_environment` |
 | `sensors` | Sensors | `ms-sensor-management` | `sensor`, `sensor_installation`, `variable`, `sensor_variable` |
 | `environment_monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (owns alerts — `ms-alert` deprecated, ADR-015) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
-| `user_experience` | UX | `ms-user-experience` | `user_preferences`, `favorites`, `classroom_ratings`, `searches`, `notification_state` |
+| `user_experience` | UX | `ms-user-experience` | Active: `user_preferences`, `favorites`, environment projection and message inbox; `notification_state` is backfill staging. Retained legacy: `legacy_searches`, `legacy_classroom_ratings` |
 | `seguridad` | IAM | `ms-security` | 13 tables from `domain/ms-iam.md` (see `database/identidad-seguridad/`) |
 | `user_management` | User Management | `ms-user-management` | `user_profile` |
 

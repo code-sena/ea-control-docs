@@ -214,7 +214,7 @@ Summary:
 | ms-sensor-management | `Sensor`, `SensorInstallation`, `SensorVariable`, `Device`, `Variable` | `SensorRepository`, `SensorInstallationRepository`, `SensorVariableRepository`, `DeviceRepository`, `VariableRepository` | JPA adapters + outbox (`OutboxWriter`, `OutboxRelay`, `OutboxPublisher`) |
 | ms-environment-monitoring | `EnvironmentalAnalysis` (state machine), `AnalysisResult`, `EnvironmentAlert` | `AnalysisRepository`, `AnalysisStatusRepository`, `MeasurementRepository`, `AlertRepository` (+ `MeasurementAggregationPort`, `ThresholdPort`, `EnvironmentLookupPort`, `UserIdentityPort`) | JPA adapters, `AnalysisResultLoader`, `MeasurementAggregationDao` (JdbcTemplate), RabbitMQ listeners |
 | ms-user-management | `UserProfile` | `UserProfileRepository` | JPA adapter |
-| ms-user-experience | `Favorite`, `UserPreference`, `ClassroomRating`, `Search`, `NotificationState` | — | Controllers + services (partial) |
+| ms-user-experience | `Favorite`, `UserPreference` | — | Controllers + services; environment projection and event inbox |
 
 ---
 
