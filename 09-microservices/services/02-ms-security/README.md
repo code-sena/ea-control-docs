@@ -57,7 +57,7 @@ curl -X POST http://localhost:8081/api/v1/auth/register \
 - [events.md](./events.md) — `user.registered`, `user.login_failed`, `user.password_changed`
 - [decisions.md](./decisions.md) — Design decisions for the authentication service
 - [runbook.md](./runbook.md) — Operation: key rotation, password reset, token blacklist
-- [API Contract](../../../07-api/contracts/openapi/auth-service.yaml)
+- [API Contract](../../../07-api/contracts/openapi/ms-security.yaml)
 
 ---
 

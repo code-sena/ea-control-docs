@@ -47,4 +47,4 @@ These logs go to the observability platform (`13-operations/observability.md`) b
 ## Correlations
 
 - Observability and logs → `13-operations/observability.md`
-- Business events of the services → `09-microservices/services/02-auth-service/events.md`
+- Business events of the services → `09-microservices/services/02-ms-security/events.md`
