@@ -93,9 +93,9 @@
 | Service | Service documentation | API contract |
 |---------|----------------------|--------------|
 | `api-gateway` | [services/01-api-gateway](services/01-api-gateway/README.md) | [api-gateway.yaml](../07-api/contracts/openapi/api-gateway.yaml) |
-| `ms-security` | [services/02-auth-service](services/02-auth-service/README.md) | [auth-service.yaml](../07-api/contracts/openapi/auth-service.yaml) |
+| `ms-security` | [services/02-ms-security](services/02-ms-security/README.md) | [ms-security.yaml](../07-api/contracts/openapi/ms-security.yaml) |
 | `ms-classroom-management` | [services/03-ms-classroom-management](services/03-ms-classroom-management/README.md) | [ms-classroom-management.yaml](../07-api/contracts/openapi/ms-classroom-management.yaml) |
 | `ms-sensor-management` | [services/04-ms-sensor-management](services/04-ms-sensor-management/README.md) | [ms-sensor-management.yaml](../07-api/contracts/openapi/ms-sensor-management.yaml) |
-| `ms-environment-monitoring` | [services/05-environment-monitoring](services/05-environment-monitoring/README.md) | [ms-environment-monitoring.yaml](../07-api/contracts/openapi/ms-environment-monitoring.yaml) |
+| `ms-environment-monitoring` | [services/05-ms-environment-monitoring](services/05-ms-environment-monitoring/README.md) | [ms-environment-monitoring.yaml](../07-api/contracts/openapi/ms-environment-monitoring.yaml) |
 | `ms-user-management` | [services/06-ms-user-management](services/06-ms-user-management/README.md) | [ms-user-management.yaml](../07-api/contracts/openapi/ms-user-management.yaml) |
 | `ms-user-experience` | [services/07-ms-user-experience](services/07-ms-user-experience/README.md) | [ms-user-experience.yaml](../07-api/contracts/openapi/ms-user-experience.yaml) |

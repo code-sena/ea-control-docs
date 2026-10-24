@@ -16,6 +16,12 @@ extracted into independent microservices, one per bounded context. Each microser
 clearly defined responsibility and business boundary while keeping controlled communication
 between services.
 
+> **Legacy monolith:** the pre-microservices system and its full history live at
+> [`Jhon-Cortez/EduAirControl`](https://github.com/Jhon-Cortez/EduAirControl). The migration
+> extracts one bounded context at a time; existing data is moved across with temporary
+> backfill services (`app.backfill.*` in `ms-environment-monitoring` and
+> `ms-user-experience`) until the broker becomes the only path.
+
 Main characteristics of the architecture as implemented:
 
 - **Frontend**: React web application + React Native mobile app (`ea-control-frontend/`).
@@ -34,17 +40,18 @@ Main characteristics of the architecture as implemented:
   - `ms-environment-monitoring` (absorbs the deprecated `ms-alert`, ADR-015)
   - `ms-user-experience`
 - **PostgreSQL** as the persistence technology. The `infra/` stack runs **one PostgreSQL
-  instance per service** (6 instances); two services (`ms-environment-monitoring`,
-  `ms-user-experience`) still point to a shared DB `eduaircontrol` with their own schema
-  (ADR-003). No service reads another service's tables.
+  instance per service** (6 instances), each with its own database and schema
+  (`eduaircontrol_monitoring`, `eduaircontrol_user_experience`, …) — ADR-003. No service
+  reads another service's tables.
 - **REST/HTTP** for synchronous communication between the frontend, API Gateway and services.
 - **RabbitMQ** for asynchronous event communication (transactional outbox → topic exchange →
   idempotent consumers). See `02-domain/domain-events.md` and ADR-007.
 - **Redis** for the gateway rate limiter, session storage, token revocation deny-list and
   lockout counters.
 - **Docker** standardizes the execution environment (`infra/docker-compose.yml`).
-- Sensor / IoT ingest is **HTTP with `X-API-Key`** (ESP32 devices authenticate per device),
-  not MQTT.
+- Sensor / IoT ingest is **HTTP with a device JWT** (`roles: ["DEVICE"]`, validated against
+  the ms-security JWKS), not MQTT; the `X-API-Key` path belonged to the legacy monolith
+  (ADR-004, ADR-018).
 
 **Reference ADRs:** ADR-002, ADR-003, ADR-004, ADR-005, ADR-006, ADR-007, ADR-016, ADR-017.
 
@@ -107,7 +114,7 @@ Shows how the system fits in the world: external actors and systems.
 └────────────────────────────────────────────────────────────────────────────┘
              ▲                                        ▲
              │                                        │
-        HTTPS / REST                            HTTP + X-API-Key
+        HTTPS / REST                            HTTP + device JWT
              │                                        │
              │                                        │
      ┌───────┴────────┐                       ┌───────┴────────┐
@@ -122,7 +129,7 @@ Shows how the system fits in the world: external actors and systems.
 |---|---|
 | Registered user | Logs in (OAuth2 authorization code flow) and consults environmental information |
 | Administrator | Manages users, classrooms and sensors |
-| ESP32 / IoT devices | Send temperature, humidity, CO₂ and noise measurements via HTTP with `X-API-Key` |
+| ESP32 / IoT devices | Send temperature, humidity, CO₂ and noise measurements via HTTP with a device JWT (`roles: ["DEVICE"]`) |
 | Web browser / mobile app | Access the React / React Native frontend |
 | RabbitMQ / Redis / PostgreSQL | Infrastructure droplets: async events, rate-limit/revocation, persistence |
 
@@ -151,7 +158,7 @@ graph TB
         MON["ms-environment-monitoring<br/>:3003 · schema: environment_monitoring<br/>RabbitMQ consumer · CQRS read model"]
         UM["ms-user-management<br/>:3007 · schema: user_management"]
         UX["ms-user-experience<br/>:3006 · schema: user_experience"]
-        LEGACY["EduAirControl (legacy monolith)<br/>ESP32 ingest · measurement events"]
+        LEGACY["EduAirControl (legacy monolith)<br/>being retired (strangler-fig)"]
 
         MQ["RabbitMQ<br/>topic exchange + work queue + DLQ"]
         REDIS["Redis<br/>rate limit · session · token deny-list"]
@@ -163,12 +170,12 @@ graph TB
     ADMIN -->|HTTPS| WEB
 
     WEB -->|OAuth2 code flow / REST| GW
-    DEVICE -->|HTTP + X-API-Key| LEGACY
+    DEVICE -->|HTTP + device JWT| GW
 
     GW -->|/api/v1/auth/** · institutions/** · admin/**| SEC
     GW -->|classrooms · campuses · environments| CLS
     GW -->|sensors · variables · installations| SEN
-    GW -->|environmental-data · dashboard · alerts| MON
+    GW -->|measurements ingest · dashboard · alerts| MON
     GW -->|users · user-profiles| UM
     GW -->|preferences · favorites · ratings| UX
 
@@ -176,9 +183,10 @@ graph TB
     GW -->|rate limit + session| REDIS
     SEC -->|token revoke / lockout| REDIS
 
-    LEGACY -->|outbox → eduaircontrol.environmental-data| MQ
+    LEGACY -->|legacy outbox → eduaircontrol.environmental-data| MQ
     SEN -->|outbox → eduaircontrol.sensor| MQ
-    MQ -->|environmental.data.* · sensor.installation.*| MON
+    CLS -->|outbox → eduaircontrol.classroom| MQ
+    MQ -->|sensor.installation.* · classroom.educational_environment.*| MON
 
     SEC -.->|persistence| PG
     CLS -.->|persistence| PG
@@ -207,20 +215,21 @@ graph TB
 ### Environmental data flow
 
 ```text
-ESP32 IoT device (X-API-Key)
+ESP32 IoT device (device JWT, roles: DEVICE)
         │
-        │ HTTP ingest → legacy monolith outbox (eduaircontrol.environmental-data)
+        │ HTTP POST /api/v1/measurements (gateway → ms-environment-monitoring)
         │ ms-sensor-management outbox (eduaircontrol.sensor → installations)
+        │ ms-classroom-management outbox (eduaircontrol.classroom → environments)
         ▼
  RabbitMQ topic exchanges
-        │ bindings: environmental.data.*  /  sensor.installation.*
+        │ bindings: sensor.installation.*  /  classroom.educational_environment.*
         ▼
  ms-environment-monitoring
-   MeasurementEventListener · SensorInstallationListener
+   MeasurementController (ingest) · SensorInstallationListener · ClassroomEnvironmentListener
         │
         │ inbox claim (idempotency, ON CONFLICT DO NOTHING)
         ▼
- projection → environment_measurement / installation_projection (ON CONFLICT natural key)
+ projection → environment_measurement / installation_projection / educational_environment
         │
         ├─ threshold evaluation ──► alerts (raiseIfAbsent)
         ▼
@@ -248,11 +257,11 @@ ESP32 IoT device (X-API-Key)
 | 10 | Redis | Rate limit, sessions, token revocation | 6379 | — | RESP |
 
 > **Database note:** ADR-003 describes a shared PostgreSQL instance with one schema per
-> service. The `infra/docker-compose.yml` stack currently runs **six separate PostgreSQL 15
-> containers** (`postgres-security` :5437, `postgres-classroom` :5433, `postgres-sensor`
-> :5434, `postgres-monitoring` :5435, `postgres-user-management` :5438,
-> `postgres-user-experience` :5439). `ms-environment-monitoring` and `ms-user-experience`
-> still configure the shared `eduaircontrol` DB in their own properties. This is a documented
+> service. The `infra/docker-compose.yml` stack runs **six separate PostgreSQL 15 containers**
+> (`postgres-security` :5437, `postgres-classroom` :5433, `postgres-sensor` :5434,
+> `postgres-monitoring` :5435, `postgres-user-management` :5438,
+> `postgres-user-experience` :5439), each with its own database
+> (`eduaircontrol_monitoring`, `eduaircontrol_user_experience`, …). This is a documented
 > drift between ADR-003 and the current deployment.
 
 > Full detail per service in `09-microservices/service-catalog.md`
@@ -281,9 +290,9 @@ directly manipulate another domain's tables.
 
 Communication between domains must occur through APIs or asynchronous events when applicable.
 
-The `infra` stack provisions one physical PostgreSQL instance per service, while two services
-still point to the shared `eduaircontrol` database with their own schema (ADR-003). In all
-cases ownership is logical and services do not read each other's tables.
+The `infra` stack provisions one physical PostgreSQL instance per service, each with its own
+database and schema (ADR-003). In all cases ownership is logical and services do not read each
+other's tables.
 
 ---
 
@@ -371,7 +380,7 @@ and quality assurance.
 | Hexagonal Architecture (ports & adapters) | Yes (all `ms-*`) | ADR-009, `05-architecture/hexagonal-architecture.md` |
 | Saga / Event Sourcing | No | Not used in the current business flows |
 | Circuit Breaker | No (documented, ADR-013) | `05-architecture/pattern-guide.md` |
-| Database per physical service | Yes (in `infra` stack) / mixed w/ ADR-003 | `infra/docker-compose.yml` |
+| Database per physical service | Yes (in `infra` stack) | `infra/docker-compose.yml` |
 | Containerization | Yes | Docker / Docker Compose |
 
 ---
@@ -397,7 +406,7 @@ Concerns that apply to ALL services:
 | Configuration | Environment variables over Spring properties | Docker / docker-compose |
 | Containerization | Docker | `infra/docker-compose.yml` |
 | Messaging | RabbitMQ (outbox publish / inbox consume) | `ms-sensor-management`, `ms-environment-monitoring` |
-| Sensor Communication | HTTP ingest with `X-API-Key` (ESP32) | Monolith `DeviceApiKeyFilter` |
+| Sensor Communication | HTTP ingest with a device JWT (`roles: ["DEVICE"]`) | `ms-environment-monitoring` `MeasurementController` |
 | Environmental Variables | CO₂, Humidity, Noise, Temperature (ADR-014) | `06-data/domain/ms-environment-monitoring.md` |
 | API Documentation | springdoc OpenAPI + Swagger UI | Per service (`/swagger-ui.html`) |
 | Tracing | OpenTelemetry **planned** (compose overlay exists) | `infra/docker-compose.observability.yml` |
@@ -409,7 +418,7 @@ Concerns that apply to ALL services:
 | # | Deviation | Current state in the code |
 |---|-----------|---------------------------|
 | D-001 | `ms-environment-monitoring` vs `ms-sensor-management` | Per AGENTS.md it was a byte-for-byte copy; the two Maven projects have since diverged (artifactId, port 3003 vs 3004, schema, RabbitMQ consumer, Testcontainers tests). |
-| D-002 | Database strategy | ADR-003 specifies a shared PostgreSQL with one schema per service; the `infra` stack runs 6 separate PostgreSQL containers. `ms-environment-monitoring` and `ms-user-experience` still point at a shared `eduaircontrol` DB. |
+| D-002 | Database strategy | ADR-003 specifies a shared PostgreSQL with one schema per service; the `infra` stack runs 6 separate PostgreSQL containers, each with its own database (`eduaircontrol_monitoring`, `eduaircontrol_user_experience`, …). |
 | D-003 | JWT scheme | `ms-security` issues RS256 (JWKS at `/api/v1/auth/jwks`); business services are **JWT-only** since ADR-018 (2026-10-17) — no shared secret, no trust in `X-User-*` headers. |
 | D-004 | JVM version | `docs-ea-control/_stacks/java-spring.md` states JDK 21; all services compile with **Java 17**. |
 | D-005 | Documentation accuracy | ~~`ms-security/README.md` is titled "ms-sensor-management"~~ — fixed: the README now describes ms-security correctly. |

@@ -76,8 +76,8 @@ reuses the Redis already used for rate limiting and the token blacklist.
 **Impact on the system:**
 - Affected services: `ms-security` (authorization server), `api-gateway` (BFF),
   frontend web and mobile.
-- Documents to update: `ADR-006` (mark the flow as superseded), `07-api/contracts/openapi/auth-service.yaml`,
-  `09-microservices/services/02-auth-service/*`, `10-devops/environments.md`.
+- Documents to update: `ADR-006` (mark the flow as superseded), `07-api/contracts/openapi/ms-security.yaml`,
+  `09-microservices/services/02-ms-security/*`, `10-devops/environments.md`.
 
 ---
 

@@ -92,7 +92,7 @@ Maps the 7 entities in `02-domain/entities-and-rules.md` to canonical tables.
 | ~~10~~ | ~~UX domain declares "Table names use plural `snake_case`", conflicting with the singular core-table rule~~ **Resolved (exemption)** — singular rule scoped to core domain tables, UX plural names accepted as service-local convention and documented in `00-governance/documentation-rules.md`; `ms-user-experience.md:60` reworded to service scope | `ms-user-experience.md:60` | ~~Low~~ Done |
 | ~~11~~ | ~~Sensor FK column named `environment_id`~~ **Resolved** — renamed to `educational_environment_id` (DBML, indexes, prose, diagrams) | `ms-sensor-management.md` | ~~Low~~ Done |
 | ~~12~~ | ~~Cross-domain duplicate tables with name/schema drift~~ **Resolved** — owning domain renamed to singular (`sensor`, `sensor_installation`, `variable`, `sensor_variable`), monitoring copies aligned (`measurement_unit_id` + audit columns), crosswalk/traceability/entities updated | `ms-sensor-management.md`, `ms-environment-monitoring.md:48–74`, `04-requirements/traceability-matrix.md:78–79` | ~~High~~ Done |
-| ~~13~~ | ~~Residual Spanish outside the Phase 7 OpenAPI scope~~ **Resolved** — `09-microservices/services/01-api-gateway/{data-model,events,runbook,decisions}.md`, `02-auth-service/{data-model,events,runbook,decisions}.md`, and `.env.example` translated to English per ADR-001 | see listed files | ~~Medium~~ Done |
+| ~~13~~ | ~~Residual Spanish outside the Phase 7 OpenAPI scope~~ **Resolved** — `09-microservices/services/01-api-gateway/{data-model,events,runbook,decisions}.md`, `02-ms-security/{data-model,events,runbook,decisions}.md`, and `.env.example` translated to English per ADR-001 | see listed files | ~~Medium~~ Done |
 
 ---
 
