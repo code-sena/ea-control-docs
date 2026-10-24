@@ -52,7 +52,7 @@ Rules:
 - Use English for tables, columns, enum values, statuses, and business concepts.
 - Use `snake_case` for all SQL identifiers.
 - Use singular nouns for core domain tables: `campus`, `sensor`, `variable`, `environment_measurement`.
-  - Exemption: tables owned by the User Experience service (`user_preferences`, `favorites`, `classroom_ratings`, `searches`) keep plural names as a service-local convention (open item 10 of `06-data/normalization-assessment.md`).
+  - Exemption: active User Experience tables (`user_preferences`, `favorites`) keep plural names as a service-local convention. Renamed `legacy_*` tables are retained historical data, not active domain tables.
 - Primary keys use `<table_name>_id`.
 - Foreign keys use the referenced table name plus `_id`.
 - Prefer stable business codes (`code`, `serial_number`, `name`) over ad hoc labels.

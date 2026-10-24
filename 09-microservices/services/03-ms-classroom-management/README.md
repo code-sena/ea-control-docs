@@ -36,7 +36,7 @@ types, and the spaces themselves (code, floor, area, capacity, status). Owns the
 - **Does not manage users, roles, or authentication** — that is `ms-security`.
 - **Does not store measurements, analyses, or alerts** — other domains reference
   an educational environment by UUID (logical reference, ADR-003).
-- **Does not expose user preferences/favorites/ratings** — those live in
+- **Does not expose user preferences or favorites** — those live in
   `ms-user-experience`.
 
 ## How to run it locally
