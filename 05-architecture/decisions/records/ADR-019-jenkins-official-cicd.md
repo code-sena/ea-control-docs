@@ -42,6 +42,14 @@ in this repo (`infra/jenkins/`: Job DSL `jobs.groovy` + `Jenkinsfile.test` +
 3. The GitHub Actions workflow is **deleted after the first green deploy** (GitHub
    Actions stops being a source of truth; Q-006 answered in favour of Jenkins).
 
+> **Note (2026-10-23):** GitHub Actions is re-enabled as a **PR verification check**
+> only — `.github/workflows/ci.yml` per repo running `./mvnw -B verify` (and, for
+> `infra`, `docker compose config` validation). GitHub requires a visible status on
+> every pull request and the Jenkins panel is not public, so the check gives the
+> reviewer a green/red signal. Jenkins remains the **official CI/CD and the only
+> deploy pipeline** (items 1–2 above); the GitHub Actions check never deploys and
+> does not reopen Q-006.
+
 **Justification:** Jenkins was already the declared tool (ADR-010/011); running it on
 the VPS costs nothing extra and gives the deploy pipeline direct access to the stack;
 GHCR artifacts make deploys immutable, fast (no Maven on the serving host) and
