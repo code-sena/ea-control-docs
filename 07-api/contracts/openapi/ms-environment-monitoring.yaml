@@ -398,24 +398,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /alerts/{id}:
-    delete:
-      summary: Eliminar una alerta (soft delete)
-      description: >
-        La alerta deja de aparecer en GET /alerts pero la traza se conserva
-        (columna deleted_at). Idempotente: repetir el DELETE responde 204.
-      operationId: deleteAlert
-      tags: [Alerts]
-      parameters:
-        - $ref: '#/components/parameters/IdParam'
-      responses:
-        '204':
-          description: Alerta eliminada
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
   /dashboard/summary:
     get:
       summary: Indicadores globales del dashboard ambiental

@@ -138,37 +138,37 @@ and ADR-003’s one-schema-per-service ownership.
 
 ---
 
-## [DEC-006] Resolution of the open §12 decisions and acceptance of ADR-014
+## [DEC-006] Resolución de decisiones abiertas §12 y aceptación de ADR-014
 
 **Date:** 2026-10-07
 **Status:** Active
 
-**Context:** The build spec leaves six decisions open in §12.
-Thresholds, alerts and the projection cannot be coded until they are closed.
-ADR-014 is in `Proposed` state and blocks the threshold implementation.
+**Context:** La especificación de construcción deja seis decisiones abiertas en §12.
+Sin cerrarlas no se puede codificar umbrales, alertas ni la proyección. ADR-014 está
+en estado `Proposed` y bloquea la implementación de umbrales.
 
-**Decision:** ADR-014 is accepted as-is and the six decisions are resolved:
+**Decision:** Se acepta ADR-014 tal cual y se resuelven las seis decisiones:
 
-1. **Breach semantics:** alert when the measurement exceeds the active threshold
-   bounds at `WARNING` or `CRITICAL` severity. `INFO` is informational only.
-   The two-sided band is modeled with `min_value`/`max_value` per severity.
-2. **`quality_flag`:** its own local catalog (`VALID`, `SUSPECT`, `BAD`). The service
-   does not reference the monolith's catalog.
-3. **Alert state:** `acknowledged_at`/`acknowledged_by` columns (canonical model).
-   The `alert_status` catalog is not used.
-4. **Ingestion:** sensors talk to `ms-sensor-management` (ADR-004). This service
-   consumes `EnvironmentalDataRecorded` over RabbitMQ. There is no direct MQTT/HTTP
-   ingestion in the service's v1.
-5. **`environment_type_id`:** local projection (`sensor_installation → educational_environment
-   → environment_type`) fed by events + periodic refresh.
-6. **Thresholds:** keyed only on `environment_type_id`, without
-   `educational_environment_id` (ADR-014 as-is). The monolith column is explicitly rejected.
+1. **Semántica de excedencia:** alerta cuando la medición supera los límites del
+   umbral activo en severidad `WARNING` o `CRITICAL`. `INFO` es solo informativo.
+   La banda bilateral se modela con `min_value`/`max_value` por severidad.
+2. **`quality_flag`:** catálogo local propio (`VALID`, `SUSPECT`, `BAD`). El servicio
+   no referencia el catálogo del monolito.
+3. **Estado de alerta:** columnas `acknowledged_at`/`acknowledged_by` (modelo canónico).
+   No se usa catálogo `alert_status`.
+4. **Ingesta:** los sensores hablan con `ms-sensor-management` (ADR-004). Este servicio
+   consume `EnvironmentalDataRecorded` por RabbitMQ. No hay ingesta directa MQTT/HTTP
+   en la v1 del servicio.
+5. **`environment_type_id`:** proyección local (`sensor_installation → educational_environment
+   → environment_type`) alimentada por eventos + refresh periódico.
+6. **Umbrales:** solo por `environment_type_id`, sin `educational_environment_id`
+   (ADR-014 tal cual). Se rechaza explícitamente la columna del monolito.
 
 **Consequences:**
-- ✅ ADR-014 moves to `Accepted` and unblocks threshold coding.
-- ✅ The six decisions are traceable in this DEC.
-- ⚠️ If the business changes the breach semantics, the event
-  or the rule must be versioned (it is not a silent compatible change).
+- ✅ ADR-014 pasa a `Accepted` y desbloquea la codificación de umbrales.
+- ✅ Las seis decisiones quedan trazables en esta DEC.
+- ⚠️ Si el negocio cambia la semántica de excedencia, hay que versionar el evento
+  o la regla (no es un cambio compatible silencioso).
 
 ---
 
