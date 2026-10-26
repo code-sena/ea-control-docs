@@ -29,7 +29,7 @@ Physical organization of the business model (one schema per domain, per ADR-003)
 | `sensors` | Sensors | `ms-sensor-management` | `sensor`, `sensor_installation`, `variable`, `sensor_variable` |
 | `environment_monitoring` | Monitoring + Data Analysis | `ms-environment-monitoring` (owns alerts — `ms-alert` deprecated, ADR-015) | `severity`, `variable_threshold`, `environment_measurement`, `environmental_analysis`, `analysis_result`, `environment_alert` |
 | `user_experience` | UX | `ms-user-experience` | `user_preferences`, `favorites`, `classroom_ratings`, `searches`, `notification_state` |
-| `seguridad` | IAM | `ms-security` | 13 tables from `domain/ms-iam.md` (see `database/identidad-seguridad/`) |
+| `seguridad` | IAM | `ms-security` | 10 tables implemented (see `domain/ms-iam.md` §5 and `09-microservices/services/02-ms-security/data-model.md`) |
 | `user_management` | User Management | `ms-user-management` | `user_profile` |
 
 Rules that hold across the split:
