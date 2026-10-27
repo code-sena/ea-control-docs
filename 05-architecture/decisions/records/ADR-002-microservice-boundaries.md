@@ -3,6 +3,7 @@
 - **ID:** ADR-002
 - **Date:** 2026-09-09
 - **Status:** Accepted
+- **Note (2026-10-06):** la parte de `ms-alert` como servicio separado queda superseded por ADR-015 (plegado en `ms-environment-monitoring`).
 - **Authors:** EduAirControl Development Team
 
 ---

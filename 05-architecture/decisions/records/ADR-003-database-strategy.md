@@ -49,6 +49,7 @@ This ADR supersedes the undocumented MySQL assumption. It does not require an im
 
 **Negative / Trade-offs:**
 - A shared PostgreSQL instance remains a potential availability and resource-sharing boundary.
+- **Evolución (2026-10):** la infraestructura productiva (`infra/docker-compose.yml`) corre 6 instancias físicas de PostgreSQL (una por servicio), yendo más allá de la opción lógica elegida. El principio de ownership (sin lectura cruzada de tablas) se mantiene; documentado como drift D-002.
 - Schema or database namespace isolation requires permissions to be configured correctly.
 - A future physical split will require migration and operational planning.
 

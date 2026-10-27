@@ -65,6 +65,7 @@ Together, they cover the three pillars of observability: metrics, logs, and trac
 - Storage requirements for metrics and traces
 - Learning curve for Prometheus query language (PromQL)
 - Additional infrastructure to maintain
+- **Estado (2026-10):** Prometheus y Grafana corren en el overlay de observabilidad; OpenTelemetry aún no está cableado a los servicios (pendiente).
 
 **Impact on the system:**
 - Affected services: All microservices, infrastructure components
