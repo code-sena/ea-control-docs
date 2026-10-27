@@ -273,6 +273,26 @@ IMPACT
 | **Status** | Active |
 
 ---
+
+### R-016 — Projections applied without event ordering in ms-environment-monitoring
+
+| Field | Value |
+|-------|-------|
+| **ID** | R-016 |
+| **Category** | Technical / Data consistency |
+| **Description** | The consumers of `sensor.installation.*` and `classroom.educational_environment.*` apply each event as a last-write-wins `UPSERT` (`InstallationProjectionDao`, `ClassroomEnvironmentDao`). Events carry `occurredAt`, but it is never compared with the stored state, and `version` is the schema version, not an entity version. Deletes are physical, so a late `UPSERT` can resurrect a deleted row, and an installation delete also purges its measurements irreversibly. If events arrive out of order, `installation_projection.removed_at` can end up stale and `MeasurementAlertingService` silently stops evaluating thresholds for that installation. Separately, a measurement ingested before its projection exists is stored without evaluation (`log.debug` only) and is never re-evaluated once the projection arrives. |
+| **Probability** | Low (assumes one instance per service and one consumer per queue; consumer concurrency was not verified) |
+| **Impact** | Medium |
+| **Risk level** | Medium |
+| **Strategy** | Accept |
+| **Mitigation plan** | Not scheduled. Options, cheapest first: (1) a counter for skipped evaluations in `MeasurementAlertingService`; (2) a `last_event_at` column on both projections, applying an event only if it is newer; (3) tombstones or a recent-deletes table for physical deletes; (4) a rebuild path from the owning services (`ms-sensor-management`, `ms-classroom-management`). |
+| **Contingency plan** | If thresholds stop alerting for an environment, compare `installation_projection` with `ms-sensor-management` and fix the row by hand. The `HistoricalBackfillService` is not a usable fallback while R-007 is open. |
+| **Trigger** | More than one replica or consumer per queue; messages routed through the DLQ and replayed; or an installation that stops raising alerts without a configuration change. |
+| **Owner** | Backend team |
+| **Review date** | 2026-11-30 |
+| **Status** | Accepted |
+
+---
 ## Common technical risks in microservices
 
 These risks apply to almost all microservices projects. Evaluate which ones apply:
