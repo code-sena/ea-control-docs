@@ -2,7 +2,14 @@
 
 - **ID:** ADR-013
 - **Date:** 2026-09-17
-- **Status:** Accepted
+- **Status:** Deprecated
+- **Deprecated on:** 2026-10-27
+
+> **Deprecated:** Aceptado pero no implementado. Resilience4j no aparece en ningún
+> `pom.xml` del proyecto y ningún item del plan de cierre (G-01…G-12, R-01/R-02)
+> cubre su adopción. Diferido post-MVP; re-evaluar cuando exista comunicación
+> inter-servicio síncrona crítica que lo justifique. El ADR se conserva como
+> registro histórico.
 - **Authors:** EduAirControl Development Team
 
 ---
