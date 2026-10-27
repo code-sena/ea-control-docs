@@ -172,6 +172,41 @@ en estado `Proposed` y bloquea la implementación de umbrales.
 
 ---
 
+## [DEC-007] Projections are last-write-wins; event ordering is a known limit
+
+**Date:** 2026-10-27
+**Status:** Active
+
+**Context:** `installation_projection` and `educational_environment` are fed by
+at-least-once events (ADR-007). Idempotency is guaranteed per event through
+`inbox_message`, but ordering is not: the `UPSERT` in `InstallationProjectionDao` and
+`ClassroomEnvironmentDao` overwrites the row with whatever event arrives last. The
+event `version` is the schema version, and `occurredAt` is not compared with stored
+state. Deletes are physical.
+
+**Decision:** Accept this limit for now and do not add ordering control. The
+projections are applied in arrival order, relying on RabbitMQ preserving order within a
+queue with a single consumer. The gap is tracked as R-016 in
+`15-project-control/risks.md`.
+
+**Consequences:**
+- ✅ No schema change and no new moving parts while the service runs as one instance.
+- ⚠️ Out-of-order events (DLQ replays, several consumers or replicas) can leave
+  `removed_at` stale, resurrect a deleted row, or purge measurements by a late delete.
+- ⚠️ `MeasurementAlertingService` skips evaluation, logging at `debug` only, when the
+  installation has no projection or its environment has no type. The measurement is kept
+  and is not re-evaluated when the projection arrives.
+- ⚠️ The projections cannot be guaranteed rebuildable: `HistoricalBackfillService`
+  copies from the monolith schemas, is disabled by default, and cannot work with
+  separate databases per service (R-007). `inbox_message` makes redeliveries safe,
+  but it does not recover a lost or misordered event.
+
+**Revisit when:** the service runs with more than one replica or consumer per queue,
+or an installation stops alerting without a configuration change. The first step is a
+`last_event_at` column on both projections, applied only if the incoming event is newer.
+
+---
+
 ## Correlations
 
 - Global architecture ADRs → `05-architecture/decisions/records/`
