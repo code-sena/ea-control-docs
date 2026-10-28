@@ -50,7 +50,7 @@ Verify these ports are free before starting:
 | 3002 | ms-classroom-management | Classrooms and educational environments |
 | 3003 | ms-environment-monitoring | Measurements, thresholds, analyses, alerts |
 | 3004 | ms-sensor-management | Sensors and installations |
-| 3006 | ms-user-experience | Preferences, favourites |
+| 3006 | ms-user-experience | Preferences, favourites, ratings, searches |
 | 3007 | ms-user-management | User profiles |
 | 5432 | PostgreSQL | Relational database (one server per service under `infra/`) |
 | 6379 | Redis | Cache and message queue |

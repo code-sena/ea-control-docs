@@ -163,11 +163,11 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 | Field | Value |
 |-------|-------|
 | **Name** | UX |
-| **Responsibility** | Manages user interface preferences and saved environments or variables. |
+| **Responsibility** | Manages user interactions: preferences, favorites, ratings, comments, search history, and filters. |
 | **Owning team** | Development Team |
 | **Microservice(s)** | `ms-user-experience` |
 | **Database** | PostgreSQL 15 |
-| **Ubiquitous Language** | Preference, Favorite |
+| **Ubiquitous Language** | Preference, Favorite, Rating, Comment, Search History, Filter |
 
 **Context-specific terms (Ubiquitous Language):**
 
@@ -175,6 +175,8 @@ A **Bounded Context** is the explicit boundary within which a particular domain 
 |------|-------------------------|-------------------------------|
 | Preference | User's UI settings (theme, language, notification toggles). | Yes — in IAM, it refers to account-level settings. |
 | Favorite | An educational environment saved by the user for quick access. | No |
+| Rating | User's qualitative evaluation of an environmental condition or environment. | No |
+| Search History | Record of user's searches within the platform. | No |
 
 ---
 
@@ -221,7 +223,8 @@ The Context Map shows relationships between bounded contexts. Relationships defi
 │             UX               │
 │                              │
 │ • Favorites                  │
-│ • Preferences                │
+│ • Ratings                    │
+│ • Search history             │
 └──────────────────────────────┘
 
 Relationships:

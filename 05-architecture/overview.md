@@ -177,7 +177,7 @@ graph TB
     GW -->|sensors · variables · installations| SEN
     GW -->|measurements ingest · dashboard · alerts| MON
     GW -->|users · user-profiles| UM
-    GW -->|preferences · favorites| UX
+    GW -->|preferences · favorites · ratings| UX
 
     SEC -->|publishes RS256 JWKS| GW
     GW -->|rate limit + session| REDIS
@@ -207,7 +207,7 @@ graph TB
 | `ms-classroom-management` | Management of educational classrooms/campuses/environment types |
 | `ms-sensor-management` | Registration, configuration and management of environmental sensors; publishes `SensorInstalled`/`SensorRemoved` events through a transactional outbox (measurement events are produced by the legacy monolith) |
 | `ms-environment-monitoring` | Reception, storage, consultation and analysis of environmental measurements, dashboard read models, and threshold alerts; consumes RabbitMQ events idempotently; maintains a local projection of installations |
-| `ms-user-experience` | User preferences and favorites |
+| `ms-user-experience` | User preferences, favorites, ratings and search experience features |
 | RabbitMQ | Asynchronous, at-least-once event communication between services: topic exchanges `eduaircontrol.environmental-data` (measurements, produced by the monolith) and `eduaircontrol.sensor` (installations, produced by ms-sensor-management), durable work queue and DLQ on the consumer side |
 | Redis | Gateway rate limiting, session storage, token revocation deny-list, lockout counters |
 | PostgreSQL | Persistent storage; one instance per service in the `infra` stack |
@@ -251,7 +251,7 @@ ESP32 IoT device (device JWT, roles: DEVICE)
 | 4 | `ms-classroom-management` | Classroom / campus / environment type management | 3002 | PostgreSQL `classrooms` | REST |
 | 5 | `ms-sensor-management` | Sensor / variable / installation management | 3004 | PostgreSQL `sensors` | REST + RabbitMQ (outbox publish) |
 | 6 | `ms-environment-monitoring` | Measurement reception, dashboard, analysis, alerts | 3003 | PostgreSQL `environment_monitoring` | REST + RabbitMQ (consume) |
-| 7 | `ms-user-experience` | Preferences, favorites | 3006 | PostgreSQL `user_experience` | REST |
+| 7 | `ms-user-experience` | Preferences, favorites, ratings, searches | 3006 | PostgreSQL `user_experience` | REST |
 | 8 | PostgreSQL | One instance per service (see note below) | 5433–5439 | — | JDBC |
 | 9 | RabbitMQ | Asynchronous messaging (topic exchange + DLQ) | 5672 / 15672 | — | AMQP |
 | 10 | Redis | Rate limit, sessions, token revocation | 6379 | — | RESP |

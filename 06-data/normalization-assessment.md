@@ -1,7 +1,6 @@
 # Normalization Assessment
 
-> Cross-cutting normalization review of the business models under `06-data/domain/`.
-> It predates the retirement of UX ratings/search history and is not the runtime table inventory. See `guia-base-de-datos.md` for current tables and retained legacy tables.
+> Cross-cutting review of all six domain data models under `06-data/domain/`.
 > Source of truth for normalization verdicts, the entity-to-table crosswalk,
 > registered denormalizations, and open items.
 
@@ -90,7 +89,7 @@ Maps the 7 entities in `02-domain/entities-and-rules.md` to canonical tables.
 | ~~7~~ | ~~ER/prose model `ENVIRONMENTAL_STATUS` / `ENVIRONMENTAL_STATISTICS` not in the DBML~~ **Resolved** — prose, indexes, events, domain boundary, ER, and domain-fit diagram realigned to `environmental_analysis` / `analysis_result` | `ms-environment-monitoring.md` §8–12, §14–16, §19, §21 | ~~Medium~~ Done |
 | ~~8~~ | ~~Classroom `status` not normalized into a reference table~~ **Accepted** — kept as an app-level validated `varchar(30)` per source intent; revisit only if lifecycle management grows more complex | `ms-classroom-management.md:217` | ~~Low~~ Accepted |
 | ~~9~~ | ~~Entity name mismatch in 02: `EnvironmentData` vs `EnvironmentalData`~~ **Resolved** — aligned to `EnvironmentalData` | `02-domain/entities-and-rules.md:198` | ~~Low~~ Done |
-| ~~10~~ | ~~UX domain declares "Table names use plural `snake_case`", conflicting with the singular core-table rule~~ **Resolved (exemption)** — active UX tables `user_preferences` and `favorites` retain their service-local plural names; renamed `legacy_*` tables are archival, not active domain tables | `ms-user-experience.md` | ~~Low~~ Done |
+| ~~10~~ | ~~UX domain declares "Table names use plural `snake_case`", conflicting with the singular core-table rule~~ **Resolved (exemption)** — singular rule scoped to core domain tables, UX plural names accepted as service-local convention and documented in `00-governance/documentation-rules.md`; `ms-user-experience.md:60` reworded to service scope | `ms-user-experience.md:60` | ~~Low~~ Done |
 | ~~11~~ | ~~Sensor FK column named `environment_id`~~ **Resolved** — renamed to `educational_environment_id` (DBML, indexes, prose, diagrams) | `ms-sensor-management.md` | ~~Low~~ Done |
 | ~~12~~ | ~~Cross-domain duplicate tables with name/schema drift~~ **Resolved** — owning domain renamed to singular (`sensor`, `sensor_installation`, `variable`, `sensor_variable`), monitoring copies aligned (`measurement_unit_id` + audit columns), crosswalk/traceability/entities updated | `ms-sensor-management.md`, `ms-environment-monitoring.md:48–74`, `04-requirements/traceability-matrix.md:78–79` | ~~High~~ Done |
 | ~~13~~ | ~~Residual Spanish outside the Phase 7 OpenAPI scope~~ **Resolved** — `09-microservices/services/01-api-gateway/{data-model,events,runbook,decisions}.md`, `02-ms-security/{data-model,events,runbook,decisions}.md`, and `.env.example` translated to English per ADR-001 | see listed files | ~~Medium~~ Done |

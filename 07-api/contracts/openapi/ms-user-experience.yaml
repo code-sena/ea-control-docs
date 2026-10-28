@@ -3,7 +3,8 @@ info:
   title: ms-user-experience API
   version: 1.0.0
   description: |
-    User preferences and favorites.
+    User preferences and interaction management: favorites, ratings, searches
+    and notification state.
 
     ## Alcance
     Este servicio es dueño de las interacciones del usuario con la plataforma.
@@ -28,6 +29,10 @@ tags:
     description: User UI preferences (language, theme, timezone, notifications)
   - name: Favorites
     description: Favorite classrooms and variables
+  - name: Ratings
+    description: Classroom ratings and comments
+  - name: Searches
+    description: Search history and applied filters
 
 paths:
   /preferences:
@@ -118,6 +123,99 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /classrooms/{id}/ratings:
+    post:
+      summary: Rate a classroom
+      operationId: rateClassroom
+      tags: [Ratings]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRequest'
+      responses:
+        '200':
+          description: Rating created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ratings:
+    get:
+      summary: List current user's ratings
+      operationId: listRatings
+      tags: [Ratings]
+      responses:
+        '200':
+          description: User's ratings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RatingView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /searches:
+    get:
+      summary: List current user's search history
+      operationId: listSearches
+      tags: [Searches]
+      responses:
+        '200':
+          description: User's search history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Record a search
+      operationId: recordSearch
+      tags: [Searches]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Search recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /searches/{searchId}:
+    delete:
+      summary: Delete a search record
+      operationId: deleteSearch
+      tags: [Searches]
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Search deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   schemas:
     UserPreference:
@@ -163,6 +261,51 @@ components:
           type: boolean
         notificationsEnabled:
           type: boolean
+
+    RatingRequest:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+
+    RatingView:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        classroomId:
+          $ref: '#/components/schemas/UUID'
+        score:
+          type: integer
+        comment:
+          type: string
+        ratedAt:
+          $ref: '#/components/schemas/Timestamp'
+
+    SearchRequest:
+      type: object
+      properties:
+        searchText:
+          type: string
+        appliedFilter:
+          type: string
+
+    SearchView:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        searchText:
+          type: string
+        appliedFilter:
+          type: string
+        searchedAt:
+          $ref: '#/components/schemas/Timestamp'
 
     UUID:
       type: string

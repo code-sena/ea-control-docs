@@ -1,48 +1,104 @@
 # Data Model — ms-user-experience
 
-> This service actively owns user preferences and favorites. The Liquibase history retains renamed legacy tables for retired search history and ratings so existing data is not destroyed.
+> This service is the **authoritative owner** of the data described here.
+> No other service should read these tables directly.
 
-## Database
+---
 
-- Engine: PostgreSQL 15
-- Schema: `user_experience`
-- Migrations: Liquibase at `src/main/resources/db/changelog/`
-- Cross-service IDs (`user_id`, `classroom_id`, `variable_id`, `institution_id`) are logical UUID references, not foreign keys.
+## Database engine
 
-## Active tables
+**Engine:** PostgreSQL 15
+**Schema:** `user_experience`. Cross-domain references (`user_id`, `classroom_id`, `variable_id`) are logical UUIDs without a foreign key, per ADR-003.
 
-| Table | Key and constraints | Purpose |
-|---|---|---|
-| `user_preferences` | PK `preference_id`; unique `user_id` | Language, theme, notification preference, timezone, date format, reminders and display options. |
-| `favorites` | PK `favorite_id`; check requires `classroom_id` or `variable_id` | Environments and/or variables saved by a user. Writes are scoped to the authenticated user and institution. |
-| `educational_environment` | PK `educational_environment_id` | Read projection of environment ID, code, name and institution, populated by classroom events for tenant checks. |
-| `inbox_message` | PK `message_id` | Message IDs already processed by the classroom event consumer. |
-| `notification_state` | Composite PK (`user_id`, `alert_id`) | Backfill-only migration staging table in the current implementation; it has no active notification API here. |
+---
 
-## Retired tables
+## Schema
 
-Liquibase changeset `005-deprecate-ratings-and-search-history` renames the former tables:
+### Table: user_preferences
 
-| Retained table | Former table | Status |
-|---|---|---|
-| `legacy_searches` | `searches` | No active entity, repository, endpoint, or backfill. Rows retained for historical preservation. |
-| `legacy_classroom_ratings` | `classroom_ratings` | No active entity, repository, endpoint, or backfill. Rows retained for historical preservation. |
+**Purpose:** Stores personal interface and notification preferences per user.
 
-The indexes dedicated to these legacy tables are removed to avoid ongoing index storage and write overhead. The rename changeset is reversible. Do not rename these tables back unless restoring the retired API and service code as a planned change.
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| preference_id | UUID | No | Unique identifier | PK, `gen_random_uuid()` |
+| user_id | UUID | No | Authenticated user reference | Logical ref to `ms-security`, UNIQUE |
+| language | VARCHAR(10) | Yes | UI language (`es`, `en`, `fr`, `pt`) | |
+| color_theme | VARCHAR(20) | Yes | Theme preference (`light`, `dark`, `system`) | |
+| notifications_enabled | BOOLEAN | No | Whether notifications are on | Default `true` |
+| time_zone | VARCHAR(100) | Yes | User timezone | |
+| date_format | VARCHAR(20) | Yes | Date display format | |
+| dark_mode | BOOLEAN | Yes | Dark mode toggle | |
+| auto_timezone | BOOLEAN | Yes | Auto-detect timezone | |
+| reminders | JSONB | Yes | Reminder toggles | |
+| created_at | TIMESTAMPTZ | No | Creation timestamp | Default `now()` |
+| updated_at | TIMESTAMPTZ | No | Last update timestamp | |
 
-## Relationships
+### Table: favorites
 
-```mermaid
-erDiagram
-  users ||..o{ user_preferences : "user_id (logical UUID)"
-  users ||..o{ favorites : "user_id (logical UUID)"
-  educational_environment ||..o{ favorites : "classroom_id (logical UUID)"
-  variable ||..o{ favorites : "variable_id (logical UUID)"
-  educational_environment ||..o{ inbox_message : "event projection (not an entity FK)"
-```
+**Purpose:** Stores classrooms and variables marked as favorites.
 
-`users` and `variable` belong to other services. `inbox_message` is a technical idempotency ledger; its connection to environment events is contextual rather than relational.
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| favorite_id | UUID | No | Unique identifier | PK, `gen_random_uuid()` |
+| user_id | UUID | No | User reference | Logical ref to `ms-security` |
+| classroom_id | UUID | Yes | Classroom reference | Logical ref to `ms-classroom-management` |
+| variable_id | UUID | Yes | Variable reference | Logical ref to `ms-sensor-management` |
+| added_at | TIMESTAMPTZ | No | When added | Default `now()` |
 
-## API surface
+**Constraints:** `CHECK (classroom_id IS NOT NULL OR variable_id IS NOT NULL)`
 
-The active API exposes preferences and favorites only. See the [OpenAPI contract](../../../07-api/contracts/openapi/ms-user-experience.yaml). Search history and ratings are absent from the runtime contract.
+### Table: classroom_ratings
+
+**Purpose:** Stores user evaluations of classrooms.
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| rating_id | UUID | No | Unique identifier | PK, `gen_random_uuid()` |
+| user_id | UUID | No | User reference | Logical ref to `ms-security` |
+| classroom_id | UUID | No | Classroom reference | Logical ref to `ms-classroom-management` |
+| score | INTEGER | No | Rating score | `CHECK (score BETWEEN 1 AND 5)` |
+| comment | VARCHAR(1000) | Yes | Optional comment | |
+| rated_at | TIMESTAMPTZ | No | When rated | Default `now()` |
+
+### Table: searches
+
+**Purpose:** Stores user search history and applied filters.
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| search_id | UUID | No | Unique identifier | PK, `gen_random_uuid()` |
+| user_id | UUID | No | User reference | Logical ref to `ms-security` |
+| search_text | VARCHAR(500) | Yes | Search text | |
+| applied_filter | VARCHAR(500) | Yes | Applied filter | |
+| searched_at | TIMESTAMPTZ | No | When searched | Default `now()` |
+
+### Table: notification_state
+
+**Purpose:** Tracks read/acknowledged state of notifications per user.
+
+| Field | Type | Nullable | Description | Constraints |
+|-------|------|----------|-------------|-------------|
+| notification_state_id | UUID | No | Unique identifier | PK, `gen_random_uuid()` |
+| user_id | UUID | No | User reference | Logical ref to `ms-security` |
+| notification_id | UUID | No | Notification reference | Logical ref to `ms-environment-monitoring` |
+| read_at | TIMESTAMPTZ | Yes | When read | |
+| acknowledged_at | TIMESTAMPTZ | Yes | When acknowledged | |
+
+### Indexes
+
+| Name | Fields | Type | Justification |
+|------|--------|------|---------------|
+| ix_user_preferences_user_id | (user_id) | BTREE | Lookup by user |
+| ix_favorites_user_id | (user_id) | BTREE | List user favorites |
+| ix_favorites_classroom_id | (classroom_id) | BTREE | Lookup by classroom |
+| ix_classroom_ratings_user_id | (user_id) | BTREE | List user ratings |
+| ix_classroom_ratings_classroom_id | (classroom_id) | BTREE | Classroom average |
+| ix_searches_user_id | (user_id) | BTREE | User search history |
+| ix_searches_searched_at | (searched_at) | BTREE | Time-based queries |
+
+---
+
+## Schema migration
+
+**Tool:** Liquibase (ADR-008)
+**Script location:** `ms-user-experience/src/main/resources/db/changelog/`

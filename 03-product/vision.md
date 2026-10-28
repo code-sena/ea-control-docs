@@ -40,7 +40,7 @@ The product does not promise automatic physical control, predictive environmenta
 | Environmental Monitoring | Make current environmental information available for educational environments | Measurement ingestion, persistence, environment selection and dashboard consultation | Environments with valid sensor references and usable measurement records |
 | Historical understanding | Help users understand how environmental conditions change over time | Analysis by day, week, month and year, with clear variable and period selection | Successful analysis requests and user completion of historical consultation |
 | Managed foundation | Keep users, spaces and sensors organized so measurements remain trustworthy | IAM, campuses, environment types, educational environments, sensors, models, variables and installations | Administrators can maintain valid references and lifecycle states |
-| Clear user experience | Reduce the effort required to find and interpret relevant information | Dashboard, favorites, preferences and filters | Successful consultation and meaningful repeated interaction |
+| Clear user experience | Reduce the effort required to find and interpret relevant information | Dashboard, favorites, preferences, searches, filters, ratings and comments when enabled | Successful consultation and meaningful repeated interaction |
 | Reliability and protection | Preserve availability, integrity and controlled access to product information | PostgreSQL-backed persistence, sessions, permissions, audit, migrations and service ownership | Successful authenticated operations, accepted measurements and traceable activity |
 
 ---
@@ -78,7 +78,7 @@ This is a product view. 05-architecture/ defines the technical deployment and se
 | Campus and environment management | ms-classroom-management.md | Campuses, environment types and educational environments | The dashboard can organize information by institution and monitored space |
 | Sensor management | ms-sensor-management.md | Sensor models, manufacturers, sensors, statuses, installations, variables, sensor-variable associations and measurement units | Measurement values can be interpreted in relation to a registered source and supported variable |
 | Environmental monitoring | ms-environment-monitoring.md | Environmental measurements, recorded time, environment references, variables and analysis support | Current and historical data can be persisted and queried |
-| User experience | ms-user-experience.md | Preferences and favorites | The product can support personalized consultation without transferring ownership of core entities |
+| User experience | ms-user-experience.md | Preferences, favorites, ratings, comments, searches and filters | The product can support personalized consultation without transferring ownership of core entities |
 | Environmental alerts | ms-alert.md | Alert status, environment, variable, threshold, measurement and user references | Threshold-related workflows are data-ready but require explicit product scope and contracts |
 
 ---
@@ -119,8 +119,8 @@ The roadmap is expressed as product horizons. It does not replace the prioritize
 
 | Horizon | Focus | Product content | Exit condition |
 |--------|-------------|----------------|--------------------------|
-| H1 — Now | Core MVP | Registration and authentication; environment management; sensor management; measurement ingestion; environmental dashboard; historical analysis by day, week, month and year; favorites | A representative user can complete the authorized consultation journey with valid data |
-| H2 — Next | Validated iteration | Improve dashboard clarity, filters, preferences and interaction flows based on pilot evidence; strengthen data completeness and operational visibility | Usage evidence identifies concrete improvements and the product remains within its domain boundary |
+| H1 — Now | Core MVP | Registration and authentication; environment management; sensor management; measurement ingestion; environmental dashboard; historical analysis by day, week, month and year; core favorites or ratings when prioritized | A representative user can complete the authorized consultation journey with valid data |
+| H2 — Next | Validated iteration | Improve dashboard clarity, filters, preferences, searches and interaction flows based on pilot evidence; strengthen data completeness and operational visibility | Usage evidence identifies concrete improvements and the product remains within its domain boundary |
 | H3 — Later | Controlled expansion | Consider alert workflows, richer operational analysis or additional integrations only after product value, ownership, contracts and operational impact are approved | Each expansion has explicit requirements, data ownership, API behavior and architecture review |
 
 
@@ -169,7 +169,7 @@ The initial baseline is to be collected during pilot operation. The product shou
 - Coverage of active environments with valid sensor associations.
 - Authentication and session success for valid users.
 - Data-quality or ingestion errors that prevent dashboard consultation.
-- Use of favorites and filters.
+- Use of favorites, filters, searches, ratings and comments when enabled.
 
 ## Correlations
 

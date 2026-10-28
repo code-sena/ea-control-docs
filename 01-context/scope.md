@@ -21,6 +21,7 @@ This document defines the boundaries of the EduAirControl MVP. It is the baselin
 | 5 | Environmental dashboard | Presents current and historical environmental information in an organized visual interface | ms-environment-monitoring and frontend |
 | 6 | Historical analysis | Allows consultation of environmental data by day, week, month and year | ms-environment-monitoring |
 | 7 | Environment Favorites | Allows users to add and remove educational environments from a personal favorites list | ms-user-experience |
+| 8 | Environment Rating | Allows users to rate the comfort or conditions of an educational environment | ms-user-experience |
 
 ### Included integrations and environments
 

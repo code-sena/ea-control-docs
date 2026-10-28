@@ -6,12 +6,14 @@
 
 **None currently.** The service is purely request/response in v1.
 
-Potential future events, if event-driven integrations are introduced later:
+Potential future events (per `06-data/domain/ms-user-experience.md`):
 
 | Event | Trigger | Consumers |
 |---|---|---|
 | `UserPreferencesUpdated` | Preferences saved | Analytics, recommendations |
 | `FavoriteAdded` / `FavoriteRemoved` | Favorite toggled | Analytics, recommendations |
+| `ClassroomRated` | Rating saved | Analytics, classroom management |
+| `SearchPerformed` | Search recorded | Analytics |
 
 ## Consumed events
 

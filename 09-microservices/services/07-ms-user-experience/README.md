@@ -1,6 +1,7 @@
 # ms-user-experience
 
-> Owns user interface preferences and favorites. Search history and classroom ratings have been retired from the active product and API.
+> User preferences and interaction management. Owns user preferences, favorites,
+> classroom ratings, search history and notification state.
 
 ## Service sheet
 
@@ -15,18 +16,25 @@
 
 ## Responsibility
 
-`ms-user-experience` is the authoritative owner of current user preferences and favorites. It does not own users, classrooms, or variables; it references them by UUID and maintains an environment projection for institution checks.
+`ms-user-experience` is the authoritative owner of:
 
-### Responsibilities
+```text
+user_preferences
+favorites
+classroom_ratings
+searches
+notification_state
+```
 
-- Manage user interface preferences (language, theme, timezone, notifications).
+One sentence: **it manages how users interact with the platform — preferences, favorites, ratings, searches and notification state.**
+
+### Responsibilities (what this service DOES)
+
+- Manage user UI preferences (language, theme, timezone, notifications).
 - Manage favorite classrooms and variables per user.
-- Maintain the local classroom-to-institution projection and event inbox.
-
-### Retired capabilities
-
-- Search history endpoints and ratings endpoints have been removed from the service and gateway.
-- Existing rows are preserved as `legacy_searches` and `legacy_classroom_ratings` by Liquibase changeset `005-deprecate-ratings-and-search-history`; the application does not read or write those tables.
+- Store classroom ratings and comments.
+- Record search history and applied filters.
+- Track notification read/acknowledged state per user.
 
 ### Out of scope
 
@@ -47,16 +55,23 @@ Base path `/api/v1`. Full contract: [ms-user-experience.yaml](../../../07-api/co
 | GET | `/favorites` | List current user's favorite IDs |
 | POST | `/favorites/{environmentId}/toggle` | Toggle favorite for an environment |
 | DELETE | `/favorites/{environmentId}` | Remove a favorite |
+| POST | `/classrooms/{id}/ratings` | Rate a classroom |
+| GET | `/ratings` | List current user's ratings |
+| GET | `/searches` | List current user's search history |
+| POST | `/searches` | Record a search |
+| DELETE | `/searches/{id}` | Delete a search record |
 
-## Frontend behavior
+## Frontend behavior (ea-control-frontend)
 
-- Environment search and filtering are performed by the client; search history is not persisted by the backend.
-- Alert notifications are generated only for environments marked as favorite.
-- A `SUPER_ADMIN` without `institutionId` cannot access institution-scoped environment data.
+- **Alert notifications are generated only for environments marked as favorite**
+  (`/favorites` + `favorites/{environmentId}/toggle`). Non-favorite environments do
+  not emit CO₂/temperature/warning notifications in the UI.
+- **SUPER_ADMIN without `institutionId`** cannot access environment data: the UI
+  skips loading environments and shows an "no access" state in the environments list.
 
 ## Documents
 
 | Document | Content |
 |----------|---------|
-| [data-model.md](data-model.md) | Active tables and retained legacy data |
+| [data-model.md](data-model.md) | Tables owned by this service and modeling decisions |
 | [decisions.md](decisions.md) | Internal technical decisions of the service |
