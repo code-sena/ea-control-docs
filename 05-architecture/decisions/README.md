@@ -21,12 +21,12 @@ ADRs document important architectural decisions. Each file = one decision.
 | # | Title | Status | Date |
 |---|-------|--------|------|
 | ADR-001 | Documentation Language | Accepted | 2026-09-08 |
-| ADR-002 | Microservice Boundaries | Accepted | 2026-09-09 |
-| ADR-003 | Database Engine and Domain Data Ownership | Accepted | 2026-09-09 |
-| ADR-004 | Communication Patterns Between Components | Accepted | 2026-09-09 |
+| ADR-002 | Microservice Boundaries | Accepted (ms-alert folded by ADR-015) | 2026-09-09 |
+| ADR-003 | Database Engine and Domain Data Ownership | Accepted (clarified 2026-10-28) | 2026-09-09 |
+| ADR-004 | Communication Patterns Between Components | Accepted (ingestion path updated 2026-10-28) | 2026-09-09 |
 | ADR-005 | API Gateway as the External Backend Entry Point | Accepted | 2026-09-09 |
 | ADR-006 | JWT Authentication and Service-Level RBAC | Accepted | 2026-09-09 |
-| ADR-007 | At-Least-Once Events with Transactional Outbox | Accepted | 2026-09-09 |
+| ADR-007 | At-Least-Once Events with Transactional Outbox | Accepted (implementation status 2026-10-28) | 2026-09-09 |
 | ADR-008 | Database Migration Tool | Accepted | 2026-09-17 |
 | ADR-009 | Hexagonal Architecture | Accepted | 2026-09-17 |
 | ADR-010 | Containerization Strategy | Accepted | 2026-09-17 |

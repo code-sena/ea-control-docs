@@ -6,6 +6,13 @@
 - **Note (2026-10-06):** la parte de `ms-alert` como servicio separado queda superseded por ADR-015 (plegado en `ms-environment-monitoring`).
 - **Authors:** EduAirControl Development Team
 
+> **Note (2026-10-28):** `ms-alert` is **not** a deployable service: ADR-015 folded alert
+> generation and management into `ms-environment-monitoring`. The decomposition in force is
+> six domain services (`ms-security`, `ms-user-management`, `ms-classroom-management`,
+> `ms-sensor-management`, `ms-environment-monitoring`, `ms-user-experience`) plus the
+> `api-gateway` platform container. Every mention below of "seven domain services" or of
+> `ms-alert` as a service describes the original decision, not the current system.
+
 ---
 
 ## Context

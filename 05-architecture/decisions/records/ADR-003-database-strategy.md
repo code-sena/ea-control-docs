@@ -2,8 +2,21 @@
 
 - **ID:** ADR-003
 - **Date:** 2026-09-09
-- **Status:** Accepted
+- **Status:** Accepted — clarified 2026-10-28 (physical separation in Compose; consistency model)
 - **Authors:** EduAirControl Development Team
+
+> **Note (2026-10-28):** the decision above allowed a single PostgreSQL instance with one
+> schema per service. The local stack (`infra/docker-compose.yml`) already goes further: it
+> runs one PostgreSQL 15 container per service (`postgres-security`, `-classroom`, `-sensor`,
+> `-user-management`, `-user-experience`, `-monitoring`), each with its own database. The rule
+> that matters is unchanged: no service reads another service's tables; data crosses
+> boundaries only through APIs or events (local read models fed by events, see ADR-007).
+>
+> **Consistency model accepted by this decision.** Each service keeps full ACID guarantees
+> inside its own database. There is no transaction spanning services, so atomicity and
+> isolation across services are **not** provided: cross-service state is eventually
+> consistent, and a local read model can lag its source of truth. This is a deliberate
+> trade-off (see ADR-007 for why two-phase commit was discarded).
 
 ---
 

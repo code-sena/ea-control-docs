@@ -2,14 +2,39 @@
 
 - **ID:** ADR-007
 - **Date:** 2026-09-09
-- **Status:** Accepted
+- **Status:** Accepted — implementation status and consistency trade-off recorded 2026-10-28
 - **Authors:** EduAirControl Development Team
+
+> **Note (2026-10-28) — what is implemented.**
+>
+> - **Producers with an outbox:** `ms-sensor-management` and `ms-classroom-management`
+>   (`OutboxWriter`, `OutboxRelay`, `OutboxPublisher`). `ms-environment-monitoring` is a pure
+>   consumer: it has an inbox, not an outbox.
+> - **Relay:** polls every 1 s, batch of 100, oldest first. Retries are at a fixed interval:
+>   there is **no exponential backoff and no attempt limit** at the relay (it records
+>   `attempts` and `last_error`) and a stale-event check only writes a warning after 5 min.
+> - **Consumers:** the inbox (`inbox_message`) is written with `INSERT … ON CONFLICT DO NOTHING`
+>   in the **same transaction** as the read-model update; the ack happens after commit.
+> - **Retries and DLQ (consumer side):** 4 retries, 1 s initial wait, ×2, capped at 10 s, then
+>   the message goes to a dead-letter queue retained for **7 days**. Bounded retries and the DLQ
+>   exist; a DLQ alert and a replay runbook/tool do **not** exist yet.
+> - **Ordering:** not guaranteed. Read-model upserts are last-write-wins. The event field
+>   `version` is the schema version, not an entity version.
+> - **Local contract copies:** each consumer keeps its own copy of the producer's event
+>   contract, with no shared library, so services deploy independently. There is no
+>   cross-service contract test yet.
+>
+> **Consistency trade-off.** Two-phase commit is discarded (see alternatives), so there is no
+> atomicity across services: each service is ACID locally and the system as a whole is
+> eventually consistent. Read models (for example `installation_projection`) can lag.
+> Events whose retries are exhausted stay in the DLQ and must be replayed within 7 days or
+> they are lost.
 
 ---
 
 ## Context
 
-The event catalog defines UserRegistered, EnvironmentalDataRecorded, and EnvironmentalDataAnalyzed. It also describes at-least-once delivery, idempotent consumers, retries, and a dead-letter queue, but the project has not selected a publication mechanism that prevents the database state and published event from diverging.
+The event catalog defines UserRegistered, EnvironmentalDataRecorded, and EnvironmentalDataAnalyzed (the events implemented first are the sensor-installation and educational-environment ones, see the note above). It also describes at-least-once delivery, idempotent consumers, retries, and a dead-letter queue, but the project has not selected a publication mechanism that prevents the database state and published event from diverging.
 For environmental monitoring, losing an event after persisting a measurement would leave historical analysis incomplete. Publishing an event before the database transaction commits could produce an event for data that was ultimately rolled back.
 
 **Known constraints:**
@@ -55,8 +80,8 @@ The outbox closes the most important failure window between committing business 
 - Operational monitoring is required for outbox backlog, retries, and dead-letter messages.
 
 **Impact on the system:**
-- Affected services: ms-sensor-management, ms-environment-monitoring, RabbitMQ, and future event consumers.
-- dcfdDocuments that must be updated: 02-domain/domain-events.md, 05-architecture/overview.md, 05-architecture/pattern-guide.md, 06-data/models.md, 09-microservices/service-catalog.md, 13-operations/observability.md.
+- Affected services: ms-sensor-management, ms-classroom-management (producers), ms-environment-monitoring, ms-user-experience (consumers), RabbitMQ, and future event consumers.
+- Documents that must be updated: 02-domain/domain-events.md, 05-architecture/overview.md, 05-architecture/pattern-guide.md, 06-data/models.md, 09-microservices/service-catalog.md, 13-operations/observability.md.
 
 ---
 

@@ -2,8 +2,19 @@
 
 - **ID:** ADR-004
 - **Date:** 2026-09-09
-- **Status:** Accepted
+- **Status:** Accepted — sensor ingestion path updated 2026-10-28
 - **Authors:** EduAirControl Development Team
+
+> **Note (2026-10-28):** the implemented ingestion path differs from the decision below.
+> Devices send measurements over HTTPS straight to `POST /api/v1/measurements` in
+> `ms-environment-monitoring`, authenticated with a `DEVICE` JWT; the call is the only
+> ingestion path and alert evaluation runs in the same transaction. No MQTT adapter exists in
+> the services, and `ms-sensor-management` does not sit in the measurement path. RabbitMQ
+> carries the integration events that are actually implemented: sensor installation events
+> (`SensorInstalled`, `SensorRemoved`, `SensorInstallationDeleted`) and educational
+> environment events (`Created`, `Updated`, `Removed`), consumed by
+> `ms-environment-monitoring` (and environment events also by `ms-user-experience`). The
+> REST-for-immediate / events-for-asynchronous split is unchanged.
 
 ---
 
