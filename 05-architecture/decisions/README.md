@@ -34,7 +34,7 @@ ADRs document important architectural decisions. Each file = one decision.
 | ADR-011 | Production Deployment Strategy | Accepted | 2026-09-17 |
 | ADR-012 | Observability Stack | Accepted | 2026-09-17 |
 | ADR-013 | Circuit Breaker Adoption | Deprecated (never implemented, 2026-10-27) | 2026-09-17 |
-| ADR-014 | Environmental Sensor Variables and Thresholds | Accepted | 2026-09-17 |
+| ADR-014 | Environmental Sensor Variables and Thresholds | Accepted (amended 2026-10-16, 2026-10-30) | 2026-09-17 |
 | ADR-015 | Fold Alert Management into ms-environment-monitoring | Accepted | 2026-10-06 |
 | ADR-016 | Multi-Tenancy by Institution and Campus | Accepted | 2026-10-06 |
 | ADR-017 | OAuth2/OIDC Authorization Server and Backend-for-Frontend | Accepted (amended 2026-10-27, interim cookie path) | 2026-10-06 |

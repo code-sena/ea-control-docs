@@ -2,7 +2,7 @@
 
 - **ID:** ADR-014
 - **Date:** 2026-09-17
-- **Status:** Accepted
+- **Status:** Accepted — amended 2026-10-16 (per-environment overrides) and 2026-10-30 (administrator-defined thresholds, out-of-range readings)
 - **Authors:** EduAirControl Development Team
 
 ---
@@ -76,7 +76,47 @@ Thresholds are defined per variable and environment type, with validity dates an
 > `ux_variable_threshold_env_var_sev` keeps one open override per
 > (environment, variable, severity).
 
-### Default Thresholds for Educational Environments
+> [!NOTE] AMENDMENT (2026-10-30) — Thresholds are defined by the administrator; out-of-range readings
+>
+> **1. Who defines thresholds.** The values that trigger alerts are decided by the
+> administrator, not by the system. The `ADMIN` of the institution defines them **per
+> environment** (the scope the override endpoint already supports); `SUPER_ADMIN` may do the
+> same. No campus-level role or campus-level threshold exists, and none is introduced here.
+>
+> **2. The tables below are reference templates, not defaults.** The per-type values for
+> classroom, laboratory and library (section "Reference Threshold Templates") are suggestions the
+> administrator reviews and confirms for each environment. Until an administrator confirms the
+> thresholds of an environment, that environment is shown as *thresholds not configured* and
+> **no alert is generated from the template values**. This replaces the fallback to the
+> environment-type threshold described in the 2026-10-16 amendment and in business rule 2.
+>
+> **3. Valid ranges are not thresholds.** The "Valid Range" column of the variables table is
+> the physical limit of the measurement. It is a fixed system rule, **not** editable by the
+> administrator, and is independent of the alert thresholds.
+>
+> **4. Readings outside the valid range.** The reading is **stored**, not rejected, so a faulty
+> sensor leaves evidence and a retried or buffered send (ADR-021) behaves the same way:
+>
+> | Reading | Quality flag | Alert evaluation | Averages (ADR-020) |
+> |---------|--------------|------------------|--------------------|
+> | Inside the valid range | `VALID` | Yes | Yes |
+> | Outside the valid range | `BAD` | **No** | **No** |
+> | `SUSPECT` (in range but implausible) | `SUSPECT` | Yes | Yes |
+>
+> `SUSPECT` is **reserved**: no rule produces it in this delivery (a future plausibility rule,
+> such as a stuck sensor or an abrupt jump, would). The flag is derived from the value at
+> insert time and the first stored value wins, so idempotency is unaffected. A missing or
+> non-numeric `value` is still rejected as invalid input.
+>
+> **Implementation status (2026-10-30): not implemented.** Today the seed
+> (`010-seed-reference`) inserts the template values as effective thresholds, the override
+> endpoint only handles the `WARNING` level, there is no *thresholds not configured* state, and
+> ingestion only checks that `value` is not null (every reading is stored as `VALID`).
+> Consequences to plan: an environment created for a demo needs its thresholds confirmed by an
+> administrator before it can raise alerts, and the ADR-020 aggregation must exclude `BAD`
+> readings.
+
+### Reference Threshold Templates (not authoritative — see the 2026-10-30 amendment)
 
 #### Classroom (environment type: `CLASSROOM`)
 
@@ -154,7 +194,7 @@ Each threshold is defined with:
 
 **Positive:**
 - Clear definition of what the system monitors
-- Flexible threshold configuration per environment type
+- Threshold values are decided by the administrator; per-type values are only templates
 - Severity-based alerting for appropriate response
 - Historical threshold tracking with validity dates
 - Standard units for consistent data analysis
