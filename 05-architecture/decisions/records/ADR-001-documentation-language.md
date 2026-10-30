@@ -39,8 +39,6 @@ A single language standard is required to maintain consistency throughout the pr
 
 ## Decision
 
-## Decision
-
 **Alternative A:** Use English as the standard language for code and technical documentation, while supporting four user interface languages through i18n.
 
 | Artifact | Language | Reason |

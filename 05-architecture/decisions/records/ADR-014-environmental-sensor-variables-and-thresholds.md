@@ -2,7 +2,7 @@
 
 - **ID:** ADR-014
 - **Date:** 2026-09-17
-- **Status:** Accepted
+- **Status:** Accepted — amended 2026-10-16 (per-environment overrides) and 2026-10-30 (administrator-defined thresholds, out-of-range readings)
 - **Authors:** EduAirControl Development Team
 
 ---
@@ -20,7 +20,7 @@ A decision is required now because:
 **Known constraints:**
 - The MVP focuses on four primary environmental variables
 - Thresholds must be configurable per environment type (classroom, lab, library, etc.)
-- Measurements come from physical IoT sensors via MQTT/HTTP
+- Measurements come from physical IoT sensors over HTTPS (ADR-004 note; no MQTT adapter exists)
 - The system must support different threshold severity levels
 
 ---
@@ -48,12 +48,16 @@ The four variables (CO₂, humidity, noise level, temperature) are the most crit
 
 | Variable | Code | Unit | Symbol | Description | Valid Range |
 |----------|------|------|--------|-------------|-------------|
-| Temperature | `TEMP` | Celsius | °C | Air temperature in the environment | -10 to 50 |
-| Humidity | `HUM` | Percent | % | Relative humidity in the environment | 0 to 100 |
-| Carbon Dioxide | `CO2` | Parts Per Million | ppm | CO₂ concentration in the environment | 0 to 5000 |
-| Noise Level | `NOISE` | Decibels | dB | Sound pressure level in the environment | 0 to 140 |
+| Temperature | `temperature` | Celsius | °C | Air temperature in the environment | -10 to 50 |
+| Humidity | `humidity` | Percent | % | Relative humidity in the environment | 0 to 100 |
+| Carbon Dioxide | `co2` | Parts Per Million | ppm | CO₂ concentration in the environment | 0 to 5000 |
+| Noise Level | `noise` | Decibels | dB | Sound pressure level in the environment | 0 to 140 |
 
 ---
+
+> **Note (2026-10-30):** the codes above are the ones stored by the service (seed
+> `010-seed-reference`) and used by the API (`variableCode`); the first draft of this ADR used
+> `TEMP`/`HUM`/`CO2`/`NOISE`. The stored unit symbol for temperature is `C` (displayed as °C).
 
 ## Threshold Configuration
 
@@ -72,9 +76,49 @@ Thresholds are defined per variable and environment type, with validity dates an
 > `ux_variable_threshold_env_var_sev` keeps one open override per
 > (environment, variable, severity).
 
-### Default Thresholds for Educational Environments
+> [!NOTE] AMENDMENT (2026-10-30) — Thresholds are defined by the administrator; out-of-range readings
+>
+> **1. Who defines thresholds.** The values that trigger alerts are decided by the
+> administrator, not by the system. The `ADMIN` of the institution defines them **per
+> environment** (the scope the override endpoint already supports); `SUPER_ADMIN` may do the
+> same. No campus-level role or campus-level threshold exists, and none is introduced here.
+>
+> **2. The tables below are reference templates, not defaults.** The per-type values for
+> classroom, laboratory and library (section "Reference Threshold Templates") are suggestions the
+> administrator reviews and confirms for each environment. Until an administrator confirms the
+> thresholds of an environment, that environment is shown as *thresholds not configured* and
+> **no alert is generated from the template values**. This replaces the fallback to the
+> environment-type threshold described in the 2026-10-16 amendment and in business rule 2.
+>
+> **3. Valid ranges are not thresholds.** The "Valid Range" column of the variables table is
+> the physical limit of the measurement. It is a fixed system rule, **not** editable by the
+> administrator, and is independent of the alert thresholds.
+>
+> **4. Readings outside the valid range.** The reading is **stored**, not rejected, so a faulty
+> sensor leaves evidence and a retried or buffered send (ADR-021) behaves the same way:
+>
+> | Reading | Quality flag | Alert evaluation | Averages (ADR-020) |
+> |---------|--------------|------------------|--------------------|
+> | Inside the valid range | `VALID` | Yes | Yes |
+> | Outside the valid range | `BAD` | **No** | **No** |
+> | `SUSPECT` (in range but implausible) | `SUSPECT` | Yes | Yes |
+>
+> `SUSPECT` is **reserved**: no rule produces it in this delivery (a future plausibility rule,
+> such as a stuck sensor or an abrupt jump, would). The flag is derived from the value at
+> insert time and the first stored value wins, so idempotency is unaffected. A missing or
+> non-numeric `value` is still rejected as invalid input.
+>
+> **Implementation status (2026-10-30): not implemented.** Today the seed
+> (`010-seed-reference`) inserts the template values as effective thresholds, the override
+> endpoint only handles the `WARNING` level, there is no *thresholds not configured* state, and
+> ingestion only checks that `value` is not null (every reading is stored as `VALID`).
+> Consequences to plan: an environment created for a demo needs its thresholds confirmed by an
+> administrator before it can raise alerts, and the ADR-020 aggregation must exclude `BAD`
+> readings.
 
-#### Classroom (环境类型: `CLASSROOM`)
+### Reference Threshold Templates (not authoritative — see the 2026-10-30 amendment)
+
+#### Classroom (environment type: `CLASSROOM`)
 
 | Variable | Normal Range | Warning Range | Critical Range | Unit |
 |----------|--------------|---------------|----------------|------|
@@ -83,7 +127,7 @@ Thresholds are defined per variable and environment type, with validity dates an
 | CO₂ | 0 - 800 | 800 - 1000 | >1000 | ppm |
 | Noise Level | 0 - 45 | 45 - 55 | >55 | dB |
 
-#### Laboratory (环境类型: `LABORATORY`)
+#### Laboratory (environment type: `LABORATORY`)
 
 | Variable | Normal Range | Warning Range | Critical Range | Unit |
 |----------|--------------|---------------|----------------|------|
@@ -92,7 +136,7 @@ Thresholds are defined per variable and environment type, with validity dates an
 | CO₂ | 0 - 600 | 600 - 800 | >800 | ppm |
 | Noise Level | 0 - 50 | 50 - 60 | >60 | dB |
 
-#### Library (环境类型: `LIBRARY`)
+#### Library (environment type: `LIBRARY`)
 
 | Variable | Normal Range | Warning Range | Critical Range | Unit |
 |----------|--------------|---------------|----------------|------|
@@ -134,15 +178,15 @@ Each threshold is defined with:
 
 2. **Override Precedence:** If a threshold with `educational_environment_id` set exists for a variable/severity, it wins over the threshold of the environment type; the type threshold remains the fallback for environments without an override.
 
-2. **Validity Dates:** Thresholds must have a `valid_from` date. The `valid_to` date is optional (null means ongoing).
+3. **Validity Dates:** Thresholds must have a `valid_from` date. The `valid_to` date is optional (null means ongoing).
 
-3. **Overlapping Prevention:** A new threshold cannot overlap with an existing threshold for the same variable, environment type, and severity.
+4. **Overlapping Prevention:** A new threshold cannot overlap with an existing threshold for the same variable, environment type, and severity.
 
-4. **Alert Generation:** Alerts are generated when a measurement exceeds the threshold boundaries for the active threshold.
+5. **Alert Generation:** Alerts are generated when a measurement exceeds the threshold boundaries for the active threshold.
 
-5. **Measurement Validation:** Each measurement must be validated against the active threshold for its variable and environment type.
+6. **Measurement Validation:** Each measurement must be validated against the active threshold for its variable and environment type.
 
-6. **Historical Preservation:** Thresholds are never deleted; they are marked as invalid by setting `valid_to`.
+7. **Historical Preservation:** Thresholds are never deleted; they are marked as invalid by setting `valid_to`.
 
 ---
 
@@ -150,7 +194,7 @@ Each threshold is defined with:
 
 **Positive:**
 - Clear definition of what the system monitors
-- Flexible threshold configuration per environment type
+- Threshold values are decided by the administrator; per-type values are only templates
 - Severity-based alerting for appropriate response
 - Historical threshold tracking with validity dates
 - Standard units for consistent data analysis
@@ -161,7 +205,7 @@ Each threshold is defined with:
 - May need tuning based on real-world observations
 
 **Impact on the system:**
-- Affected services: ms-sensor-management, ms-environment-monitoring, ms-alert
+- Affected services: ms-sensor-management, ms-environment-monitoring (alerts live here since ADR-015)
 - Documents that must be updated: `06-data/domain/ms-environment-monitoring.md`, `06-data/domain/ms-sensor-management.md`
 
 ---
@@ -180,6 +224,6 @@ Each threshold is defined with:
 
 - Environmental monitoring data model: `06-data/domain/ms-environment-monitoring.md`
 - Sensor management data model: `06-data/domain/ms-sensor-management.md`
-- Alert data model: `06-data/domain/ms-alert.md`
+- Alert data model: `06-data/domain/ms-alert.md` (historical; alerts were folded into monitoring by ADR-015)
 - Domain events: `02-domain/domain-events.md`
 - Related to: ADR-002 (Microservice Boundaries), ADR-008 (Database Migration Tool)
