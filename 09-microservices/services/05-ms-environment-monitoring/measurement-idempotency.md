@@ -116,7 +116,7 @@ implementation task, not by this document.
 | Q2 | Latest value per variable for an environment (`latestByEnvironment`) | `(installation, variable, measured_at)` via `installation_projection` |
 | Q3 | History of an environment in `[from, to)`, optionally one variable, paged (`history`) | Same index plus range on `measured_at` |
 | Q4 | Count of readings of active installations of an institution (`countByInstitution`) | Scan by installation |
-| Q5 | Aggregation recompute: readings of the last 25 h grouped by 5-minute bucket (ADR-020 job, per ADR-021 contract) | `ix_environment_measurement_time` |
+| Q5 | Aggregation recompute: readings of the last 25 h grouped by 5-minute bucket, excluding `BAD` readings (ADR-020 job, per ADR-021 contract and the ADR-014 amendment) | `ix_environment_measurement_time` |
 | Q6 | Retention: readings older than the raw retention period | Partition drop (ADR-020), otherwise `ix_environment_measurement_time` |
 
 ## 7. Integrity tests to implement (Issue #6 and #13)
@@ -138,6 +138,8 @@ Run them against real PostgreSQL (Testcontainers), not H2, because they depend o
 | T10 | Batch where one reading fails validation | Valid readings stored; failing one reported individually |
 | T11 | Failure after the insert (alert evaluation throws) | Whole transaction rolls back: no row and no alert |
 | T12 | `measured_at` is `NULL` | Rejected before reaching the database; column stays `NOT NULL` |
+| T13 | Reading outside the variable's valid range (ADR-014 amendment 2026-10-30), sent twice | Stored once with `BAD`; no alert; first value kept on the retry |
+| T14 | Aggregation recompute window with a `BAD` reading inside it | The `BAD` reading is excluded from the averages |
 
 ## 8. Open points handed to other tasks
 
