@@ -48,6 +48,12 @@ token, so the institution model belongs there. Referencing the institution by UU
 the campus preserves ADR-003 without cross-schema foreign keys. Enforcing isolation in
 each service follows the existing defense-in-depth principle (ADR-006).
 
+> **Note (2026-10-30, ADR-018):** the `X-Institution-Id` / `X-Campus-Id` headers are
+> informational only; services take `institutionId` / `campusId` exclusively from the validated
+> token. `TenantFilter` exists in `ms-classroom-management`, `ms-sensor-management` and
+> `ms-user-management`; `ms-environment-monitoring` has no `TenantFilter` and scopes by the
+> institution replicated on `educational_environment` in its queries.
+>
 > **Note (2026-10-07):** `company_code` is required at **registration** (to join an
 > institution) but **not at login**: `users.email` is globally unique, so the email already
 > identifies the user and the institution is resolved from the account. This avoids the

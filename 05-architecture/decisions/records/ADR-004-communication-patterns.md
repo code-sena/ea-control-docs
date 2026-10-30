@@ -1,4 +1,4 @@
-## ADR-004 — Communication Patterns Between Components
+# ADR-004 — Communication Patterns Between Components
 
 - **ID:** ADR-004
 - **Date:** 2026-09-09
@@ -15,6 +15,16 @@
 > environment events (`Created`, `Updated`, `Removed`), consumed by
 > `ms-environment-monitoring` (and environment events also by `ms-user-experience`). The
 > REST-for-immediate / events-for-asynchronous split is unchanged.
+>
+> **Still outdated in the body below (kept as the original decision):** the decision text and
+> alternatives name MQTT and `ms-sensor-management` as the sensor entry point; the first
+> positive consequence ("ingestion can absorb transient downstream delays") and the risk row
+> "normalize all input in ms-sensor-management" no longer apply. Ingestion is a synchronous
+> HTTPS call; an outage is absorbed by the **device-side buffer**, not by the service.
+>
+> **Update 2026-10-30 (ADR-021):** the ingestion path also accepts readings in batches, and
+> each reading carries a device-set `measuredAt`. Retry, offline-buffer and idempotency rules
+> are in ADR-021.
 
 ---
 

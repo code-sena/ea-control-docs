@@ -586,20 +586,27 @@ The catalog above is generic; this is where each pattern is actually applied tod
   calls are prevented (services never call each other over HTTP).
 
 - **Async (RabbitMQ)** — producers:
-  - `ms-sensor-management` publishes `SensorInstalled` / `SensorRemoved` via a transactional
-    outbox to the topic exchange `eduaircontrol.sensor`.
-  - The legacy monolith publishes `EnvironmentalDataRecorded` (measurements) to the topic
-    exchange `eduaircontrol.environmental-data`.
-  - `ms-environment-monitoring` consumes both (`MeasurementEventListener`,
-    `SensorInstallationListener`):
-  - Topology declared from the consumer: topic exchanges `eduaircontrol.environmental-data`
-    and `eduaircontrol.sensor`, bindings `environmental.data.*` and
-    `sensor.installation.*`, durable work queues, DLX/DLQ with 7-day TTL.
-  - At-least-once delivery + idempotency: inbox claim in the same transaction plus natural
-    key `ON CONFLICT (sensor_installation_id, variable_id, measured_at) DO NOTHING`.
+  - `ms-sensor-management` publishes `SensorInstalled` / `SensorRemoved` /
+    `SensorInstallationDeleted` via a transactional outbox to the topic exchange
+    `eduaircontrol.sensor`.
+  - `ms-classroom-management` publishes the educational-environment events
+    (`Created`, `Updated`, `Removed`) the same way.
+  - `ms-environment-monitoring` consumes both (`SensorInstallationListener`,
+    `ClassroomEnvironmentListener`). It has an inbox, not an outbox.
+  - Topology declared from the consumer: durable work queues with a DLX/DLQ per source
+    (7-day TTL); bindings `sensor.installation.*` for sensor events.
+  - At-least-once delivery + idempotency: inbox claim in the same transaction as the
+    projection update.
   - Retries: statutory 4 attempts, exponential backoff from 1s (max 10s), then DLQ
     (`RejectAndDontRequeueRecoverer`).
   - `SensorInstalled` / `SensorRemoved` maintain the local `installation_projection`.
+
+- **Measurements are not sent through RabbitMQ.** Devices call
+  `POST /api/v1/measurements` (and the batch endpoint, ADR-021) over HTTPS with a `DEVICE`
+  token (ADR-004 note). Idempotency is the unique natural key
+  `(sensor_installation_id, variable_id, measured_at)`, written with
+  `INSERT … ON CONFLICT DO NOTHING` (see
+  `09-microservices/services/05-ms-environment-monitoring/measurement-idempotency.md`).
 
 ### Data & consistency
 
@@ -608,7 +615,7 @@ The catalog above is generic; this is where each pattern is actually applied tod
   `OutboxPublisher` sends each in `REQUIRES_NEW` with the `eventId` as message id.
 - **Inbox / idempotent consumer** — `InboxRepository.claim` inserts with
   `ON CONFLICT (message_id) DO NOTHING` in the same transaction that applies the effect
-  (measurements or projections).
+  (projections).
 - **CQRS read model** — `ms-environment-monitoring` writes atomic
   `environment_measurement` rows and reads aggregated summary/series through the dashboard;
   `environmental_analysis` holds completed analysis results.

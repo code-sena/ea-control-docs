@@ -1,4 +1,4 @@
-## ADR-007 — At-Least-Once Events with Transactional Outbox
+# ADR-007 — At-Least-Once Events with Transactional Outbox
 
 - **ID:** ADR-007
 - **Date:** 2026-09-09
@@ -20,6 +20,9 @@
 >   exist; a DLQ alert and a replay runbook/tool do **not** exist yet.
 > - **Ordering:** not guaranteed. Read-model upserts are last-write-wins. The event field
 >   `version` is the schema version, not an entity version.
+> - **Measurements are not events.** `EnvironmentalDataRecorded` is not published by any
+>   service: readings enter by HTTPS (ADR-004 note) and are deduplicated by the natural key
+>   `(sensor_installation_id, variable_id, measured_at)` (ADR-021), not by the inbox.
 > - **Local contract copies:** each consumer keeps its own copy of the producer's event
 >   contract, with no shared library, so services deploy independently. There is no
 >   cross-service contract test yet.
