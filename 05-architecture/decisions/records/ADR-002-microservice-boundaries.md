@@ -2,8 +2,7 @@
 
 - **ID:** ADR-002
 - **Date:** 2026-09-09
-- **Status:** Accepted
-- **Note (2026-10-06):** la parte de `ms-alert` como servicio separado queda superseded por ADR-015 (plegado en `ms-environment-monitoring`).
+- **Status:** Accepted — `ms-alert` folded into `ms-environment-monitoring` by ADR-015
 - **Authors:** EduAirControl Development Team
 
 > **Note (2026-10-28):** `ms-alert` is **not** a deployable service: ADR-015 folded alert

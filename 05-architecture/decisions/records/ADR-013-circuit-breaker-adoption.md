@@ -4,13 +4,13 @@
 - **Date:** 2026-09-17
 - **Status:** Deprecated
 - **Deprecated on:** 2026-10-27
-
-> **Deprecated:** Aceptado pero no implementado. Resilience4j no aparece en ningún
-> `pom.xml` del proyecto y ningún item del plan de cierre (G-01…G-12, R-01/R-02)
-> cubre su adopción. Diferido post-MVP; re-evaluar cuando exista comunicación
-> inter-servicio síncrona crítica que lo justifique. El ADR se conserva como
-> registro histórico.
 - **Authors:** EduAirControl Development Team
+
+> **Deprecated:** accepted but never implemented. Resilience4j appears in no `pom.xml` of the
+> project and no item of the closing plan (G-01…G-12, R-01/R-02) covers its adoption. Postponed
+> beyond the MVP; re-evaluate when a critical synchronous inter-service call exists (today none
+> does: ADR-018 and `pattern-guide.md` state that services never call each other over HTTP).
+> The ADR is kept as a historical record.
 
 ---
 
@@ -84,7 +84,7 @@ Resilience4j provides a lightweight, functional approach to circuit breaking wit
 |------|------------|--------|-----------|
 | Incorrect circuit breaker configuration | Medium | Medium | Start with sensible defaults, tune based on monitoring |
 | Fallback logic introduces bugs | Medium | Medium | Test fallback scenarios thoroughly, keep fallbacks simple |
-| Circuit breaker masks underlying issues | Low | High | Monitor circuit breaker state changes, alert on频繁 trips |
+| Circuit breaker masks underlying issues | Low | High | Monitor circuit breaker state changes, alert on frequent trips |
 | Performance overhead from decorators | Low | Low | Benchmark critical paths, minimize unnecessary decorators |
 
 ---
