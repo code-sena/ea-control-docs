@@ -27,17 +27,18 @@ variable and instant.
 
 | Field | Type | Nullable | Description | Constraints |
 |-------|------|----------|-------------|-------------|
-| environment_measurement_id | UUID | No | Local projection identifier | PK, `gen_random_uuid()` |
-| environment_id | UUID | No | Environment measured | Logical ref to `ms-classroom-management` |
+| environment_measurement_id | UUID | No | Measurement identifier (exposed by the API as the reading id) | PK |
+| sensor_installation_id | UUID | No | Installation that produced the reading; the environment is resolved through `installation_projection` | Logical ref to `ms-sensor-management` |
 | variable_id | UUID | No | Variable measured | Logical ref to `ms-sensor-management` |
 | measured_value | NUMERIC(12,4) | No | Recorded value | |
-| measured_at | TIMESTAMPTZ | No | Instant attributed to the reading | |
-| quality_flag | VARCHAR(20) | Yes | Quality classification | |
-| received_at | TIMESTAMPTZ | No | Projection receipt time | Default `now()` |
+| measured_at | TIMESTAMPTZ | No | Instant of the reading, set by the device; never replaced (ADR-021) | |
+| quality_flag_id | UUID | No | Quality classification | Logical ref to `quality_flag` (no FK in the deployed schema) |
+| created_at | TIMESTAMPTZ | No | When the service persisted the reading | Default `now()` |
 
 **Relationships:**
-- `(environment_id, variable_id, measured_at)` → unique natural key used for
-  idempotent projection.
+- `(sensor_installation_id, variable_id, measured_at)` → unique natural key
+  (`uq_environment_measurement_inst_var_time`) used for idempotent persistence.
+  See [measurement-idempotency.md](measurement-idempotency.md).
 
 ### Read-only catalog replicas
 
