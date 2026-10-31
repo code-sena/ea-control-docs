@@ -3,7 +3,7 @@
 - **ID:** ADR-020
 - **Date:** 2026-10-29
 - **Status:** Accepted
-- **Authors:** EduAirControl Development Team (Jota, Mariangel)
+- **Authors:** EduAirControl Development Team 
 
 ---
 
