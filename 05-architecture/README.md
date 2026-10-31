@@ -57,6 +57,7 @@ were evaluated, and what the consequences are.
 | ADR-013 | Circuit Breaker Adoption | Proposed |
 | ADR-014 | Environmental Sensor Variables and Thresholds | Proposed |
 | ADR-015 | Fold Alert Management into ms-environment-monitoring | Accepted |
+| ADR-020 | Storage, Retention and Aggregations | Accepted |
 
 ---
 
