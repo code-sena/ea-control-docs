@@ -160,14 +160,3 @@ The frontend (dashboard, analytics) receives aggregated data for long periods (p
 - PostgreSQL declarative partitioning: https://www.postgresql.org/docs/15/ddl-partitioning.html
 
 ---
-
-### Plan de ejecución
-1. Crear `Docs-ea-control/05-architecture/decisions/records/ADR-020-storage-retention-and-aggregations.md` con el contenido anterior.
-2. Añadir fila en `Docs-ea-control/05-architecture/decisions/README.md`: `| ADR-020 | Storage, Retention and Aggregations | Accepted | 2026-10-29 |`.
-3. Añadir fila en `Docs-ea-control/05-architecture/README.md` (índice ADR): `| ADR-020 | Storage, Retention and Aggregations | Accepted |`.
-4. Commit en rama `docs/adr-020-storage-retention` → push → PR a `main`.
-
-¿Apruebas? Sal del modo plan y lo escribo.<|end|><|start|>user<|channel|>hazlo <|end|><|start|><|start|>assistant<|channel|>analysis<|message|>Build mode now. Let me write the ADR-020 file, update the two README index files, commit, and push. I'll do all of this now.
-
-First, write the ADR file. I have the full content from my previous response. Let me write it to the file.<|end|><|start|><|repo_name|>assistant to=bash<|channel|>analysis <|constrain|>xml<|message|><rfl:parameter name="command">
-cd Docs-ea-control; git checkout -b docs/adr-020-storage-retention main 2>&1 | Select-Object -Last 2
