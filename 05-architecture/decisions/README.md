@@ -40,6 +40,5 @@ ADRs document important architectural decisions. Each file = one decision.
 | ADR-017 | OAuth2/OIDC Authorization Server and Backend-for-Frontend | Accepted (amended 2026-10-27, interim cookie path) | 2026-10-06 |
 | ADR-018 | JWT-Only Mesh Authentication | Accepted | 2026-10-17 |
 | ADR-019 | Jenkins as the Official CI/CD (GHCR, auto-deploy on main) | Accepted | 2026-10-17 |
-| ADR-021 | Offline Measurement Buffering and Device-Side `measuredAt` | Accepted | 2026-10-29 |
 
 > Add rows here as you create ADRs in `records/`
