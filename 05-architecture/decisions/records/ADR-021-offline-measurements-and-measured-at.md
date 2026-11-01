@@ -2,7 +2,7 @@
 
 - **ID:** ADR-021
 - **Date:** 2026-10-29
-- **Status:** Accepted
+- **Status:** Accepted — amended 2026-11-01 (normal-operation batching, see ADR-022)
 - **Authors:** Jhon-Cortez
 - **Related plan:** PLAN-001 (EduAirControl Delivery 2026-11-06), Issue #2
 
@@ -93,6 +93,11 @@ instead of automatically after a Wi-Fi drop.
 
 ### 6. Delivery and retry rules for the node
 
+- **Normal operation uses the same path (amended 2026-11-01, ADR-022).** Every reading is
+  appended to the buffer first; a sender drains the buffer once per minute as one batch
+  (about 6 cycles × 4 variables = 24 readings). Online and offline are one code path: an
+  outage only makes the batch bigger. A reading reaches the backend up to ~60 s after it was
+  taken, and threshold evaluation (ADR-014) is delayed by the same amount.
 - Records are sent **oldest first**, in batches, at a controlled rate.
 - A record is deleted from the buffer **only after the backend confirms it** (created or
   already-stored duplicate).
@@ -181,6 +186,7 @@ natural key avoids a schema change.
 - The BLE characteristic is still unauthenticated while open; this ADR only shortens and
   gates the exposure window, it does not add pairing or authentication.
 - Records overwritten after 24 h offline are lost by design.
+- Alerts can be up to ~60 s late because readings are sent in one batch per minute (ADR-022).
 - Flash write wear: one ~24-byte append per 10 s cycle. LittleFS wear levelling makes this
   acceptable for the project lifetime, but it is measured in Issue #7.
 
