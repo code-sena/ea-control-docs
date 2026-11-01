@@ -494,66 +494,78 @@ The raw measurements remain the source of truth.
 
 ---
 
-## 13. Data Retention
+## 13. Data Retention and Partitioning (ADR-020)
 
-Environmental measurements can grow rapidly because EduAirControl is an IoT system.
+Environmental measurements are stored in a **partitioned table** (`environment_measurement`),
+split by range of `measured_at` (monthly partitions). Retention is enforced by
+**dropping expired partitions** (O(1), no bloat) rather than `DELETE`:
 
-The measurement table should therefore be designed with historical querying and future scaling in mind.
+| Granularity | Table | Retention | Mechanism |
+|---|---|---|---|
+| Raw | `environment_measurement` | 90 days | Drop monthly partition when `measured_at < now() - 90 days` |
+| 5 min | `measurement_agg_5m` | 180 days | DELETE by range |
+| 1 hour | `measurement_agg_1h` | 1 year | DELETE by range |
+| 1 day | `measurement_agg_1d` | 5 years | DELETE by range |
 
-Recommended considerations include:
+Three **aggregation tables** pre-compute `avg`, `min`, `max`, `count` per
+`(sensor_installation_id, variable_id, bucket_start)`:
 
-* Index measurements by educational environment.
-* Index measurements by variable.
-* Index `measurement_at`.
-* Avoid unnecessary indexes because measurements can be inserted frequently.
-* Define a future retention policy according to project requirements.
-* Consider table partitioning if the volume becomes sufficiently large.
+- `measurement_agg_5m` -- 5-minute buckets
+- `measurement_agg_1h` -- 1-hour buckets
+- `measurement_agg_1d` -- 1-day buckets
 
-Partitioning is **not required for the initial implementation**.
+A scheduled job recalculates the last 25 hours of buckets from raw data on every
+run (idempotent upsert), so late-arriving measurements are incorporated into
+already-closed buckets. The cascade propagates: `measurement_agg_5m` ->
+`measurement_agg_1h` -> `measurement_agg_1d`.
 
----
+Historical queries select the coarsest aggregation that covers the requested range:
+<= 24 h -> raw, <= 7 days -> 5 min, <= 90 days -> 1 h, > 90 days -> 1 day.
 
-## 14. Indexing Strategy
+Partitioning is **required** for the initial implementation (ADR-020). The
+`environment_measurement_id` remains an identifier of the measurement (exposed as
+`MeasurementView.id` in the API) but is **not** the primary key; the PK is the
+composite `(sensor_installation_id, variable_id, measured_at)`.
+
+### 13.1 Partitioning strategy
+
+Monthly partitions named `environment_measurement_YYYY_MM` are created by a
+scheduled job 3 months in advance. Dropping an expired partition is O(1).
+
+### 13.2 Indexing strategy (updated)
 
 Recommended indexes include:
 
-### Measurements
+#### Measurements (partitioned)
 
-```text
-educational_environment_id
+```
+(sensor_installation_id, variable_id, measured_at)  -- PK, covers aggregation queries
 variable_id
-measurement_at
-(educational_environment_id, variable_id, measurement_at)
+measured_at
 ```
 
-These support queries such as:
+#### Aggregation tables
 
-```text
-Get measurements for an environment.
-Get measurements for a variable.
-Get measurements within a period.
-Get measurements for a variable in an environment during a period.
+```
+(sensor_installation_id, variable_id, bucket_start)  -- PK
 ```
 
-Because this table can receive a large number of inserts, indexes should be kept purposeful.
+#### Environmental Analysis
 
-### Environmental Analysis
-
-```text
+```
 educational_environment_id
 period_start
 period_end
 ```
 
-### Analysis Result
+#### Analysis Result
 
-```text
+```
 environmental_analysis_id
 variable_id
 ```
 
 ---
-
 ## 15. Domain Events
 
 Potential events produced by this domain include:
