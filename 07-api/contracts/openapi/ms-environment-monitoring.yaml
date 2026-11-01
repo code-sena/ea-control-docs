@@ -273,6 +273,22 @@ paths:
   /measurements/batch:
     post:
       summary: Ingesta de mediciones por lotes (buffer offline / reenvío)
+      description: |
+        Cada medición se valida y se guarda de forma independiente: una medición
+        inválida o duplicada no aborta el lote. La clave de idempotencia es
+        `(sensorInstallationId, variableId, measuredAt)`; reenviar una medición ya guardada
+        es un éxito (`duplicate`), no un error.
+
+        **Resultado por medición (`200`).** Solo un error de validación marca una medición
+        como `rejected` (`error: VALIDATION_ERROR`): `value` ausente, `measuredAt` ausente
+        o fuera de la ventana `[ahora − 24 h, ahora + 5 min]`. El dispositivo debe
+        **descartar** esa medición, porque reintentarla nunca va a funcionar.
+
+        **Errores que fallan el lote entero** (no se guarda ninguna medición):
+        `403` si una instalación pertenece a otro sensor o institución, y `410` si una
+        instalación no existe o está cerrada (el dispositivo debe dejar de enviar y
+        reaprovisionarse). Cualquier `5xx` es transitorio: el dispositivo **conserva** el
+        lote y lo reintenta; las mediciones ya guardadas volverán como `duplicate`.
       operationId: ingestMeasurementBatch
       tags: [Measurements]
       requestBody:
@@ -302,6 +318,18 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Una instalación del lote pertenece a otro sensor o institución. No se guarda ninguna medición.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: Una instalación del lote no existe o está cerrada. No se guarda ninguna medición; el dispositivo debe dejar de enviar y reaprovisionarse.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '413':
           description: Lote excede el máximo de 1000 mediciones o 1 MB
           content:
@@ -723,7 +751,24 @@ components:
           minItems: 1
           maxItems: 1000
           items:
-            $ref: '#/components/schemas/MeasurementIngest'
+            $ref: '#/components/schemas/MeasurementBatchItem'
+
+    MeasurementBatchItem:
+      description: |
+        Medición dentro de un lote. A diferencia de `MeasurementIngest`,
+        `measuredAt` es obligatorio: sin la hora del dispositivo no hay clave de
+        idempotencia fiable (ADR-021).
+      type: object
+      required: [sensorInstallationId, variableId, value, measuredAt]
+      properties:
+        sensorInstallationId:
+          $ref: '#/components/schemas/UUID'
+        variableId:
+          $ref: '#/components/schemas/UUID'
+        value:
+          type: number
+        measuredAt:
+          $ref: '#/components/schemas/Timestamp'
 
     MeasurementBatchItemResult:
       type: object
@@ -740,7 +785,7 @@ components:
           description: ID de la medicion persistida (solo si accepted)
         error:
           type: string
-          description: Codigo de error (solo si rejected)
+          description: Codigo de error (solo si rejected). Hoy solo `VALIDATION_ERROR`.
         message:
           type: string
           description: Mensaje de error (solo si rejected)
