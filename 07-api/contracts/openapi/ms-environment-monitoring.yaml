@@ -208,6 +208,67 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /measurements/export:
+    get:
+      summary: Exportar mediciones a CSV o Excel
+      operationId: exportMeasurements
+      tags: [Measurements]
+      parameters:
+        - name: environmentId
+          in: query
+          required: true
+          description: Ambiente educativo
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: variableId
+          in: query
+          description: Filtra por variable
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: from
+          in: query
+          description: Inicio del rango (ISO-8601)
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Fin del rango (ISO-8601)
+          schema:
+            type: string
+            format: date-time
+        - name: format
+          in: query
+          description: Formato del archivo
+          schema:
+            type: string
+            enum: [csv, xlsx]
+            default: csv
+      responses:
+        '200':
+          description: Archivo de mediciones
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          description: Rango excede el maximo de 100000 mediciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /environments/{id}/current:
     get:
       summary: Ultimos valores por variable de un ambiente (HU-MON-003)
